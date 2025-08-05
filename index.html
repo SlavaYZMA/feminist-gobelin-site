@@ -117,28 +117,28 @@
 
             return (
                 <div className="container max-w-md mx-auto p-4 glass rounded-lg">
-                    <h1 className="text-2xl font-bold text-center mb-4 text-white">Цифровой Гобелен</h1>
+                    <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Цифровой Гобелен</h1>
                     <div className="flex items-center mb-4">
                         <input
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder="Задай вопрос ИИ (например, Куда обратиться?)"
-                            className="w-full p-2 bg-transparent border border-white/30 text-white rounded-l focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full p-2 bg-transparent border border-gray-300 text-gray-800 rounded-l focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                         <button
                             onClick={handleSubmit}
                             className="p-2 bg-purple-500 rounded-r hover:bg-purple-600"
                             title="Отправить"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </button>
                     </div>
                     <button
                         onClick={() => setShowDetails(!showDetails)}
-                        className="text-white text-sm mb-4 hover:underline"
+                        className="text-gray-800 text-sm mb-4 hover:underline"
                     >
                         {showDetails ? 'скрыть ↑' : 'уточнить данные ↓'}
                     </button>
@@ -149,33 +149,33 @@
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Имя (например, Анна)"
-                                className="w-full p-2 bg-transparent border border-white/30 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full p-2 bg-transparent border border-gray-300 text-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                             />
                             <input
                                 type="text"
                                 value={country}
                                 onChange={(e) => setCountry(e.target.value)}
                                 placeholder="Страна (например, Испания)"
-                                className="w-full p-2 bg-transparent border border-white/30 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full p-2 bg-transparent border border-gray-300 text-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                             />
                             <input
                                 type="text"
                                 value={city}
                                 onChange={(e) => setCity(e.target.value)}
                                 placeholder="Город (например, Мадрид)"
-                                className="w-full p-2 bg-transparent border border-white/30 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full p-2 bg-transparent border border-gray-300 text-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                             />
                             <input
                                 type="text"
                                 value={language}
                                 onChange={(e) => setLanguage(e.target.value)}
                                 placeholder="Язык общения (например, Русский)"
-                                className="w-full p-2 bg-transparent border border-white/30 text-white rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full p-2 bg-transparent border border-gray-300 text-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                             />
                         </div>
                     )}
                     {response && (
-                        <div className="p-2 bg-transparent border border-white/30 text-white rounded">
+                        <div className="p-2 bg-transparent border border-gray-300 text-gray-800 rounded">
                             <p><strong>Ответ:</strong> {response}</p>
                         </div>
                     )}
