@@ -12,7 +12,6 @@
             --primary: #8b5cf6; /* Фиолетовый */
             --accent: #ec4899; /* Розовый */
             --text: #e5e7eb; /* Светло-серый */
-            --background: rgba(255, 255, 255, 0.1);
         }
         body {
             background: linear-gradient(to bottom, #f3e8ff, #fce7f3);
@@ -30,7 +29,7 @@
             top: 0;
             left: 0;
             z-index: -1;
-            width: 100%;
+            width: 100vw;
             height: 100vh;
         }
         .container {
@@ -40,7 +39,7 @@
             width: 100%;
             padding: 2rem;
             margin: 2rem;
-            background: var(--background);
+            background: transparent;
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
@@ -60,29 +59,76 @@
         .details.open {
             max-height: 600px;
             opacity: 1;
-        }
-        .input-group {
-            background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--primary);
-            border-opacity: 0.5;
-            display: flex;
-            align-items: center;
-            height: 2.5rem;
+            display: grid;
+            gap: 0.75rem;
         }
         input, select {
             transition: all 0.2s ease;
             appearance: none;
-            border: none;
-            background: transparent;
+            border: 1px solid var(--primary);
+            border-opacity: 0.5;
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             height: 2.5rem;
             font-size: 1rem;
             padding: 0 0.75rem;
             color: var(--text);
         }
-        button {
-            transition: all 0.2s ease;
+        input:focus, select:focus {
+            outline: 2px solid var(--primary);
+        }
+        button.primary {
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        button.primary:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        button.primary:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        button.primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        button.submit {
+            background: linear-gradient(to right, #7c3aed, #db2777);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        button.submit:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+        button.submit:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        button.submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .header-text {
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .header-text:hover {
+            color: var(--accent);
         }
         .modal {
             background: rgba(0, 0, 0, 0.5);
@@ -98,21 +144,29 @@
             z-index: 10;
         }
         .modal-content {
-            background: var(--background);
+            background: transparent;
+            backdrop-filter: blur(12px);
             border-radius: 1rem;
             padding: 2rem;
             max-width: 24rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         @media (prefers-color-scheme: dark) {
-            .container, .modal-content { background: rgba(0, 0, 0, 0.25); }
-            .input-group { background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); }
+            .container, .modal-content {
+                background: transparent;
+                backdrop-filter: blur(12px);
+            }
+            input, select {
+                background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+            }
         }
         @media (max-width: 640px) {
             .container { padding: 1rem; margin: 1rem; }
-            .input-group, input, select { height: 2.25rem; }
-            input, select { font-size: 0.875rem; padding: 0 0.5rem; }
-            button { font-size: 0.875rem; padding: 0.5rem; }
+            input, select { height: 2.25rem; font-size: 0.875rem; padding: 0 0.5rem; }
+            button.primary { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+            button.submit { width: 2.25rem; height: 2.25rem; }
+            button.submit svg { width: 1.25rem; height: 1.25rem; }
         }
     </style>
 </head>
@@ -122,9 +176,13 @@
         function GobelinApp() {
             const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
             const [name, setName] = React.useState(localStorage.getItem('name') || '');
+            const [tempName, setTempName] = React.useState(name);
             const [country, setCountry] = React.useState(localStorage.getItem('country') || '');
+            const [tempCountry, setTempCountry] = React.useState(country);
             const [city, setCity] = React.useState(localStorage.getItem('city') || '');
+            const [tempCity, setTempCity] = React.useState(city);
             const [language, setLanguage] = React.useState(localStorage.getItem('language') || 'Русский');
+            const [tempLanguage, setTempLanguage] = React.useState(language);
             const [prompt, setPrompt] = React.useState('');
             const [response, setResponse] = React.useState('');
             const [isLoading, setIsLoading] = React.useState(false);
@@ -142,11 +200,12 @@
                     aboutText: 'Цифровой Гобелен — это арт-проект и чат-бот для поддержки женщин-мигранток, столкнувшихся с насилием. Задавайте вопросы, чтобы получить помощь, психологическую поддержку или советы.',
                     promptPlaceholder: 'Задай вопрос (например, Куда обратиться?)',
                     details: 'Уточнить данные',
-                    hide: 'Скрыть ↑',
+                    hide: 'Скрыть',
                     name: 'Имя (например, Анна)',
                     country: 'Выберите страну',
                     city: 'Город (например, Мадрид)',
                     language: 'Выберите язык',
+                    save: 'Сохранить',
                     reset: 'Сбросить данные',
                     retry: 'Попробовать снова',
                     history: 'История запросов',
@@ -154,7 +213,7 @@
                     answer: 'Ответ:',
                     error: 'Ошибка: Введите вопрос для ИИ.',
                     serverError: 'Сервер не отвечает. Проверьте соединение или попробуйте позже.',
-                    submit: 'Отправить'
+                    close: 'Закрыть'
                 },
                 uk: {
                     title: 'Цифровий Гобелен',
@@ -162,11 +221,12 @@
                     aboutText: 'Цифровий Гобелен — це арт-проєкт і чат-бот для підтримки жінок-мігранток, які зіткнулися з насильством. Задавайте питання, щоб отримати допомогу або поради.',
                     promptPlaceholder: 'Задайте питання (наприклад, Куди звернутися?)',
                     details: 'Уточнити дані',
-                    hide: 'Приховати ↑',
+                    hide: 'Приховати',
                     name: "Ім'я (наприклад, Анна)",
                     country: 'Виберіть країну',
                     city: 'Місто (наприклад, Мадрид)',
                     language: 'Виберіть мову',
+                    save: 'Зберегти',
                     reset: 'Скинути дані',
                     retry: 'Спробувати ще раз',
                     history: 'Історія запитів',
@@ -174,7 +234,7 @@
                     answer: 'Відповідь:',
                     error: 'Помилка: Введіть питання для ШІ.',
                     serverError: 'Сервер не відповідає. Перевірте з’єднання або спробуйте пізніше.',
-                    submit: 'Надіслати'
+                    close: 'Закрити'
                 },
                 en: {
                     title: 'Digital Tapestry',
@@ -182,11 +242,12 @@
                     aboutText: 'Digital Tapestry is an art project and chatbot to support migrant women facing violence. Ask questions to get help, psychological support, or advice.',
                     promptPlaceholder: 'Ask a question (e.g., Where to seek help?)',
                     details: 'Refine details',
-                    hide: 'Hide ↑',
+                    hide: 'Hide',
                     name: 'Name (e.g., Anna)',
                     country: 'Select country',
                     city: 'City (e.g., Madrid)',
                     language: 'Select language',
+                    save: 'Save',
                     reset: 'Reset data',
                     retry: 'Try again',
                     history: 'Request history',
@@ -194,7 +255,7 @@
                     answer: 'Answer:',
                     error: 'Error: Please enter a question for the AI.',
                     serverError: 'Server not responding. Check connection or try again later.',
-                    submit: 'Submit'
+                    close: 'Close'
                 },
                 sr: {
                     title: 'Digitalni Goblen',
@@ -202,11 +263,12 @@
                     aboutText: 'Digitalni Goblen je umetnički projekat i čet-bot za podršku ženama migrantkinjama koje se suočavaju sa nasiljem. Postavljajte pitanja za pomoć ili savete.',
                     promptPlaceholder: 'Postavite pitanje (npr. Gde potražiti pomoć?)',
                     details: 'Precizirajte podatke',
-                    hide: 'Sakrij ↑',
+                    hide: 'Sakrij',
                     name: 'Ime (npr. Ana)',
                     country: 'Izaberite zemlju',
                     city: 'Grad (npr. Madrid)',
                     language: 'Izaberite jezik',
+                    save: 'Sačuvaj',
                     reset: 'Resetuj podatke',
                     retry: 'Pokušaj ponovo',
                     history: 'Istorija zahteva',
@@ -214,7 +276,7 @@
                     answer: 'Odgovor:',
                     error: 'Greška: Unesite pitanje za AI.',
                     serverError: 'Server ne odgovara. Proverite vezu ili pokušajte ponovo.',
-                    submit: 'Pošalji'
+                    close: 'Zatvori'
                 },
                 de: {
                     title: 'Digitaler Wandteppich',
@@ -222,11 +284,12 @@
                     aboutText: 'Digitaler Wandteppich ist ein Kunstprojekt und Chatbot zur Unterstützung von Migrantinnen, die mit Gewalt konfrontiert sind. Stellen Sie Fragen, um Hilfe oder Ratschläge zu erhalten.',
                     promptPlaceholder: 'Stellen Sie eine Frage (z.B. Wo kann ich Hilfe suchen?)',
                     details: 'Details verfeinern',
-                    hide: 'Verbergen ↑',
+                    hide: 'Verbergen',
                     name: 'Name (z.B. Anna)',
                     country: 'Land auswählen',
                     city: 'Stadt (z.B. Madrid)',
                     language: 'Sprache auswählen',
+                    save: 'Speichern',
                     reset: 'Daten zurücksetzen',
                     retry: 'Erneut versuchen',
                     history: 'Anfragengeschichte',
@@ -234,7 +297,7 @@
                     answer: 'Antwort:',
                     error: 'Fehler: Bitte geben Sie eine Frage für die KI ein.',
                     serverError: 'Server antwortet nicht. Überprüfen Sie die Verbindung oder versuchen Sie es später erneut.',
-                    submit: 'Senden'
+                    close: 'Schließen'
                 }
             };
 
@@ -254,13 +317,39 @@
             const languages = ['Русский', 'Украинский', 'Английский', 'Сербский', 'Немецкий'];
 
             // Сохранение данных
+            const saveData = () => {
+                setName(tempName);
+                setCountry(tempCountry);
+                setCity(tempCity);
+                setLanguage(tempLanguage);
+                localStorage.setItem('name', tempName);
+                localStorage.setItem('country', tempCountry);
+                localStorage.setItem('city', tempCity);
+                localStorage.setItem('language', tempLanguage);
+            };
+
+            // Сброс данных
+            const resetData = () => {
+                setTempName('');
+                setTempCountry('');
+                setTempCity('');
+                setTempLanguage('Русский');
+                setName('');
+                setCountry('');
+                setCity('');
+                setLanguage('Русский');
+                setHistory([]);
+                localStorage.removeItem('name');
+                localStorage.removeItem('country');
+                localStorage.removeItem('city');
+                localStorage.setItem('language', 'Русский');
+                localStorage.removeItem('history');
+            };
+
+            // Сохранение истории
             React.useEffect(() => {
-                localStorage.setItem('name', name);
-                localStorage.setItem('country', country);
-                localStorage.setItem('city', city);
-                localStorage.setItem('language', language);
                 localStorage.setItem('history', JSON.stringify(history.slice(-5)));
-            }, [name, country, city, language, history]);
+            }, [history]);
 
             // Рисование реалистичной нити
             const drawThread = (ctx, prompt) => {
@@ -380,41 +469,29 @@
                 }
             };
 
-            // Сброс данных
-            const resetData = () => {
-                setName('');
-                setCountry('');
-                setCity('');
-                setLanguage('Русский');
-                setHistory([]);
-                localStorage.removeItem('name');
-                localStorage.removeItem('country');
-                localStorage.removeItem('city');
-                localStorage.setItem('language', 'Русский');
-                localStorage.removeItem('history');
-            };
-
             return (
                 <div className="container">
                     <header className="flex justify-between items-center">
-                        <h1 className="text-2xl font-semibold text-[var(--text)]">{translations[language.toLowerCase()]?.title || 'Цифровой Гобелен'}</h1>
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={() => setShowAbout(true)}
-                                className="text-sm text-[var(--primary)] hover:underline"
-                            >
-                                {translations[language.toLowerCase()]?.about || 'О проекте'}
-                            </button>
-                            <select
-                                value={language}
-                                onChange={(e) => setLanguage(e.target.value)}
-                                className="p-1 bg-transparent text-[var(--text)] border border-[var(--primary)] border-opacity-50 rounded"
-                            >
-                                {languages.map((lang) => (
-                                    <option key={lang} value={lang}>{lang}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <span
+                            className="text-2xl font-semibold text-[var(--text)] header-text"
+                            onClick={() => setShowAbout(true)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={(e) => e.key === 'Enter' && setShowAbout(true)}
+                            aria-label={translations[language.toLowerCase()]?.title || 'Цифровой Гобелен'}
+                        >
+                            {translations[language.toLowerCase()]?.title || 'Цифровой Гобелен'}
+                        </span>
+                        <span
+                            className="text-sm header-text"
+                            onClick={() => setShowAbout(true)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={(e) => e.key === 'Enter' && setShowAbout(true)}
+                            aria-label={translations[language.toLowerCase()]?.about || 'О проекте'}
+                        >
+                            {translations[language.toLowerCase()]?.about || 'О проекте'}
+                        </span>
                     </header>
                     {showAbout && (
                         <div className="modal">
@@ -423,114 +500,122 @@
                                 <p className="text-sm text-[var(--text)]">{translations[language.toLowerCase()]?.aboutText || 'Цифровой Гобелен — это арт-проект и чат-бот для поддержки женщин-мигранток.'}</p>
                                 <button
                                     onClick={() => setShowAbout(false)}
-                                    className="mt-4 text-sm text-[var(--primary)] hover:underline"
+                                    className="primary mt-4"
+                                    aria-label={translations[language.toLowerCase()]?.close || 'Закрыть'}
                                 >
-                                    Закрыть
+                                    {translations[language.toLowerCase()]?.close || 'Закрыть'}
                                 </button>
                             </div>
                         </div>
                     )}
-                    <div className="input-group">
-                        <label htmlFor="prompt" className="sr-only">{translations[language.toLowerCase()]?.promptPlaceholder || 'Вопрос для ИИ'}</label>
+                    <div className="flex items-center gap-3">
                         <input
                             id="prompt"
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder={translations[language.toLowerCase()]?.promptPlaceholder || 'Задай вопрос (например, Куда обратиться?)'}
-                            className="w-full p-2 text-[var(--text)] focus:outline-none"
+                            className="w-full"
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                         />
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
+                            className="submit"
                             aria-label={translations[language.toLowerCase()]?.submit || 'Отправить'}
-                            className={`p-2 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-r-lg hover:shadow-lg text-[var(--text)] font-medium ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
                         >
-                            {isLoading ? '...' : translations[language.toLowerCase()]?.submit || 'Отправить'}
+                            {isLoading ? (
+                                <svg className="animate-spin h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" className="opacity-75" />
+                                </svg>
+                            ) : (
+                                <svg className="h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                            )}
                         </button>
                     </div>
                     <div className="text-center">
-                        <button
+                        <span
+                            className="text-sm header-text"
                             onClick={() => setShowDetails(!showDetails)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={(e) => e.key === 'Enter' && setShowDetails(!showDetails)}
                             aria-expanded={showDetails}
-                            className="text-sm text-[var(--primary)] hover:underline"
+                            aria-label={showDetails ? translations[language.toLowerCase()]?.hide || 'Скрыть' : translations[language.toLowerCase()]?.details || 'Уточнить данные'}
                         >
-                            {showDetails ? translations[language.toLowerCase()]?.hide || 'Скрыть ↑' : translations[language.toLowerCase()]?.details || 'Уточнить данные ↓'}
-                        </button>
+                            {showDetails ? translations[language.toLowerCase()]?.hide || 'Скрыть' : translations[language.toLowerCase()]?.details || 'Уточнить данные'}
+                        </span>
                         <p className="text-xs text-gray-400 mt-1">{translations[language.toLowerCase()]?.details || 'Для более точных ответов'}</p>
                     </div>
                     {showDetails && (
-                        <div className="details open space-y-3">
-                            <div className="input-group">
-                                <label htmlFor="name" className="sr-only">{translations[language.toLowerCase()]?.name || 'Имя'}</label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder={translations[language.toLowerCase()]?.name || 'Имя (например, Анна)'}
-                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label htmlFor="country" className="sr-only">{translations[language.toLowerCase()]?.country || 'Страна'}</label>
-                                <select
-                                    id="country"
-                                    value={country}
-                                    onChange={(e) => { setCountry(e.target.value); setCity(''); }}
-                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
-                                >
-                                    <option value="">{translations[language.toLowerCase()]?.country || 'Выберите страну'}</option>
-                                    {countries.map((c) => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="input-group">
-                                <label htmlFor="city" className="sr-only">{translations[language.toLowerCase()]?.city || 'Город'}</label>
-                                <select
-                                    id="city"
-                                    value={city}
-                                    onChange={(e) => setCity(e.target.value)}
-                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
-                                    disabled={!country}
-                                >
-                                    <option value="">{translations[language.toLowerCase()]?.city || 'Город (например, Мадрид)'}</option>
-                                    {(citiesByCountry[country] || []).map((c) => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="input-group">
-                                <label htmlFor="language" className="sr-only">{translations[language.toLowerCase()]?.language || 'Язык'}</label>
-                                <select
-                                    id="language"
-                                    value={language}
-                                    onChange={(e) => setLanguage(e.target.value)}
-                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
-                                >
-                                    <option value="">{translations[language.toLowerCase()]?.language || 'Выберите язык'}</option>
-                                    {languages.map((lang) => (
-                                        <option key={lang} value={lang}>{lang}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                onClick={resetData}
-                                className="text-sm text-[var(--primary)] hover:underline"
+                        <div className="details open">
+                            <input
+                                id="name"
+                                type="text"
+                                value={tempName}
+                                onChange={(e) => setTempName(e.target.value)}
+                                placeholder={translations[language.toLowerCase()]?.name || 'Имя (например, Анна)'}
+                            />
+                            <select
+                                id="country"
+                                value={tempCountry}
+                                onChange={(e) => { setTempCountry(e.target.value); setTempCity(''); }}
                             >
-                                {translations[language.toLowerCase()]?.reset || 'Сбросить данные'}
-                            </button>
+                                <option value="">{translations[language.toLowerCase()]?.country || 'Выберите страну'}</option>
+                                {countries.map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                            <select
+                                id="city"
+                                value={tempCity}
+                                onChange={(e) => setTempCity(e.target.value)}
+                                disabled={!tempCountry}
+                            >
+                                <option value="">{translations[language.toLowerCase()]?.city || 'Город (например, Мадрид)'}</option>
+                                {(citiesByCountry[tempCountry] || []).map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                            <select
+                                id="language"
+                                value={tempLanguage}
+                                onChange={(e) => setTempLanguage(e.target.value)}
+                            >
+                                <option value="">{translations[language.toLowerCase()]?.language || 'Выберите язык'}</option>
+                                {languages.map((lang) => (
+                                    <option key={lang} value={lang}>{lang}</option>
+                                ))}
+                            </select>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={saveData}
+                                    className="primary"
+                                    aria-label={translations[language.toLowerCase()]?.save || 'Сохранить'}
+                                >
+                                    {translations[language.toLowerCase()]?.save || 'Сохранить'}
+                                </button>
+                                <button
+                                    onClick={resetData}
+                                    className="primary"
+                                    aria-label={translations[language.toLowerCase()]?.reset || 'Сбросить данные'}
+                                >
+                                    {translations[language.toLowerCase()]?.reset || 'Сбросить данные'}
+                                </button>
+                            </div>
                         </div>
                     )}
                     {response && (
-                        <div className="p-4 bg-[var(--background)] border border-[var(--primary)] border-opacity-50 rounded-lg shadow-md">
+                        <div className="p-4 bg-transparent border border-[var(--primary)] border-opacity-50 rounded-lg shadow-md backdrop-filter blur(12px)">
                             <p className="text-[var(--text)]"><strong>{translations[language.toLowerCase()]?.answer || 'Ответ:'}</strong> {response}</p>
                             {response.includes('Ошибка') && (
                                 <button
                                     onClick={handleSubmit}
-                                    className="text-sm text-[var(--primary)] hover:underline mt-2"
+                                    className="primary mt-2"
+                                    aria-label={translations[language.toLowerCase()]?.retry || 'Попробовать снова'}
                                 >
                                     {translations[language.toLowerCase()]?.retry || 'Попробовать снова'}
                                 </button>
@@ -538,7 +623,7 @@
                         </div>
                     )}
                     {history.length > 0 && (
-                        <div className="p-4 bg-[var(--background)] border border-[var(--primary)] border-opacity-50 rounded-lg shadow-md">
+                        <div className="p-4 bg-transparent border border-[var(--primary)] border-opacity-50 rounded-lg shadow-md backdrop-filter blur(12px)">
                             <h2 className="text-lg font-semibold text-[var(--text)] mb-2">{translations[language.toLowerCase()]?.history || 'История запросов'}</h2>
                             {history.slice(-5).reverse().map((item, index) => (
                                 <div key={index} className="text-sm text-[var(--text)] mb-2">
