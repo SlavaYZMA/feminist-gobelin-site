@@ -78,6 +78,8 @@
             background: transparent;
             height: 2.5rem;
             font-size: 1rem;
+            padding: 0 0.75rem;
+            color: var(--text);
         }
         button {
             transition: all 0.2s ease;
@@ -109,8 +111,8 @@
         @media (max-width: 640px) {
             .container { padding: 1rem; margin: 1rem; }
             .input-group, input, select { height: 2.25rem; }
-            input, select { font-size: 0.875rem; }
-            button svg { height: 1.5rem; width: 1.5rem; }
+            input, select { font-size: 0.875rem; padding: 0 0.5rem; }
+            button { font-size: 0.875rem; padding: 0.5rem; }
         }
     </style>
 </head>
@@ -151,7 +153,8 @@
                     question: 'Вопрос:',
                     answer: 'Ответ:',
                     error: 'Ошибка: Введите вопрос для ИИ.',
-                    serverError: 'Сервер не отвечает. Проверьте соединение или попробуйте позже.'
+                    serverError: 'Сервер не отвечает. Проверьте соединение или попробуйте позже.',
+                    submit: 'Отправить'
                 },
                 uk: {
                     title: 'Цифровий Гобелен',
@@ -170,7 +173,8 @@
                     question: 'Питання:',
                     answer: 'Відповідь:',
                     error: 'Помилка: Введіть питання для ШІ.',
-                    serverError: 'Сервер не відповідає. Перевірте з’єднання або спробуйте пізніше.'
+                    serverError: 'Сервер не відповідає. Перевірте з’єднання або спробуйте пізніше.',
+                    submit: 'Надіслати'
                 },
                 en: {
                     title: 'Digital Tapestry',
@@ -189,7 +193,8 @@
                     question: 'Question:',
                     answer: 'Answer:',
                     error: 'Error: Please enter a question for the AI.',
-                    serverError: 'Server not responding. Check connection or try again later.'
+                    serverError: 'Server not responding. Check connection or try again later.',
+                    submit: 'Submit'
                 },
                 sr: {
                     title: 'Digitalni Goblen',
@@ -208,7 +213,8 @@
                     question: 'Pitanje:',
                     answer: 'Odgovor:',
                     error: 'Greška: Unesite pitanje za AI.',
-                    serverError: 'Server ne odgovara. Proverite vezu ili pokušajte ponovo.'
+                    serverError: 'Server ne odgovara. Proverite vezu ili pokušajte ponovo.',
+                    submit: 'Pošalji'
                 },
                 de: {
                     title: 'Digitaler Wandteppich',
@@ -227,7 +233,8 @@
                     question: 'Frage:',
                     answer: 'Antwort:',
                     error: 'Fehler: Bitte geben Sie eine Frage für die KI ein.',
-                    serverError: 'Server antwortet nicht. Überprüfen Sie die Verbindung oder versuchen Sie es später erneut.'
+                    serverError: 'Server antwortet nicht. Überprüfen Sie die Verbindung oder versuchen Sie es später erneut.',
+                    submit: 'Senden'
                 }
             };
 
@@ -265,7 +272,7 @@
                 const thickness = Math.min(prompt.length / 3, 8);
                 const material = prompt.length < 20 ? 'cotton' :
                                 prompt.length < 40 ? 'silk' : 'wool';
-                const padding = 100; // Отступ от краёв
+                const padding = 100;
                 const startX = isHorizontal ? padding : Math.random() * (ctx.canvas.width - 2 * padding) + padding;
                 const startY = isHorizontal ? Math.random() * (ctx.canvas.height - 2 * padding) + padding : padding;
                 const endX = isHorizontal ? ctx.canvas.width - padding : startX;
@@ -425,9 +432,6 @@
                     )}
                     <div className="input-group">
                         <label htmlFor="prompt" className="sr-only">{translations[language.toLowerCase()]?.promptPlaceholder || 'Вопрос для ИИ'}</label>
-                        <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5v-4a2 2 0 012-2h10a2 2 0 012 2v4h-4m-2 4h.01" />
-                        </svg>
                         <input
                             id="prompt"
                             type="text"
@@ -440,19 +444,10 @@
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
-                            aria-label="Отправить запрос"
-                            className={`p-2 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-r-lg hover:shadow-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                            aria-label={translations[language.toLowerCase()]?.submit || 'Отправить'}
+                            className={`p-2 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-r-lg hover:shadow-lg text-[var(--text)] font-medium ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
                         >
-                            {isLoading ? (
-                                <svg className="animate-spin h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" className="opacity-75" />
-                                </svg>
-                            ) : (
-                                <svg className="h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
-                            )}
+                            {isLoading ? '...' : translations[language.toLowerCase()]?.submit || 'Отправить'}
                         </button>
                     </div>
                     <div className="text-center">
@@ -469,9 +464,6 @@
                         <div className="details open space-y-3">
                             <div className="input-group">
                                 <label htmlFor="name" className="sr-only">{translations[language.toLowerCase()]?.name || 'Имя'}</label>
-                                <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
                                 <input
                                     id="name"
                                     type="text"
@@ -483,9 +475,6 @@
                             </div>
                             <div className="input-group">
                                 <label htmlFor="country" className="sr-only">{translations[language.toLowerCase()]?.country || 'Страна'}</label>
-                                <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M3 3v18M21 3v18M9 9h6m-6 6h6" />
-                                </svg>
                                 <select
                                     id="country"
                                     value={country}
@@ -500,9 +489,6 @@
                             </div>
                             <div className="input-group">
                                 <label htmlFor="city" className="sr-only">{translations[language.toLowerCase()]?.city || 'Город'}</label>
-                                <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7m-9 5v6h4v-6m-6-9h12" />
-                                </svg>
                                 <select
                                     id="city"
                                     value={city}
@@ -518,9 +504,6 @@
                             </div>
                             <div className="input-group">
                                 <label htmlFor="language" className="sr-only">{translations[language.toLowerCase()]?.language || 'Язык'}</label>
-                                <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m-7 8h16" />
-                                </svg>
                                 <select
                                     id="language"
                                     value={language}
