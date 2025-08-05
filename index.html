@@ -15,7 +15,7 @@
             --background: rgba(255, 255, 255, 0.1);
         }
         body {
-            background: transparent;
+            background: linear-gradient(to bottom, #f3e8ff, #fce7f3);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -31,12 +31,12 @@
             left: 0;
             z-index: -1;
             width: 100%;
-            height: 100%;
+            height: 100vh;
         }
         .container {
             display: grid;
             gap: 1.5rem;
-            max-width: 28rem;
+            max-width: 32rem;
             width: 100%;
             padding: 2rem;
             margin: 2rem;
@@ -62,14 +62,22 @@
             opacity: 1;
         }
         .input-group {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
             border-radius: 0.75rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--primary);
             border-opacity: 0.5;
+            display: flex;
+            align-items: center;
+            height: 2.5rem;
         }
         input, select {
             transition: all 0.2s ease;
+            appearance: none;
+            border: none;
+            background: transparent;
+            height: 2.5rem;
+            font-size: 1rem;
         }
         button {
             transition: all 0.2s ease;
@@ -96,19 +104,19 @@
         }
         @media (prefers-color-scheme: dark) {
             .container, .modal-content { background: rgba(0, 0, 0, 0.25); }
-            .input-group { background: rgba(0, 0, 0, 0.3); }
+            .input-group { background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); }
         }
         @media (max-width: 640px) {
             .container { padding: 1rem; margin: 1rem; }
-            button svg { height: 2rem; width: 2rem; }
-            input, select { font-size: 1rem; }
+            .input-group, input, select { height: 2.25rem; }
+            input, select { font-size: 0.875rem; }
+            button svg { height: 1.5rem; width: 1.5rem; }
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        // Рекомендация: Используйте Vite/Webpack для продакшена
         function GobelinApp() {
             const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
             const [name, setName] = React.useState(localStorage.getItem('name') || '');
@@ -141,7 +149,9 @@
                     retry: 'Попробовать снова',
                     history: 'История запросов',
                     question: 'Вопрос:',
-                    answer: 'Ответ:'
+                    answer: 'Ответ:',
+                    error: 'Ошибка: Введите вопрос для ИИ.',
+                    serverError: 'Сервер не отвечает. Проверьте соединение или попробуйте позже.'
                 },
                 uk: {
                     title: 'Цифровий Гобелен',
@@ -158,7 +168,9 @@
                     retry: 'Спробувати ще раз',
                     history: 'Історія запитів',
                     question: 'Питання:',
-                    answer: 'Відповідь:'
+                    answer: 'Відповідь:',
+                    error: 'Помилка: Введіть питання для ШІ.',
+                    serverError: 'Сервер не відповідає. Перевірте з’єднання або спробуйте пізніше.'
                 },
                 en: {
                     title: 'Digital Tapestry',
@@ -175,7 +187,9 @@
                     retry: 'Try again',
                     history: 'Request history',
                     question: 'Question:',
-                    answer: 'Answer:'
+                    answer: 'Answer:',
+                    error: 'Error: Please enter a question for the AI.',
+                    serverError: 'Server not responding. Check connection or try again later.'
                 },
                 sr: {
                     title: 'Digitalni Goblen',
@@ -192,7 +206,9 @@
                     retry: 'Pokušaj ponovo',
                     history: 'Istorija zahteva',
                     question: 'Pitanje:',
-                    answer: 'Odgovor:'
+                    answer: 'Odgovor:',
+                    error: 'Greška: Unesite pitanje za AI.',
+                    serverError: 'Server ne odgovara. Proverite vezu ili pokušajte ponovo.'
                 },
                 de: {
                     title: 'Digitaler Wandteppich',
@@ -209,14 +225,15 @@
                     retry: 'Erneut versuchen',
                     history: 'Anfragengeschichte',
                     question: 'Frage:',
-                    answer: 'Antwort:'
+                    answer: 'Antwort:',
+                    error: 'Fehler: Bitte geben Sie eine Frage für die KI ein.',
+                    serverError: 'Server antwortet nicht. Überprüfen Sie die Verbindung oder versuchen Sie es später erneut.'
                 }
             };
 
             // Список стран и городов
             const countries = [
                 'Испания', 'Германия', 'Россия', 'Франция', 'Украина', 'Сербия', 'Великобритания'
-                // Добавьте больше стран по ISO 3166-1
             ];
             const citiesByCountry = {
                 'Испания': ['Мадрид', 'Барселона', 'Валенсия'],
@@ -226,7 +243,6 @@
                 'Украина': ['Киев', 'Одесса', 'Львов'],
                 'Сербия': ['Белград', 'Нови-Сад', 'Ниш'],
                 'Великобритания': ['Лондон', 'Манчестер', 'Бирмингем']
-                // Добавьте больше городов
             };
             const languages = ['Русский', 'Украинский', 'Английский', 'Сербский', 'Немецкий'];
 
@@ -244,16 +260,16 @@
                 const length = Math.min(prompt.length * 15, ctx.canvas.height);
                 const isHorizontal = Math.random() > 0.5;
                 const colors = ['#8b5cf6', '#ec4899', '#f472b6', '#3b82f6'];
-                const color = prompt.includes('насилие') ? '#ec4899' :
-                             prompt.includes('violence') ? '#f472b6' :
-                             prompt.includes('поддержка') ? '#3b82f6' : '#8b5cf6';
+                const color = prompt.includes('насилие') || prompt.includes('violence') ? '#ec4899' :
+                             prompt.includes('поддержка') || prompt.includes('support') ? '#3b82f6' : '#8b5cf6';
                 const thickness = Math.min(prompt.length / 3, 8);
                 const material = prompt.length < 20 ? 'cotton' :
                                 prompt.length < 40 ? 'silk' : 'wool';
-                const startX = isHorizontal ? 0 : Math.random() * (ctx.canvas.width - 100) + 50;
-                const startY = isHorizontal ? Math.random() * (ctx.canvas.height - 100) + 50 : 0;
-                const endX = isHorizontal ? ctx.canvas.width : startX;
-                const endY = isHorizontal ? startY : length;
+                const padding = 100; // Отступ от краёв
+                const startX = isHorizontal ? padding : Math.random() * (ctx.canvas.width - 2 * padding) + padding;
+                const startY = isHorizontal ? Math.random() * (ctx.canvas.height - 2 * padding) + padding : padding;
+                const endX = isHorizontal ? ctx.canvas.width - padding : startX;
+                const endY = isHorizontal ? startY : length + padding;
                 const controlX = (startX + endX) / 2 + (Math.random() - 0.5) * 100;
                 const controlY = (startY + endY) / 2 + (Math.random() - 0.5) * 100;
 
@@ -315,7 +331,6 @@
                 canvas.height = window.innerHeight;
 
                 // Начальные нити
-                const colors = ['#8b5cf6', '#ec4899', '#f472b6', '#3b82f6'];
                 for (let i = 0; i < 10; i++) {
                     drawThread(ctx, 'Начальная нить ' + i);
                 }
@@ -324,7 +339,7 @@
             // Обработка отправки запроса
             const handleSubmit = async () => {
                 if (!prompt) {
-                    setResponse(translations[language.toLowerCase()]?.['Ошибка: Введите вопрос для ИИ.'] || 'Ошибка: Введите вопрос для ИИ.');
+                    setResponse(translations[language.toLowerCase()]?.error || 'Ошибка: Введите вопрос для ИИ.');
                     return;
                 }
                 setIsLoading(true);
@@ -336,7 +351,7 @@
                         signal: AbortSignal.timeout(30000)
                     });
                     if (!response.ok) {
-                        throw new Error(translations[language.toLowerCase()]?.['Сервер не отвечает. Проверьте соединение или попробуйте позже.'] || 'Сервер не отвечает. Проверьте соединение или попробуйте позже.');
+                        throw new Error(translations[language.toLowerCase()]?.serverError || 'Сервер не отвечает. Проверьте соединение или попробуйте позже.');
                     }
                     const data = await response.json();
                     if (data.error) {
@@ -408,7 +423,7 @@
                             </div>
                         </div>
                     )}
-                    <div className="input-group flex items-center border border-[var(--primary)] border-opacity-50 rounded-lg focus-within:ring-2 focus-within:ring-[var(--primary)]">
+                    <div className="input-group">
                         <label htmlFor="prompt" className="sr-only">{translations[language.toLowerCase()]?.promptPlaceholder || 'Вопрос для ИИ'}</label>
                         <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5v-4a2 2 0 012-2h10a2 2 0 012 2v4h-4m-2 4h.01" />
@@ -419,22 +434,22 @@
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder={translations[language.toLowerCase()]?.promptPlaceholder || 'Задай вопрос (например, Куда обратиться?)'}
-                            className="w-full p-4 text-lg bg-transparent text-[var(--text)] focus:outline-none"
+                            className="w-full p-2 text-[var(--text)] focus:outline-none"
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                         />
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
                             aria-label="Отправить запрос"
-                            className={`p-4 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-r-lg hover:shadow-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                            className={`p-2 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-r-lg hover:shadow-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
                         >
                             {isLoading ? (
-                                <svg className="animate-spin h-6 w-6 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
+                                <svg className="animate-spin h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
                                     <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" className="opacity-75" />
                                 </svg>
                             ) : (
-                                <svg className="h-6 w-6 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                 </svg>
                             )}
@@ -452,7 +467,7 @@
                     </div>
                     {showDetails && (
                         <div className="details open space-y-3">
-                            <div className="input-group flex items-center border border-[var(--primary)] border-opacity-50 rounded-lg">
+                            <div className="input-group">
                                 <label htmlFor="name" className="sr-only">{translations[language.toLowerCase()]?.name || 'Имя'}</label>
                                 <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -463,10 +478,10 @@
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder={translations[language.toLowerCase()]?.name || 'Имя (например, Анна)'}
-                                    className="w-full p-4 text-lg bg-transparent text-[var(--text)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
                                 />
                             </div>
-                            <div className="input-group flex items-center border border-[var(--primary)] border-opacity-50 rounded-lg">
+                            <div className="input-group">
                                 <label htmlFor="country" className="sr-only">{translations[language.toLowerCase()]?.country || 'Страна'}</label>
                                 <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M3 3v18M21 3v18M9 9h6m-6 6h6" />
@@ -475,7 +490,7 @@
                                     id="country"
                                     value={country}
                                     onChange={(e) => { setCountry(e.target.value); setCity(''); }}
-                                    className="w-full p-4 text-lg bg-transparent text-[var(--text)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
                                 >
                                     <option value="">{translations[language.toLowerCase()]?.country || 'Выберите страну'}</option>
                                     {countries.map((c) => (
@@ -483,7 +498,7 @@
                                     ))}
                                 </select>
                             </div>
-                            <div className="input-group flex items-center border border-[var(--primary)] border-opacity-50 rounded-lg">
+                            <div className="input-group">
                                 <label htmlFor="city" className="sr-only">{translations[language.toLowerCase()]?.city || 'Город'}</label>
                                 <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7m-9 5v6h4v-6m-6-9h12" />
@@ -492,7 +507,7 @@
                                     id="city"
                                     value={city}
                                     onChange={(e) => setCity(e.target.value)}
-                                    className="w-full p-4 text-lg bg-transparent text-[var(--text)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
                                     disabled={!country}
                                 >
                                     <option value="">{translations[language.toLowerCase()]?.city || 'Город (например, Мадрид)'}</option>
@@ -501,7 +516,7 @@
                                     ))}
                                 </select>
                             </div>
-                            <div className="input-group flex items-center border border-[var(--primary)] border-opacity-50 rounded-lg">
+                            <div className="input-group">
                                 <label htmlFor="language" className="sr-only">{translations[language.toLowerCase()]?.language || 'Язык'}</label>
                                 <svg className="h-5 w-5 text-[var(--text)] ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m-7 8h16" />
@@ -510,7 +525,7 @@
                                     id="language"
                                     value={language}
                                     onChange={(e) => setLanguage(e.target.value)}
-                                    className="w-full p-4 text-lg bg-transparent text-[var(--text)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                                    className="w-full p-2 text-[var(--text)] rounded focus:outline-none"
                                 >
                                     <option value="">{translations[language.toLowerCase()]?.language || 'Выберите язык'}</option>
                                     {languages.map((lang) => (
