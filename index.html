@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Цифровой Гобелен</title>
+    <title>Digital Tapestry</title>
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
     <style>
         :root {
-            --primary: #8b5cf6; /* Фиолетовый */
-            --accent: #ec4899; /* Розовый */
-            --positive: #3b82f6; /* Синий */
-            --text: #e5e7eb; /* Светло-серый */
+            --primary: #8b5cf6; /* Purple */
+            --accent: #ec4899; /* Pink */
+            --positive: #3b82f6; /* Blue */
+            --text: #e5e7eb; /* Light gray */
         }
         body {
             background: linear-gradient(to bottom, #f3e8ff, #fce7f3);
@@ -54,6 +54,17 @@
             flex-direction: row;
             align-items: center;
             gap: 0.5rem;
+        }
+        .response {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-height: 10rem;
+            overflow-y: auto;
+            line-height: 1.5;
         }
         input, select {
             transition: all 0.2s ease;
@@ -169,6 +180,11 @@
             .prompt-container {
                 gap: 0.3rem;
             }
+            .response {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+                max-height: 8rem;
+            }
         }
     </style>
 </head>
@@ -183,96 +199,33 @@
             const [tempCountry, setTempCountry] = React.useState(country);
             const [city, setCity] = React.useState(localStorage.getItem('city') || '');
             const [tempCity, setTempCity] = React.useState(city);
-            const [language, setLanguage] = React.useState(localStorage.getItem('language') || 'Русский');
-            const [tempLanguage, setTempLanguage] = React.useState(language);
             const [prompt, setPrompt] = React.useState('');
+            const [response, setResponse] = React.useState('');
             const [isLoading, setIsLoading] = React.useState(false);
             const [showDetails, setShowDetails] = React.useState(false);
             const canvasRef = React.useRef(null);
             const threadsRef = React.useRef([]);
 
-            // Локализация
-            const translations = {
-                ru: {
-                    promptPlaceholder: 'Задай вопрос, поделись мыслью...',
-                    details: 'Уточнить данные',
-                    hide: 'Скрыть',
-                    name: 'Имя (например, Анна)',
-                    country: 'Страна',
-                    city: 'Город',
-                    language: 'Язык',
-                    save: 'Сохранить',
-                    reset: 'Сбросить'
-                },
-                uk: {
-                    promptPlaceholder: 'Задайте питання, поділіться думкою...',
-                    details: 'Уточнити дані',
-                    hide: 'Приховати',
-                    name: "Ім'я (наприклад, Анна)",
-                    country: 'Країна',
-                    city: 'Місто',
-                    language: 'Мова',
-                    save: 'Зберегти',
-                    reset: 'Скинути'
-                },
-                en: {
-                    promptPlaceholder: 'Ask a question, share a thought...',
-                    details: 'Refine details',
-                    hide: 'Hide',
-                    name: 'Name (e.g., Anna)',
-                    country: 'Country',
-                    city: 'City',
-                    language: 'Language',
-                    save: 'Save',
-                    reset: 'Reset'
-                },
-                sr: {
-                    promptPlaceholder: 'Postavite pitanje, podelite misao...',
-                    details: 'Precizirajte podatke',
-                    hide: 'Sakrij',
-                    name: 'Ime (npr. Ana)',
-                    country: 'Zemlja',
-                    city: 'Grad',
-                    language: 'Jezik',
-                    save: 'Sačuvaj',
-                    reset: 'Resetuj'
-                },
-                de: {
-                    promptPlaceholder: 'Stellen Sie eine Frage, teilen Sie einen Gedanken...',
-                    details: 'Details verfeinern',
-                    hide: 'Verbergen',
-                    name: 'Name (z.B. Anna)',
-                    country: 'Land',
-                    city: 'Stadt',
-                    language: 'Sprache',
-                    save: 'Speichern',
-                    reset: 'Zurücksetzen'
-                }
-            };
-
             // Список стран и городов
-            const countries = ['Испания', 'Германия', 'Россия', 'Франция', 'Украина', 'Сербия', 'Великобритания'];
+            const countries = ['Spain', 'Germany', 'Russia', 'France', 'Ukraine', 'Serbia', 'United Kingdom'];
             const citiesByCountry = {
-                'Испания': ['Мадрид', 'Барселона', 'Валенсия'],
-                'Германия': ['Берлин', 'Мюнхен', 'Гамбург'],
-                'Россия': ['Москва', 'Санкт-Петербург', 'Новосибирск'],
-                'Франция': ['Париж', 'Марсель', 'Лион'],
-                'Украина': ['Киев', 'Одесса', 'Львов'],
-                'Сербия': ['Белград', 'Нови-Сад', 'Ниш'],
-                'Великобритания': ['Лондон', 'Манчестер', 'Бирмингем']
+                'Spain': ['Madrid', 'Barcelona', 'Valencia'],
+                'Germany': ['Berlin', 'Munich', 'Hamburg'],
+                'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
+                'France': ['Paris', 'Marseille', 'Lyon'],
+                'Ukraine': ['Kyiv', 'Odessa', 'Lviv'],
+                'Serbia': ['Belgrade', 'Novi Sad', 'Niš'],
+                'United Kingdom': ['London', 'Manchester', 'Birmingham']
             };
-            const languages = ['Русский', 'Украинский', 'Английский', 'Сербский', 'Немецкий'];
 
             // Сохранение данных
             const saveData = () => {
                 setName(tempName);
                 setCountry(tempCountry);
                 setCity(tempCity);
-                setLanguage(tempLanguage);
                 localStorage.setItem('name', tempName);
                 localStorage.setItem('country', tempCountry);
                 localStorage.setItem('city', tempCity);
-                localStorage.setItem('language', tempLanguage);
             };
 
             // Сброс данных
@@ -280,21 +233,18 @@
                 setTempName('');
                 setTempCountry('');
                 setTempCity('');
-                setTempLanguage('Русский');
                 setName('');
                 setCountry('');
                 setCity('');
-                setLanguage('Русский');
                 localStorage.removeItem('name');
                 localStorage.removeItem('country');
                 localStorage.removeItem('city');
-                localStorage.setItem('language', 'Русский');
             };
 
             // Определение эмоции
             const detectEmotion = (text) => {
-                const positive = ['поддержка', 'support', 'помощь', 'help', 'любовь', 'love', 'радость', 'joy'];
-                const negative = ['насилие', 'violence', 'страх', 'fear', 'боль', 'pain'];
+                const positive = ['support', 'help', 'love', 'joy'];
+                const negative = ['violence', 'fear', 'pain'];
                 return positive.some(word => text.toLowerCase().includes(word)) ? 'positive' :
                        negative.some(word => text.toLowerCase().includes(word)) ? 'negative' : 'neutral';
             };
@@ -443,6 +393,7 @@
             const handleSubmit = async () => {
                 if (!prompt) return;
                 setIsLoading(true);
+                setResponse('');
                 try {
                     const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
                     const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
@@ -450,14 +401,17 @@
                     const ctx = canvas.getContext('2d');
                     drawThread(ctx, prompt, type);
                     animateThreads(ctx);
-                    await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
+                    const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId, name, country, city, language, prompt }),
+                        body: JSON.stringify({ user_id: userId, name, country, city, prompt }),
                         signal: AbortSignal.timeout(30000)
                     });
+                    const data = await res.json();
+                    setResponse(data.response || 'No response received.');
                 } catch (error) {
-                    console.error('Ошибка:', error);
+                    console.error('Error:', error);
+                    setResponse('An error occurred. Please try again.');
                 } finally {
                     setIsLoading(false);
                     setPrompt('');
@@ -472,14 +426,14 @@
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            placeholder={translations[language.toLowerCase()]?.promptPlaceholder || 'Задай вопрос, поделись мыслью...'}
+                            placeholder="Ask a question, share a thought..."
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                         />
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
                             className="submit"
-                            aria-label={translations[language.toLowerCase()]?.submit || 'Отправить'}
+                            aria-label="Submit"
                         >
                             {isLoading ? (
                                 <svg className="animate-spin h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
@@ -493,6 +447,11 @@
                             )}
                         </button>
                     </div>
+                    {response && (
+                        <div className="response">
+                            {response}
+                        </div>
+                    )}
                     <span
                         className="details-toggle"
                         onClick={() => setShowDetails(!showDetails)}
@@ -500,9 +459,9 @@
                         tabIndex={0}
                         onKeyPress={(e) => e.key === 'Enter' && setShowDetails(!showDetails)}
                         aria-expanded={showDetails}
-                        aria-label={showDetails ? translations[language.toLowerCase()]?.hide || 'Скрыть' : translations[language.toLowerCase()]?.details || 'Уточнить данные'}
+                        aria-label={showDetails ? 'Hide' : 'Refine details'}
                     >
-                        {showDetails ? translations[language.toLowerCase()]?.hide || 'Скрыть' : translations[language.toLowerCase()]?.details || 'Уточнить данные'}
+                        {showDetails ? 'Hide' : 'Refine details'}
                     </span>
                     {showDetails && (
                         <div className="details open">
@@ -511,14 +470,14 @@
                                 type="text"
                                 value={tempName}
                                 onChange={(e) => setTempName(e.target.value)}
-                                placeholder={translations[language.toLowerCase()]?.name || 'Имя (например, Анна)'}
+                                placeholder="Name (e.g., Anna)"
                             />
                             <select
                                 id="country"
                                 value={tempCountry}
                                 onChange={(e) => { setTempCountry(e.target.value); setTempCity(''); }}
                             >
-                                <option value="">{translations[language.toLowerCase()]?.country || 'Страна'}</option>
+                                <option value="">Country</option>
                                 {countries.map((c) => (
                                     <option key={c} value={c}>{c}</option>
                                 ))}
@@ -529,35 +488,25 @@
                                 onChange={(e) => setTempCity(e.target.value)}
                                 disabled={!tempCountry}
                             >
-                                <option value="">{translations[language.toLowerCase()]?.city || 'Город'}</option>
+                                <option value="">City</option>
                                 {(citiesByCountry[tempCountry] || []).map((c) => (
                                     <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                            <select
-                                id="language"
-                                value={tempLanguage}
-                                onChange={(e) => setTempLanguage(e.target.value)}
-                            >
-                                <option value="">{translations[language.toLowerCase()]?.language || 'Язык'}</option>
-                                {languages.map((lang) => (
-                                    <option key={lang} value={lang}>{lang}</option>
                                 ))}
                             </select>
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={saveData}
                                     className="primary"
-                                    aria-label={translations[language.toLowerCase()]?.save || 'Сохранить'}
+                                    aria-label="Save"
                                 >
-                                    {translations[language.toLowerCase()]?.save || 'Сохранить'}
+                                    Save
                                 </button>
                                 <button
                                     onClick={resetData}
                                     className="primary"
-                                    aria-label={translations[language.toLowerCase()]?.reset || 'Сбросить'}
+                                    aria-label="Reset"
                                 >
-                                    {translations[language.toLowerCase()]?.reset || 'Сбросить'}
+                                    Reset
                                 </button>
                             </div>
                         </div>
