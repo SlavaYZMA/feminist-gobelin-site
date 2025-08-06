@@ -11,6 +11,7 @@
         :root {
             --primary: #8b5cf6; /* Фиолетовый */
             --accent: #ec4899; /* Розовый */
+            --positive: #3b82f6; /* Синий */
             --text: #e5e7eb; /* Светло-серый */
         }
         body {
@@ -32,49 +33,50 @@
             height: 100vh;
         }
         .container {
-            display: grid;
+            display: flex;
+            flex-direction: column;
             gap: 0.75rem;
-            max-width: 32rem;
+            max-width: 28rem;
             width: 100%;
             padding: 1rem;
             background: transparent;
             backdrop-filter: blur(8px);
-            border-radius: 0.75rem;
+            border-radius: 0.5rem;
             text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
         }
-        .details {
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .details.open {
-            max-height: 600px;
-            opacity: 1;
-            display: grid;
-            gap: 0.75rem;
+        .prompt-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5rem;
         }
         input, select {
             transition: all 0.2s ease;
             appearance: none;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 0.5rem;
-            height: 2.5rem;
-            font-size: 1rem;
+            height: 2.25rem;
+            font-size: 0.875rem;
             padding: 0 0.75rem;
             color: var(--text);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            flex-grow: 1;
         }
         input:focus, select:focus {
-            outline: 2px solid var(--primary);
+            outline: 1px solid var(--primary);
         }
         button.submit {
             background: linear-gradient(to right, #7c3aed, #db2777);
             border-radius: 0.5rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 2.25rem;
+            height: 2.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -92,37 +94,81 @@
             cursor: not-allowed;
         }
         button.primary {
-            background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
             border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             padding: 0.5rem 1rem;
             color: var(--text);
             font-weight: 500;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             transition: all 0.3s ease;
         }
         button.primary:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         button.primary:active:not(:disabled) {
             transform: scale(0.95);
         }
+        .details {
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .details.open {
+            max-height: 400px;
+            opacity: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
         .details-toggle {
             cursor: pointer;
             color: var(--primary);
-            font-size: 0.875rem;
+            font-size: 0.75rem;
+            font-weight: 500;
             transition: color 0.2s ease;
         }
         .details-toggle:hover {
             color: var(--accent);
         }
+        @media (prefers-color-scheme: dark) {
+            .container {
+                backdrop-filter: blur(8px);
+            }
+            input, select {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
         @media (max-width: 640px) {
-            .container { padding: 0.5rem; }
-            input, select { height: 2.25rem; font-size: 0.875rem; padding: 0 0.5rem; }
-            button.submit { width: 2.25rem; height: 2.25rem; }
-            button.submit svg { width: 1.25rem; height: 1.25rem; }
-            button.primary { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+            .container {
+                padding: 0.5rem;
+                max-width: 90%;
+            }
+            input, select {
+                height: 2rem;
+                font-size: 0.75rem;
+                padding: 0 0.5rem;
+            }
+            button.submit {
+                width: 2rem;
+                height: 2rem;
+            }
+            button.submit svg {
+                width: 1rem;
+                height: 1rem;
+            }
+            button.primary {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.7rem;
+            }
+            .details-toggle {
+                font-size: 0.7rem;
+            }
+            .prompt-container {
+                gap: 0.3rem;
+            }
         }
     </style>
 </head>
@@ -420,14 +466,13 @@
 
             return (
                 <div className="container">
-                    <div className="flex items-center gap-3">
+                    <div className="prompt-container">
                         <input
                             id="prompt"
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder={translations[language.toLowerCase()]?.promptPlaceholder || 'Задай вопрос, поделись мыслью...'}
-                            className="w-full"
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                         />
                         <button
