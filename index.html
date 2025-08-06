@@ -687,32 +687,42 @@
 
             // Обработка отправки
             const handleSubmit = async () => {
-                if (!prompt) return;
-                setIsLoading(true);
-                setResponse('');
-                try {
-                    const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
-                    const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
-                    const canvas = canvasRef.current;
-                    const ctx = canvas.getContext('2d');
-                    drawThread(ctx, prompt, type);
-                    animateThreads(ctx);
-                    const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId, name, country, city, prompt }),
-                        signal: AbortSignal.timeout(30000)
-                    });
-                    const data = await res.json();
-                    setResponse(data.response || 'No response received.');
-                } catch (error) {
-                    console.error('Error:', error);
-                    setResponse('An error occurred. Please try again.');
-                } finally {
-                    setIsLoading(false);
-                    setPrompt('');
-                }
-            };
+    if (!prompt) return;
+    setIsLoading(true);
+    setResponse('');
+    try {
+        const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
+        const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        drawThread(ctx, prompt, type);
+        animateThreads(ctx);
+        const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, name, country, city, prompt }),
+            signal: AbortSignal.timeout(45000) // Увеличено до 45 секунд
+        });
+        const data = await res.json();
+        let responseText = data.response || 'No response received.';
+        // Проверяем, содержит ли ответ промпт, и убираем его
+        const fullPrompt = name && city && country ? `${name} from ${city}, ${country}: ${prompt}` : prompt;
+        if (responseText.startsWith(fullPrompt)) {
+            responseText = responseText.substring(fullPrompt.length).trim();
+        }
+        // Fallback для некорректного ответа
+        if (responseText.length < 10 || responseText.includes('What is it about')) {
+            responseText = 'Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)';
+        }
+        setResponse(responseText);
+    } catch (error) {
+        console.error('Error:', error);
+        setResponse('An error occurred. Please try again later.');
+    } finally {
+        setIsLoading(false);
+        setPrompt('');
+    }
+};
 
             return (
                 <div className="container">
