@@ -724,23 +724,28 @@
     }
 };
 
-            return (
-                <div className="container">
-                    <div className="prompt-container">
-                        <input
-                            id="prompt"
-                            type="text"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Ask a question, share a thought..."
-                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                        />
-                        <button
-                            onClick={handleSubmit}
-                            disabled={isLoading}
-                            className="submit"
-                            aria-label="Submit"
-                        >
+                                    return (
+                          <div className="container">
+                            {response && (
+                              <div className="response">
+                                {response}
+                              </div>
+                            )}
+                            <div className="prompt-container">
+                              <input
+                                id="prompt"
+                                type="text"
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Ask a question, share a thought..."
+                                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                              />
+                              <button
+                                onClick={handleSubmit}
+                                disabled={isLoading}
+                                className="submit"
+                                aria-label="Submit"
+                              >
                             {isLoading ? (
                                 <svg className="animate-spin h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
