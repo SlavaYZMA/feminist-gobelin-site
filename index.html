@@ -49,6 +49,7 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+    
         .prompt-container {
             display: flex;
             flex-direction: row;
@@ -66,18 +67,20 @@
             overflow-y: auto;
             line-height: 1.5;
         }
-        input, select {
-            transition: all 0.2s ease;
-            appearance: none;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 0.5rem;
-            height: 2.25rem;
-            font-size: 0.875rem;
-            padding: 0 0.75rem;
-            color: var(--text);
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-            flex-grow: 1;
+        input, select, textarea {
+          transition: all 0.2s ease;
+          appearance: none;
+          border: none;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          padding: 0.75rem;
+          color: var(--text);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+          flex-grow: 1;
+          min-height: 2.5rem;
+          line-height: 1.4;
+          width: 100%;
         }
         input:focus, select:focus {
             outline: 1px solid var(--primary);
@@ -186,6 +189,10 @@
                 max-height: 8rem;
             }
         }
+        textarea {
+  resize: none;
+  overflow: hidden;
+}
     </style>
 </head>
 <body>
@@ -732,14 +739,25 @@
                               </div>
                             )}
                             <div className="prompt-container">
-                              <input
-                                id="prompt"
-                                type="text"
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="Ask a question, share a thought..."
-                                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                              />
+                              <textarea
+                              id="prompt"
+                              value={prompt}
+                              onChange={(e) => {
+                                setPrompt(e.target.value);
+                                e.target.style.height = "auto";
+                                e.target.style.height = e.target.scrollHeight + "px";
+                              }}
+                              placeholder="Ask a question, share a thought..."
+                              rows={1}
+                              style={{ resize: "none", overflow: "hidden" }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSubmit();
+                                }
+                              }}
+                            />
+
                               <button
                                 onClick={handleSubmit}
                                 disabled={isLoading}
