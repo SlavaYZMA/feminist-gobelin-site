@@ -1,14 +1,76 @@
+const threadsRef = React.createRef([]);
+threadsRef.current = [];
+
 function App() {
     const [currentPage, setCurrentPage] = React.useState('about');
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [shareModalOpen, setShareModalOpen] = React.useState(false);
+    const [language, setLanguage] = React.useState('en');
 
     const pages = {
         about: { name: 'About', ru: 'О проекте', es: 'Acerca de' },
         instructions: { name: 'Instructions', ru: 'Инструкции', es: 'Instrucciones' },
         myGobelin: { name: 'My Gobelin', ru: 'Мой гобелен', es: 'Mi Gobelino' },
+        aiChat: { name: 'AI Chat', ru: 'AI чат', es: 'Chat IA' },
         socials: { name: 'Socials', ru: 'Соцсети', es: 'Redes Sociales' },
         support: { name: 'Support', ru: 'Поддержать', es: 'Apoyar' }
+    };
+
+    const translations = {
+        en: {
+            download: 'Download',
+            share: 'Share',
+            placeholder: "Ask a question about feminism...",
+            detailsToggle: { open: "Hide Details", closed: "Show Details" },
+            namePlaceholder: "Name (e.g., Anna)",
+            countryPlaceholder: "Country",
+            cityPlaceholder: "City",
+            save: "Save",
+            reset: "Reset",
+            clear: "Clear",
+            clearHistory: "Clear History",
+            regenerate: "Regenerate",
+            copy: "Copy",
+            errorResponse: "An error occurred. Please try again later.",
+            fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
+            modalTitle: "User Details"
+        },
+        ru: {
+            download: 'Скачать',
+            share: 'Поделиться',
+            placeholder: "Задайте вопрос о феминизме...",
+            detailsToggle: { open: "Скрыть детали", closed: "Показать детали" },
+            namePlaceholder: "Имя (например, Анна)",
+            countryPlaceholder: "Страна",
+            cityPlaceholder: "Город",
+            save: "Сохранить",
+            reset: "Сбросить",
+            clear: "Очистить",
+            clearHistory: "Очистить историю",
+            regenerate: "Перегенерировать",
+            copy: "Скопировать",
+            errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
+            fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
+            modalTitle: "Данные пользователя"
+        },
+        es: {
+            download: 'Descargar',
+            share: 'Compartir',
+            placeholder: "Haz una pregunta sobre feminismo...",
+            detailsToggle: { open: "Ocultar detalles", closed: "Mostrar detalles" },
+            namePlaceholder: "Nombre (ej., Anna)",
+            countryPlaceholder: "País",
+            cityPlaceholder: "Ciudad",
+            save: "Guardar",
+            reset: "Restablecer",
+            clear: "Limpiar",
+            clearHistory: "Limpiar historial",
+            regenerate: "Regenerar",
+            copy: "Copiar",
+            errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
+            fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
+            modalTitle: "Detalles del usuario"
+        }
     };
 
     const toggleMenu = () => {
@@ -32,6 +94,16 @@ function App() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
                 </button>
+                <div className="language-switcher">
+                    <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                    >
+                        <option value="en">English</option>
+                        <option value="ru">Русский</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
             </header>
             <div className={`side-menu ${menuOpen ? 'open' : ''}`}>
                 <button className="menu-close" onClick={closeMenu} aria-label="Close Menu">
@@ -45,38 +117,15 @@ function App() {
                         className={`menu-item ${currentPage === page ? 'active' : ''}`}
                         onClick={() => handlePageChange(page)}
                     >
-                        {pages[page].name}
+                        {pages[page][language] || pages[page].name}
                     </div>
                 ))}
-                <button
-                    className="menu-button"
-                    onClick={() => {
-                        const canvas = document.querySelector('canvas');
-                        if (canvas) {
-                            const link = document.createElement('a');
-                            link.href = canvas.toDataURL('image/png');
-                            link.download = 'my-gobelin.png';
-                            link.click();
-                        }
-                    }}
-                >
-                    Download
-                </button>
-                <button
-                    className="menu-button"
-                    onClick={() => {
-                        setShareModalOpen(true);
-                        closeMenu();
-                    }}
-                >
-                    Share
-                </button>
             </div>
             <div className={`overlay ${menuOpen ? 'open' : ''}`} onClick={closeMenu}></div>
             <main className="content">
                 {currentPage === 'about' && (
                     <div className="page">
-                        <h1>About the Project</h1>
+                        <h1>{pages.about[language] || pages.about.name}</h1>
                         <p>
                             Feminist Gobelin is a digital platform dedicated to raising awareness about feminism and gender equality. Our mission is to provide a safe space for learning, creating data-art based on your questions, and supporting initiatives against domestic violence. Join us to explore, create, and contribute to a more equitable world.
                         </p>
@@ -84,7 +133,7 @@ function App() {
                 )}
                 {currentPage === 'instructions' && (
                     <div className="page">
-                        <h1>Instructions Against Domestic Violence</h1>
+                        <h1>{pages.instructions[language] || pages.instructions.name}</h1>
                         <p>
                             If you or someone you know is experiencing domestic violence, here are steps to seek help:
                             <ul style={{ textAlign: 'left', margin: '16px 0' }}>
@@ -98,10 +147,11 @@ function App() {
                         </p>
                     </div>
                 )}
-                {currentPage === 'myGobelin' && <MyGobelin />}
+                {currentPage === 'myGobelin' && <MyGobelin threadsRef={threadsRef} language={language} translations={translations} setShareModalOpen={setShareModalOpen} />}
+                {currentPage === 'aiChat' && <AIChat threadsRef={threadsRef} language={language} translations={translations} />}
                 {currentPage === 'socials' && (
                     <div className="page">
-                        <h1>Socials</h1>
+                        <h1>{pages.socials[language] || pages.socials.name}</h1>
                         <p>
                             Connect with us on social media to stay updated and join the conversation:
                             <div className="footer-socials" style={{ marginTop: '16px' }}>
@@ -117,7 +167,7 @@ function App() {
                 )}
                 {currentPage === 'support' && (
                     <div className="page">
-                        <h1>Support the Project</h1>
+                        <h1>{pages.support[language] || pages.support.name}</h1>
                         <p>
                             You can support Feminist Gobelin in the following ways:
                             <ul style={{ textAlign: 'left', margin: '16px 0' }}>
@@ -138,7 +188,7 @@ function App() {
                             className="footer-item"
                             onClick={() => handlePageChange(page)}
                         >
-                            {pages[page].name}
+                            {pages[page][language] || pages[page].name}
                         </div>
                     ))}
                 </div>
@@ -154,7 +204,7 @@ function App() {
             {shareModalOpen && (
                 <div className="modal">
                     <div className="modal-header">
-                        <span className="modal-title">Share Your Gobelin</span>
+                        <span className="modal-title">{translations[language].share}</span>
                         <span
                             className="modal-close"
                             onClick={() => setShareModalOpen(false)}
@@ -191,7 +241,7 @@ function App() {
                                     className="share-button"
                                     onClick={() => {
                                         navigator.clipboard.writeText('https://feminist-gobelin-site.netlify.app');
-                                        alert('Link copied!');
+                                        alert(translations[language].copy + 'ed!');
                                         setShareModalOpen(false);
                                     }}
                                 >
@@ -231,279 +281,8 @@ function App() {
     );
 }
 
-function MyGobelin() {
-    const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
-    const [name, setName] = React.useState(localStorage.getItem('name') || '');
-    const [tempName, setTempName] = React.useState(name);
-    const [country, setCountry] = React.useState(localStorage.getItem('country') || '');
-    const [tempCountry, setTempCountry] = React.useState(country);
-    const [city, setCity] = React.useState(localStorage.getItem('city') || '');
-    const [tempCity, setTempCity] = React.useState(city);
-    const [prompt, setPrompt] = React.useState('');
-    const [messages, setMessages] = React.useState(() => {
-        const saved = localStorage.getItem('chatHistory');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [showDetails, setShowDetails] = React.useState(false);
-    const [language, setLanguage] = React.useState('en');
-    const [editingIndex, setEditingIndex] = React.useState(null);
-    const [editText, setEditText] = React.useState('');
+function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const canvasRef = React.useRef(null);
-    const threadsRef = React.useRef([]);
-    const abortControllerRef = React.useRef(null);
-    const chatContainerRef = React.useRef(null);
-
-    const translations = {
-        en: {
-            placeholder: "Ask a question about feminism...",
-            detailsToggle: { open: "Hide Details", closed: "Show Details" },
-            namePlaceholder: "Name (e.g., Anna)",
-            countryPlaceholder: "Country",
-            cityPlaceholder: "City",
-            save: "Save",
-            reset: "Reset",
-            clear: "Clear",
-            clearHistory: "Clear History",
-            regenerate: "Regenerate",
-            copy: "Copy",
-            share: "Share",
-            edit: "Edit",
-            errorResponse: "An error occurred. Please try again later.",
-            fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
-            modalTitle: "User Details"
-        },
-        ru: {
-            placeholder: "Задайте вопрос о феминизме...",
-            detailsToggle: { open: "Скрыть детали", closed: "Показать детали" },
-            namePlaceholder: "Имя (например, Анна)",
-            countryPlaceholder: "Страна",
-            cityPlaceholder: "Город",
-            save: "Сохранить",
-            reset: "Сбросить",
-            clear: "Очистить",
-            clearHistory: "Очистить историю",
-            regenerate: "Перегенерировать",
-            copy: "Скопировать",
-            share: "Поделиться",
-            edit: "Редактировать",
-            errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
-            fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
-            modalTitle: "Данные пользователя"
-        },
-        es: {
-            placeholder: "Haz una pregunta sobre feminismo...",
-            detailsToggle: { open: "Ocultar detalles", closed: "Mostrar detalles" },
-            namePlaceholder: "Nombre (ej., Anna)",
-            countryPlaceholder: "País",
-            cityPlaceholder: "Ciudad",
-            save: "Guardar",
-            reset: "Restablecer",
-            clear: "Limpiar",
-            clearHistory: "Limpiar historial",
-            regenerate: "Regenerar",
-            copy: "Copiar",
-            share: "Compartir",
-            edit: "Editar",
-            errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
-            fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
-            modalTitle: "Detalles del usuario"
-        }
-    };
-
-    const countries = [
-        'Afghanistan', 'Albania', 'Argentina', 'Australia', 'Brazil',
-        'Canada', 'China', 'France', 'Germany', 'India', 'Mexico',
-        'Russia', 'Spain', 'United Kingdom', 'United States', 'Zimbabwe'
-    ];
-    const citiesByCountry = {
-        'Afghanistan': ['Kabul', 'Kandahar', 'Herat'],
-        'Albania': ['Tirana', 'Durrës', 'Vlorë'],
-        'Argentina': ['Buenos Aires', 'Córdoba', 'Rosario'],
-        'Australia': ['Sydney', 'Melbourne', 'Brisbane'],
-        'Brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília'],
-        'Canada': ['Toronto', 'Montreal', 'Vancouver'],
-        'China': ['Beijing', 'Shanghai', 'Guangzhou'],
-        'France': ['Paris', 'Marseille', 'Lyon'],
-        'Germany': ['Berlin', 'Munich', 'Hamburg'],
-        'India': ['Delhi', 'Mumbai', 'Bangalore'],
-        'Mexico': ['Mexico City', 'Guadalajara', 'Monterrey'],
-        'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
-        'Spain': ['Madrid', 'Barcelona', 'Valencia'],
-        'United Kingdom': ['London', 'Manchester', 'Birmingham'],
-        'United States': ['New York', 'Los Angeles', 'Chicago'],
-        'Zimbabwe': ['Harare', 'Bulawayo', 'Chitungwiza']
-    };
-
-    const saveData = () => {
-        setName(tempName);
-        setCountry(tempCountry);
-        setCity(tempCity);
-        localStorage.setItem('name', tempName);
-        localStorage.setItem('country', tempCountry);
-        localStorage.setItem('city', tempCity);
-        setShowDetails(false);
-    };
-
-    const resetData = () => {
-        setTempName('');
-        setTempCountry('');
-        setTempCity('');
-        setName('');
-        setCountry('');
-        setCity('');
-        localStorage.removeItem('name');
-        localStorage.removeItem('country');
-        localStorage.removeItem('city');
-        setShowDetails(false);
-    };
-
-    const clearMessage = (index) => {
-        const newMessages = messages.filter((_, i) => i !== index);
-        setMessages(newMessages);
-        localStorage.setItem('chatHistory', JSON.stringify(newMessages));
-        if (newMessages.length === 0) {
-            threadsRef.current = [];
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-    };
-
-    const clearHistory = () => {
-        setMessages([]);
-        localStorage.removeItem('chatHistory');
-        threadsRef.current = [];
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
-
-    const startEditing = (index, content) => {
-        setEditingIndex(index);
-        setEditText(content);
-    };
-
-    const saveEdit = (index) => {
-        const fullPrompt = name && city && country ? `${name} from ${city}, ${country}: ${editText}` : editText;
-        const newMessages = [...messages];
-        newMessages[index] = { ...newMessages[index], content: editText, fullPrompt };
-        setMessages(newMessages);
-        localStorage.setItem('chatHistory', JSON.stringify(newMessages));
-        setEditingIndex(null);
-        setEditText('');
-    };
-
-    const copyText = (text) => {
-        navigator.clipboard.writeText(text);
-        alert(translations[language].copy + 'ed!');
-    };
-
-    const shareResponse = (content) => {
-        const shareText = `${content}\n\nGenerated by Feminist Gobelin: https://feminist-gobelin-site.netlify.app`;
-        navigator.clipboard.writeText(shareText);
-        alert(translations[language].share + ' link copied!');
-    };
-
-    const regenerateResponse = async (index) => {
-        const promptMessage = messages[index - 1];
-        if (!promptMessage || promptMessage.role !== 'user') return;
-        setIsLoading(true);
-        abortControllerRef.current = new AbortController();
-        try {
-            const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
-            const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            drawThread(ctx, promptMessage.content, type);
-            animateThreads(ctx);
-            const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, name, country, city, prompt: promptMessage.content }),
-                signal: abortControllerRef.current.signal
-            });
-            const data = await res.json();
-            let responseText = data.response || 'No response received.';
-            const fullPrompt = promptMessage.fullPrompt || promptMessage.content;
-            if (responseText.startsWith(fullPrompt)) {
-                responseText = responseText.substring(fullPrompt.length).trim();
-            }
-            if (responseText.length < 10 || responseText.includes('What is it about')) {
-                responseText = translations[language].fallbackResponse;
-            }
-            const newMessages = [...messages];
-            newMessages[index] = { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() };
-            setMessages(newMessages);
-            localStorage.setItem('chatHistory', JSON.stringify(newMessages));
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                threadsRef.current = [];
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            } else {
-                console.error('Error:', error);
-                const newMessages = [...messages];
-                newMessages[index] = { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() };
-                setMessages(newMessages);
-                localStorage.setItem('chatHistory', JSON.stringify(newMessages));
-            }
-        } finally {
-            setIsLoading(false);
-            abortControllerRef.current = null;
-        }
-    };
-
-    const detectEmotion = (text) => {
-        const positive = ['support', 'help', 'love', 'joy', 'поддержка', 'помощь', 'любовь', 'радость', 'apoyo', 'ayuda', 'amor', 'alegría'];
-        const negative = ['violence', 'fear', 'pain', 'насилие', 'страх', 'боль', 'violencia', 'miedo', 'dolor'];
-        return positive.some(word => text.toLowerCase().includes(word)) ? 'positive' :
-               negative.some(word => text.toLowerCase().includes(word)) ? 'negative' : 'neutral';
-    };
-
-    const drawThread = (ctx, input, type) => {
-        const length = Math.min(input.length * 15, ctx.canvas.height);
-        const emotion = detectEmotion(input);
-        const isHorizontal = Math.random() > 0.5;
-        const padding = 50;
-        const startX = isHorizontal ? padding : Math.random() * (ctx.canvas.width - 2 * padding) + padding;
-        const startY = isHorizontal ? Math.random() * (ctx.canvas.height - 2 * padding) + padding : padding;
-        const endX = isHorizontal ? ctx.canvas.width - padding : startX;
-        const endY = isHorizontal ? startY : length + padding;
-        const color = emotion === 'positive' ? '#3b82f6' : emotion === 'negative' ? '#ec4899' : '#165DF5';
-        const thickness = Math.min(input.length / 5, 6);
-        let thread = { type, startX, startY, endX, endY, color, thickness, opacity: 0, progress: 0 };
-
-        switch (type) {
-            case 'line':
-                thread = { ...thread, controlX: (startX + endX) / 2, controlY: (startY + endY) / 2 };
-                break;
-            case 'wave':
-                thread = { ...thread, amplitude: 50 + Math.random() * 50, frequency: 0.02 + Math.random() * 0.03 };
-                break;
-            case 'text':
-                thread = { ...thread, text: input.slice(0, 10), fontSize: 12 + input.length / 10 };
-                break;
-            case 'pixels':
-                thread = { ...thread, particleCount: 20 + input.length * 2 };
-                break;
-            case 'fiber':
-                thread = { ...thread, segments: 5 + Math.floor(input.length / 10) };
-                break;
-            case 'glitch':
-                thread = { ...thread, glitchOffset: 5 + Math.random() * 10 };
-                break;
-            case 'spiral':
-                thread = { ...thread, radius: 20 + input.length, turns: 2 + input.length / 20 };
-                break;
-        }
-
-        threadsRef.current.push(thread);
-        if (threadsRef.current.length > 30) {
-            threadsRef.current.shift();
-        }
-    };
 
     const animateThreads = (ctx) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -600,10 +379,236 @@ function MyGobelin() {
         const handleResize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            animateThreads(ctx);
         };
         window.addEventListener('resize', handleResize);
-        return () => window.addEventListener('resize', handleResize);
+        animateThreads(ctx);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    return (
+        <div className="page">
+            <h1>{translations[language].myGobelin || 'My Gobelin'}</h1>
+            <div className="gobelin-buttons">
+                <button
+                    className="gobelin-button"
+                    onClick={() => {
+                        const canvas = canvasRef.current;
+                        if (canvas) {
+                            const link = document.createElement('a');
+                            link.href = canvas.toDataURL('image/png');
+                            link.download = 'my-gobelin.png';
+                            link.click();
+                        }
+                    }}
+                >
+                    {translations[language].download}
+                </button>
+                <button
+                    className="gobelin-button"
+                    onClick={() => setShareModalOpen(true)}
+                >
+                    {translations[language].share}
+                </button>
+            </div>
+            <canvas ref={canvasRef}></canvas>
+        </div>
+    );
+}
+
+function AIChat({ threadsRef, language, translations }) {
+    const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
+    const [name, setName] = React.useState(localStorage.getItem('name') || '');
+    const [tempName, setTempName] = React.useState(name);
+    const [country, setCountry] = React.useState(localStorage.getItem('country') || '');
+    const [tempCountry, setTempCountry] = React.useState(country);
+    const [city, setCity] = React.useState(localStorage.getItem('city') || '');
+    const [tempCity, setTempCity] = React.useState(city);
+    const [prompt, setPrompt] = React.useState('');
+    const [messages, setMessages] = React.useState(() => {
+        const saved = localStorage.getItem('chatHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [showDetails, setShowDetails] = React.useState(false);
+    const [editingIndex, setEditingIndex] = React.useState(null);
+    const [editText, setEditText] = React.useState('');
+    const chatContainerRef = React.useRef(null);
+
+    const countries = [
+        'Afghanistan', 'Albania', 'Argentina', 'Australia', 'Brazil',
+        'Canada', 'China', 'France', 'Germany', 'India', 'Mexico',
+        'Russia', 'Spain', 'United Kingdom', 'United States', 'Zimbabwe'
+    ];
+    const citiesByCountry = {
+        'Afghanistan': ['Kabul', 'Kandahar', 'Herat'],
+        'Albania': ['Tirana', 'Durrës', 'Vlorë'],
+        'Argentina': ['Buenos Aires', 'Córdoba', 'Rosario'],
+        'Australia': ['Sydney', 'Melbourne', 'Brisbane'],
+        'Brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília'],
+        'Canada': ['Toronto', 'Montreal', 'Vancouver'],
+        'China': ['Beijing', 'Shanghai', 'Guangzhou'],
+        'France': ['Paris', 'Marseille', 'Lyon'],
+        'Germany': ['Berlin', 'Munich', 'Hamburg'],
+        'India': ['Delhi', 'Mumbai', 'Bangalore'],
+        'Mexico': ['Mexico City', 'Guadalajara', 'Monterrey'],
+        'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
+        'Spain': ['Madrid', 'Barcelona', 'Valencia'],
+        'United Kingdom': ['London', 'Manchester', 'Birmingham'],
+        'United States': ['New York', 'Los Angeles', 'Chicago'],
+        'Zimbabwe': ['Harare', 'Bulawayo', 'Chitungwiza']
+    };
+
+    const saveData = () => {
+        setName(tempName);
+        setCountry(tempCountry);
+        setCity(tempCity);
+        localStorage.setItem('name', tempName);
+        localStorage.setItem('country', tempCountry);
+        localStorage.setItem('city', tempCity);
+        setShowDetails(false);
+    };
+
+    const resetData = () => {
+        setTempName('');
+        setTempCountry('');
+        setTempCity('');
+        setName('');
+        setCountry('');
+        setCity('');
+        localStorage.removeItem('name');
+        localStorage.removeItem('country');
+        localStorage.removeItem('city');
+        setShowDetails(false);
+    };
+
+    const clearMessage = (index) => {
+        const newMessages = messages.filter((_, i) => i !== index);
+        setMessages(newMessages);
+        localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        if (newMessages.length === 0) {
+            threadsRef.current = [];
+        }
+    };
+
+    const clearHistory = () => {
+        setMessages([]);
+        localStorage.removeItem('chatHistory');
+        threadsRef.current = [];
+    };
+
+    const startEditing = (index, content) => {
+        setEditingIndex(index);
+        setEditText(content);
+    };
+
+    const saveEdit = (index) => {
+        const fullPrompt = name && city && country ? `${name} from ${city}, ${country}: ${editText}` : editText;
+        const newMessages = [...messages];
+        newMessages[index] = { ...newMessages[index], content: editText, fullPrompt };
+        setMessages(newMessages);
+        localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        setEditingIndex(null);
+        setEditText('');
+    };
+
+    const copyText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert(translations[language].copy + 'ed!');
+    };
+
+    const shareResponse = (content) => {
+        const shareText = `${content}\n\nGenerated by Feminist Gobelin: https://feminist-gobelin-site.netlify.app`;
+        navigator.clipboard.writeText(shareText);
+        alert(translations[language].share + ' link copied!');
+    };
+
+    const regenerateResponse = async (index) => {
+        const promptMessage = messages[index - 1];
+        if (!promptMessage || promptMessage.role !== 'user') return;
+        setIsLoading(true);
+        try {
+            const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
+            const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
+            drawThread(null, promptMessage.content, type);
+            const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, name, country, city, prompt: promptMessage.content })
+            });
+            const data = await res.json();
+            let responseText = data.response || 'No response received.';
+            const fullPrompt = promptMessage.fullPrompt || promptMessage.content;
+            if (responseText.startsWith(fullPrompt)) {
+                responseText = responseText.substring(fullPrompt.length).trim();
+            }
+            if (responseText.length < 10 || responseText.includes('What is it about')) {
+                responseText = translations[language].fallbackResponse;
+            }
+            const newMessages = [...messages];
+            newMessages[index] = { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() };
+            setMessages(newMessages);
+            localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        } catch (error) {
+            console.error('Error:', error);
+            const newMessages = [...messages];
+            newMessages[index] = { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() };
+            setMessages(newMessages);
+            localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const detectEmotion = (text) => {
+        const positive = ['support', 'help', 'love', 'joy', 'поддержка', 'помощь', 'любовь', 'радость', 'apoyo', 'ayuda', 'amor', 'alegría'];
+        const negative = ['violence', 'fear', 'pain', 'насилие', 'страх', 'боль', 'violencia', 'miedo', 'dolor'];
+        return positive.some(word => text.toLowerCase().includes(word)) ? 'positive' :
+               negative.some(word => text.toLowerCase().includes(word)) ? 'negative' : 'neutral';
+    };
+
+    const drawThread = (ctx, input, type) => {
+        const length = Math.min(input.length * 15, window.innerHeight);
+        const emotion = detectEmotion(input);
+        const isHorizontal = Math.random() > 0.5;
+        const padding = 50;
+        const startX = isHorizontal ? padding : Math.random() * (window.innerWidth - 2 * padding) + padding;
+        const startY = isHorizontal ? Math.random() * (window.innerHeight - 2 * padding) + padding : padding;
+        const endX = isHorizontal ? window.innerWidth - padding : startX;
+        const endY = isHorizontal ? startY : length + padding;
+        const color = emotion === 'positive' ? '#3b82f6' : emotion === 'negative' ? '#ec4899' : '#165DF5';
+        const thickness = Math.min(input.length / 5, 6);
+        let thread = { type, startX, startY, endX, endY, color, thickness, opacity: 0, progress: 0 };
+
+        switch (type) {
+            case 'line':
+                thread = { ...thread, controlX: (startX + endX) / 2, controlY: (startY + endY) / 2 };
+                break;
+            case 'wave':
+                thread = { ...thread, amplitude: 50 + Math.random() * 50, frequency: 0.02 + Math.random() * 0.03 };
+                break;
+            case 'text':
+                thread = { ...thread, text: input.slice(0, 10), fontSize: 12 + input.length / 10 };
+                break;
+            case 'pixels':
+                thread = { ...thread, particleCount: 20 + input.length * 2 };
+                break;
+            case 'fiber':
+                thread = { ...thread, segments: 5 + Math.floor(input.length / 10) };
+                break;
+            case 'glitch':
+                thread = { ...thread, glitchOffset: 5 + Math.random() * 10 };
+                break;
+            case 'spiral':
+                thread = { ...thread, radius: 20 + input.length, turns: 2 + input.length / 20 };
+                break;
+        }
+
+        threadsRef.current.push(thread);
+        if (threadsRef.current.length > 30) {
+            threadsRef.current.shift();
+        }
+    };
 
     React.useEffect(() => {
         if (chatContainerRef.current) {
@@ -619,19 +624,14 @@ function MyGobelin() {
         setMessages([...messages, { role: 'user', content: prompt, fullPrompt, timestamp }]);
         setIsLoading(true);
         setPrompt('');
-        abortControllerRef.current = new AbortController();
         try {
             const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
             const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            drawThread(ctx, prompt, type);
-            animateThreads(ctx);
+            drawThread(null, prompt, type);
             const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, name, country, city, prompt }),
-                signal: abortControllerRef.current.signal
+                body: JSON.stringify({ user_id: userId, name, country, city, prompt })
             });
             const data = await res.json();
             let responseText = data.response || 'No response received.';
@@ -644,47 +644,22 @@ function MyGobelin() {
             }
             setMessages(prev => [...prev, { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() }]);
         } catch (error) {
-            if (error.name === 'AbortError') {
-                setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
-                threadsRef.current = [];
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            } else {
-                console.error('Error:', error);
-                setMessages(prev => [...prev, { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() }]);
-            }
+            console.error('Error:', error);
+            setMessages(prev => [...prev, { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() }]);
         } finally {
             setIsLoading(false);
-            abortControllerRef.current = null;
         }
     };
 
     const cancelRequest = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-            setIsLoading(false);
-            setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
-            threadsRef.current = [];
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        setIsLoading(false);
+        setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
+        threadsRef.current = [];
     };
 
     return (
         <div className="page">
-            <h1>My Gobelin</h1>
-            <select
-                className="modal-select"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                style={{ width: '150px', alignSelf: 'center' }}
-            >
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="es">Español</option>
-            </select>
+            <h1>{translations[language].aiChat || 'AI Chat'}</h1>
             {messages.length > 0 && (
                 <>
                     <div className="chat-container" ref={chatContainerRef}>
@@ -916,7 +891,6 @@ function MyGobelin() {
                     </div>
                 </div>
             )}
-            <canvas ref={canvasRef}></canvas>
         </div>
     );
 }
