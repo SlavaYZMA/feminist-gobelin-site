@@ -285,7 +285,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const canvasRef = React.useRef(null);
     const [threads, setThreads] = React.useState([]);
 
-    // Текстуры для материалов
     const createTexture = (material, ctx) => {
         const textureCanvas = document.createElement('canvas');
         textureCanvas.width = 100;
@@ -332,7 +331,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         return ctx.createPattern(textureCanvas, 'repeat');
     };
 
-    // Правила для ключевых слов
     const keywordRules = {
         'насилие': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
         'поддержка': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
@@ -356,7 +354,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         'love': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
     };
 
-    // Правила для стран
     const countryRules = {
         'Serbia': [{ color: '#FFC107', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }],
         'Ukraine': [
@@ -393,7 +390,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         ]
     };
 
-    // Правила для городов
     const cityRules = {
         'Belgrade': { color: '#FFC107', thickness: 4, material: 'cotton', shape: 'wave', effect: 'shine' },
         'Kyiv': { color: '#005BBB', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'glow-gold' },
@@ -403,34 +399,32 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         'Tokyo': { color: '#FFFFFF', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'red-splashes' }
     };
 
-    // Загрузка нитей из localStorage
     React.useEffect(() => {
         const savedThreads = localStorage.getItem('threads');
         if (savedThreads) {
             threadsRef.current = JSON.parse(savedThreads);
             setThreads(JSON.parse(savedThreads));
         }
-        // Загрузка нитей для страны и города
         const country = localStorage.getItem('country');
         const city = localStorage.getItem('city');
         if (country && countryRules[country]) {
             countryRules[country].forEach(rule => {
-                const thread = createThread(rule, threads.length);
+                const thread = createThread(rule, threadsRef.current.length);
                 threadsRef.current.push(thread);
                 setThreads(prev => [...prev, thread]);
             });
         }
         if (city && cityRules[city]) {
-            const thread = createThread(cityRules[city], threads.length);
+            const thread = createThread(cityRules[city], threadsRef.current.length);
             threadsRef.current.push(thread);
             setThreads(prev => [...prev, thread]);
         }
         localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+        console.log('Loaded threads:', threadsRef.current);
     }, []);
 
-    // Создание нити
     const createThread = (rule, index) => {
-        const yPos = 50 + index * 20; // Нити снизу вверх
+        const yPos = 50 + index * 20;
         return {
             ...rule,
             startX: 50,
@@ -443,7 +437,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         };
     };
 
-    // Анимация нитей
     const animateThreads = (ctx) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         threads.forEach(thread => {
@@ -456,7 +449,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         }
     };
 
-    // Отрисовка нити
     const drawThread = (ctx, thread) => {
         ctx.globalAlpha = thread.opacity;
         ctx.strokeStyle = thread.color;
@@ -466,7 +458,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         ctx.strokeStyle = texture;
         ctx.fillStyle = texture;
 
-        // Эффекты
         if (thread.effect === 'glow') {
             ctx.shadowBlur = 10;
             ctx.shadowColor = `${thread.color}80`;
@@ -513,7 +504,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             ctx.shadowBlur = 0;
         }
 
-        // Формы
         ctx.beginPath();
         if (thread.shape === 'horizontal') {
             ctx.moveTo(thread.startX, thread.startY);
@@ -596,15 +586,11 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         return () => window.removeEventListener('resize', handleResize);
     }, [threads]);
 
-    // Обновление нитей из threadsRef
     React.useEffect(() => {
-        const newThreads = threadsRef.current.filter(thread => thread.progress === 0);
-        if (newThreads.length > 0) {
-            setThreads(prev => {
-                const updatedThreads = [...prev, ...newThreads];
-                localStorage.setItem('threads', JSON.stringify(updatedThreads));
-                return updatedThreads;
-            });
+        if (threadsRef.current.length !== threads.length) {
+            console.log('Updating threads:', threadsRef.current);
+            setThreads([...threadsRef.current]);
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
         }
     }, [threadsRef.current]);
 
@@ -718,6 +704,22 @@ function AIChat({ threadsRef, language, translations }) {
         localStorage.setItem('country', tempCountry);
         localStorage.setItem('city', tempCity);
         setShowDetails(false);
+        // Добавляем нити для страны и города
+        const newThreads = [];
+        if (tempCountry && countryRules[tempCountry]) {
+            countryRules[tempCountry].forEach(rule => {
+                const thread = createThread(rule, threadsRef.current.length + newThreads.length);
+                newThreads.push(thread);
+            });
+        }
+        if (tempCity && cityRules[tempCity]) {
+            const thread = createThread(cityRules[tempCity], threadsRef.current.length + newThreads.length);
+            newThreads.push(thread);
+        }
+        if (newThreads.length > 0) {
+            threadsRef.current = [...threadsRef.current, ...newThreads];
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+        }
     };
 
     const resetData = () => {
@@ -781,12 +783,13 @@ function AIChat({ threadsRef, language, translations }) {
         if (!promptMessage || promptMessage.role !== 'user') return;
         setIsLoading(true);
         try {
-            const keyword = Object.keys(keywordRules).find(k => promptMessage.content.toLowerCase().includes(k));
-            if (keyword) {
+            const keywords = Object.keys(keywordRules).filter(k => promptMessage.content.toLowerCase().includes(k));
+            console.log('Regenerate keywords found:', keywords);
+            keywords.forEach(keyword => {
                 const thread = createThread(keywordRules[keyword], threadsRef.current.length);
                 threadsRef.current.push(thread);
-                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-            }
+            });
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
             const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -838,12 +841,13 @@ function AIChat({ threadsRef, language, translations }) {
         setIsLoading(true);
         setPrompt('');
         try {
-            const keyword = Object.keys(keywordRules).find(k => prompt.toLowerCase().includes(k));
-            if (keyword) {
+            const keywords = Object.keys(keywordRules).filter(k => prompt.toLowerCase().includes(k));
+            console.log('Keywords found:', keywords);
+            keywords.forEach(keyword => {
                 const thread = createThread(keywordRules[keyword], threadsRef.current.length);
                 threadsRef.current.push(thread);
-                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-            }
+            });
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
             const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -878,7 +882,8 @@ function AIChat({ threadsRef, language, translations }) {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-        localStorage.setItem('chatHistory', JSON.stringify(messages));
+        localStorage.setItem('chatHistory', JSON.stringify(messages Gunnar Enberg
+(messages));
     }, [messages]);
 
     return (
