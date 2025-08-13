@@ -283,92 +283,302 @@ function App() {
 
 function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const canvasRef = React.useRef(null);
+    const [threads, setThreads] = React.useState([]);
 
+    // Текстуры для материалов
+    const createTexture = (material, ctx) => {
+        const textureCanvas = document.createElement('canvas');
+        textureCanvas.width = 100;
+        textureCanvas.height = 100;
+        const tCtx = textureCanvas.getContext('2d');
+        tCtx.fillStyle = '#fff';
+        tCtx.fillRect(0, 0, 100, 100);
+        if (material === 'silk') {
+            tCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            for (let i = 0; i < 100; i += 5) {
+                tCtx.beginPath();
+                tCtx.moveTo(i, 0);
+                tCtx.lineTo(i, 100);
+                tCtx.stroke();
+            }
+        } else if (material === 'cotton') {
+            tCtx.fillStyle = 'rgba(200, 200, 200, 0.1)';
+            for (let i = 0; i < 100; i += 5) {
+                for (let j = 0; j < 100; j += 5) {
+                    tCtx.fillRect(i, j, 2, 2);
+                }
+            }
+        } else if (material === 'wool') {
+            tCtx.fillStyle = 'rgba(150, 150, 150, 0.3)';
+            for (let i = 0; i < 100; i += 3) {
+                tCtx.beginPath();
+                tCtx.arc(i, 50 + Math.random() * 10, 1, 0, Math.PI * 2);
+                tCtx.fill();
+            }
+        } else if (material === 'fur') {
+            tCtx.strokeStyle = 'rgba(100, 100, 100, 0.4)';
+            for (let i = 0; i < 100; i += 5) {
+                tCtx.beginPath();
+                tCtx.moveTo(i, 50);
+                tCtx.lineTo(i + Math.random() * 5, 50 + Math.random() * 10);
+                tCtx.stroke();
+            }
+        } else if (material === 'satin') {
+            tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            tCtx.fillRect(0, 0, 100, 100);
+            tCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            tCtx.fillRect(0, 0, 100, 50);
+        }
+        return ctx.createPattern(textureCanvas, 'repeat');
+    };
+
+    // Правила для ключевых слов
+    const keywordRules = {
+        'насилие': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'поддержка': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'семья': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'страх': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'радость': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'помощь': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'свобода': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'надежда': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'потеря': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'любовь': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
+        'violence': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'support': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'family': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'fear': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'joy': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'help': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'freedom': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'hope': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'loss': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'love': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
+    };
+
+    // Правила для стран
+    const countryRules = {
+        'Serbia': [{ color: '#FFC107', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }],
+        'Ukraine': [
+            { color: '#005BBB', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFD500', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' }
+        ],
+        'France': [
+            { color: '#0055A4', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#EF4135', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+        ],
+        'Germany': [
+            { color: '#000000', thickness: 4, material: 'wool', shape: 'horizontal', effect: 'texture' },
+            { color: '#DD0000', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' },
+            { color: '#FFCE00', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+        ],
+        'Italy': [
+            { color: '#009246', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' },
+            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#CE2B37', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+        ],
+        'United States': [
+            { color: '#B22234', thickness: 2, material: 'cotton', shape: 'stripes', effect: 'matte' },
+            { color: '#FFFFFF', thickness: 2, material: 'cotton', shape: 'stripes', effect: 'matte' },
+            { color: '#3C3B6E', thickness: 4, material: 'satin', shape: 'rectangle', effect: 'stars' }
+        ],
+        'Japan': [
+            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#BC002D', thickness: 4, material: 'silk', shape: 'circle', effect: 'shine' }
+        ],
+        'Turkey': [
+            { color: '#E30A17', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFFFFF', thickness: 4, material: 'cotton', shape: 'crescent-star', effect: 'matte' }
+        ]
+    };
+
+    // Правила для городов
+    const cityRules = {
+        'Belgrade': { color: '#FFC107', thickness: 4, material: 'cotton', shape: 'wave', effect: 'shine' },
+        'Kyiv': { color: '#005BBB', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'glow-gold' },
+        'Paris': { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'glow-pink' },
+        'Berlin': { color: '#000000', thickness: 4, material: 'wool', shape: 'dashed', effect: 'white-inserts' },
+        'New York': { color: '#6B7280', thickness: 4, material: 'cotton', shape: 'skyline', effect: 'matte' },
+        'Tokyo': { color: '#FFFFFF', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'red-splashes' }
+    };
+
+    // Загрузка нитей из localStorage
+    React.useEffect(() => {
+        const savedThreads = localStorage.getItem('threads');
+        if (savedThreads) {
+            threadsRef.current = JSON.parse(savedThreads);
+            setThreads(JSON.parse(savedThreads));
+        }
+        // Загрузка нитей для страны и города
+        const country = localStorage.getItem('country');
+        const city = localStorage.getItem('city');
+        if (country && countryRules[country]) {
+            countryRules[country].forEach(rule => {
+                const thread = createThread(rule, threads.length);
+                threadsRef.current.push(thread);
+                setThreads(prev => [...prev, thread]);
+            });
+        }
+        if (city && cityRules[city]) {
+            const thread = createThread(cityRules[city], threads.length);
+            threadsRef.current.push(thread);
+            setThreads(prev => [...prev, thread]);
+        }
+        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+    }, []);
+
+    // Создание нити
+    const createThread = (rule, index) => {
+        const yPos = 50 + index * 20; // Нити снизу вверх
+        return {
+            ...rule,
+            startX: 50,
+            startY: yPos,
+            endX: window.innerWidth - 50,
+            endY: yPos,
+            progress: 0,
+            opacity: 0,
+            timestamp: new Date().toISOString()
+        };
+    };
+
+    // Анимация нитей
     const animateThreads = (ctx) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        threadsRef.current = threadsRef.current.filter(thread => thread.progress < 1);
-        threadsRef.current.forEach((thread) => {
+        threads.forEach(thread => {
             thread.progress = Math.min(thread.progress + 0.02, 1);
             thread.opacity = thread.progress < 0.8 ? thread.progress : Math.max(1 - (thread.progress - 0.8) / 0.2, 0);
-            ctx.globalAlpha = thread.opacity;
-
-            ctx.beginPath();
-            switch (thread.type) {
-                case 'line':
-                    ctx.moveTo(thread.startX, thread.startY);
-                    ctx.quadraticCurveTo(thread.controlX, thread.controlY, thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + (thread.endY - thread.startY) * thread.progress);
-                    ctx.strokeStyle = thread.color;
-                    ctx.lineWidth = thread.thickness;
-                    ctx.stroke();
-                    break;
-                case 'wave':
-                    ctx.moveTo(thread.startX, thread.startY);
-                    for (let x = 0; x <= (thread.endX - thread.startX) * thread.progress; x += 5) {
-                        const y = Math.sin(x * thread.frequency) * thread.amplitude;
-                        ctx.lineTo(thread.startX + x, thread.startY + y);
-                    }
-                    ctx.strokeStyle = thread.color;
-                    ctx.lineWidth = thread.thickness;
-                    ctx.stroke();
-                    break;
-                case 'text':
-                    ctx.font = `${thread.fontSize}px Inter`;
-                    ctx.fillStyle = thread.color;
-                    ctx.fillText(thread.text, thread.startX, thread.startY + (thread.endY - thread.startY) * thread.progress);
-                    break;
-                case 'pixels':
-                    for (let i = 0; i < thread.particleCount; i++) {
-                        const t = i / thread.particleCount;
-                        if (t <= thread.progress) {
-                            const x = thread.startX + (thread.endX - thread.startX) * t;
-                            const y = thread.startY + (thread.endY - thread.startY) * t + (Math.random() - 0.5) * 10;
-                            ctx.fillStyle = thread.color;
-                            ctx.fillRect(x, y, thread.thickness / 2, thread.thickness / 2);
-                        }
-                    }
-                    break;
-                case 'fiber':
-                    for (let i = 0; i < thread.segments; i++) {
-                        const t = i / thread.segments;
-                        if (t <= thread.progress) {
-                            const x = thread.startX + (thread.endX - thread.startX) * t;
-                            const y = thread.startY + (thread.endY - thread.startY) * t + (Math.random() - 0.5) * 5;
-                            ctx.beginPath();
-                            ctx.moveTo(x, y);
-                            ctx.lineTo(x + 5, y + 5);
-                            ctx.strokeStyle = thread.color;
-                            ctx.lineWidth = thread.thickness / 2;
-                            ctx.stroke();
-                        }
-                    }
-                    break;
-                case 'glitch':
-                    ctx.moveTo(thread.startX, thread.startY);
-                    ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress + (Math.random() - 0.5) * thread.glitchOffset, thread.startY + (thread.endY - thread.startY) * thread.progress);
-                    ctx.strokeStyle = thread.color;
-                    ctx.lineWidth = thread.thickness;
-                    ctx.setLineDash([5, 5]);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                    break;
-                case 'spiral':
-                    ctx.moveTo(thread.startX, thread.startY);
-                    for (let t = 0; t < thread.progress * thread.turns * 2 * Math.PI; t += 0.1) {
-                        const r = thread.radius * t / (thread.turns * 2 * Math.PI);
-                        const x = thread.startX + r * Math.cos(t);
-                        const y = thread.startY + r * Math.sin(t);
-                        ctx.lineTo(x, y);
-                    }
-                    ctx.strokeStyle = thread.color;
-                    ctx.lineWidth = thread.thickness;
-                    ctx.stroke();
-                    break;
-            }
-            ctx.globalAlpha = 1;
+            drawThread(ctx, thread);
         });
-        if (threadsRef.current.length > 0) {
+        if (threads.some(thread => thread.progress < 1)) {
             requestAnimationFrame(() => animateThreads(ctx));
         }
+    };
+
+    // Отрисовка нити
+    const drawThread = (ctx, thread) => {
+        ctx.globalAlpha = thread.opacity;
+        ctx.strokeStyle = thread.color;
+        ctx.fillStyle = thread.color;
+        ctx.lineWidth = thread.thickness;
+        const texture = createTexture(thread.material, ctx);
+        ctx.strokeStyle = texture;
+        ctx.fillStyle = texture;
+
+        // Эффекты
+        if (thread.effect === 'glow') {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = `${thread.color}80`;
+        } else if (thread.effect === 'shine') {
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#FFFFFF80';
+        } else if (thread.effect === 'strong-shine') {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FFFFFFCC';
+        } else if (thread.effect === 'texture') {
+            ctx.shadowBlur = 3;
+            ctx.shadowColor = '#00000040';
+        } else if (thread.effect === 'gradient') {
+            const gradient = ctx.createLinearGradient(thread.startX, thread.startY, thread.endX, thread.endY);
+            gradient.addColorStop(0, thread.color);
+            gradient.addColorStop(1, '#FFFFFF80');
+            ctx.strokeStyle = gradient;
+            ctx.fillStyle = gradient;
+        } else if (thread.effect === 'gradient-pink') {
+            const gradient = ctx.createLinearGradient(thread.startX, thread.startY, thread.endX, thread.endY);
+            gradient.addColorStop(0, thread.color);
+            gradient.addColorStop(1, '#F472B680');
+            ctx.strokeStyle = gradient;
+            ctx.fillStyle = gradient;
+        } else if (thread.effect === 'transparent') {
+            ctx.globalAlpha = thread.opacity * 0.5;
+        } else if (thread.effect === 'twinkle') {
+            ctx.globalAlpha = thread.opacity * (0.8 + Math.random() * 0.2);
+        } else if (thread.effect === 'glow-gold') {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#FFD70080';
+        } else if (thread.effect === 'glow-pink') {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#EC489980';
+        } else if (thread.effect === 'white-inserts') {
+            ctx.setLineDash([10, 5]);
+            ctx.strokeStyle = '#FFFFFF';
+        } else if (thread.effect === 'red-splashes') {
+            ctx.fillStyle = '#BC002D';
+            for (let i = 0; i < 5; i++) {
+                ctx.fillRect(thread.startX + Math.random() * (thread.endX - thread.startX), thread.startY - 5, 2, 2);
+            }
+        } else if (thread.effect === 'matte') {
+            ctx.shadowBlur = 0;
+        }
+
+        // Формы
+        ctx.beginPath();
+        if (thread.shape === 'horizontal') {
+            ctx.moveTo(thread.startX, thread.startY);
+            ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
+            ctx.stroke();
+        } else if (thread.shape === 'wave') {
+            ctx.moveTo(thread.startX, thread.startY);
+            for (let x = 0; x <= (thread.endX - thread.startX) * thread.progress; x += 5) {
+                const y = Math.sin(x * 0.02) * 20;
+                ctx.lineTo(thread.startX + x, thread.startY + y);
+            }
+            ctx.stroke();
+        } else if (thread.shape === 'dashed') {
+            ctx.setLineDash([10, 10]);
+            ctx.moveTo(thread.startX, thread.startY);
+            ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        } else if (thread.shape === 'stripes') {
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(thread.startX, thread.startY + i * 10);
+                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * 10);
+                ctx.strokeStyle = i % 2 === 0 ? '#B22234' : '#FFFFFF';
+                ctx.stroke();
+            }
+        } else if (thread.shape === 'rectangle') {
+            ctx.fillRect(thread.startX, thread.startY - 20, (thread.endX - thread.startX) * thread.progress, 40);
+            if (thread.effect === 'stars') {
+                ctx.fillStyle = '#FFFFFF';
+                for (let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    ctx.arc(thread.startX + i * 20, thread.startY, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        } else if (thread.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, 20 * thread.progress, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (thread.shape === 'crescent-star') {
+            ctx.beginPath();
+            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, 20 * thread.progress, 0.5 * Math.PI, 2.5 * Math.PI);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo((thread.startX + thread.endX) / 2 + 10, thread.startY);
+            for (let i = 0; i < 5; i++) {
+                const angle = i * (Math.PI * 2 / 5);
+                ctx.lineTo(
+                    (thread.startX + thread.endX) / 2 + Math.cos(angle) * 5 * thread.progress,
+                    thread.startY + Math.sin(angle) * 5 * thread.progress
+                );
+            }
+            ctx.fill();
+        } else if (thread.shape === 'skyline') {
+            ctx.beginPath();
+            ctx.moveTo(thread.startX, thread.startY);
+            for (let x = 0; x <= (thread.endX - thread.startX) * thread.progress; x += 20) {
+                ctx.lineTo(thread.startX + x, thread.startY - Math.random() * 20);
+            }
+            ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
     };
 
     React.useEffect(() => {
@@ -379,12 +589,24 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         const handleResize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            animateThreads(ctx);
+            threads.forEach(thread => drawThread(ctx, thread));
         };
         window.addEventListener('resize', handleResize);
         animateThreads(ctx);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [threads]);
+
+    // Обновление нитей из threadsRef
+    React.useEffect(() => {
+        const newThreads = threadsRef.current.filter(thread => thread.progress === 0);
+        if (newThreads.length > 0) {
+            setThreads(prev => {
+                const updatedThreads = [...prev, ...newThreads];
+                localStorage.setItem('threads', JSON.stringify(updatedThreads));
+                return updatedThreads;
+            });
+        }
+    }, [threadsRef.current]);
 
     return (
         <div className="page">
@@ -406,7 +628,23 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                 </button>
                 <button
                     className="gobelin-button"
-                    onClick={() => setShareModalOpen(true)}
+                    onClick={() => {
+                        const canvas = canvasRef.current;
+                        if (canvas) {
+                            canvas.toBlob(blob => {
+                                const file = new File([blob], 'my-gobelin.png', { type: 'image/png' });
+                                if (navigator.share) {
+                                    navigator.share({
+                                        title: 'My Feminist Gobelin',
+                                        text: 'Check out my unique data-art gobelin created with Feminist Gobelin!',
+                                        files: [file]
+                                    }).then(() => setShareModalOpen(false));
+                                } else {
+                                    setShareModalOpen(true);
+                                }
+                            });
+                        }
+                    }}
                 >
                     {translations[language].share}
                 </button>
@@ -436,27 +674,40 @@ function AIChat({ threadsRef, language, translations }) {
     const chatContainerRef = React.useRef(null);
 
     const countries = [
-        'Afghanistan', 'Albania', 'Argentina', 'Australia', 'Brazil',
-        'Canada', 'China', 'France', 'Germany', 'India', 'Mexico',
-        'Russia', 'Spain', 'United Kingdom', 'United States', 'Zimbabwe'
+        'Serbia', 'Ukraine', 'France', 'Germany', 'Italy', 'United States', 'Japan', 'Turkey'
     ];
     const citiesByCountry = {
-        'Afghanistan': ['Kabul', 'Kandahar', 'Herat'],
-        'Albania': ['Tirana', 'Durrës', 'Vlorë'],
-        'Argentina': ['Buenos Aires', 'Córdoba', 'Rosario'],
-        'Australia': ['Sydney', 'Melbourne', 'Brisbane'],
-        'Brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília'],
-        'Canada': ['Toronto', 'Montreal', 'Vancouver'],
-        'China': ['Beijing', 'Shanghai', 'Guangzhou'],
-        'France': ['Paris', 'Marseille', 'Lyon'],
-        'Germany': ['Berlin', 'Munich', 'Hamburg'],
-        'India': ['Delhi', 'Mumbai', 'Bangalore'],
-        'Mexico': ['Mexico City', 'Guadalajara', 'Monterrey'],
-        'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk'],
-        'Spain': ['Madrid', 'Barcelona', 'Valencia'],
-        'United Kingdom': ['London', 'Manchester', 'Birmingham'],
-        'United States': ['New York', 'Los Angeles', 'Chicago'],
-        'Zimbabwe': ['Harare', 'Bulawayo', 'Chitungwiza']
+        'Serbia': ['Belgrade'],
+        'Ukraine': ['Kyiv'],
+        'France': ['Paris'],
+        'Germany': ['Berlin'],
+        'Italy': [],
+        'United States': ['New York'],
+        'Japan': ['Tokyo'],
+        'Turkey': []
+    };
+
+    const keywordRules = {
+        'насилие': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'поддержка': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'семья': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'страх': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'радость': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'помощь': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'свобода': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'надежда': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'потеря': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'любовь': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
+        'violence': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'support': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'family': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'fear': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'joy': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'help': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'freedom': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'hope': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'loss': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'love': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
     };
 
     const saveData = () => {
@@ -488,6 +739,7 @@ function AIChat({ threadsRef, language, translations }) {
         localStorage.setItem('chatHistory', JSON.stringify(newMessages));
         if (newMessages.length === 0) {
             threadsRef.current = [];
+            localStorage.setItem('threads', JSON.stringify([]));
         }
     };
 
@@ -495,6 +747,7 @@ function AIChat({ threadsRef, language, translations }) {
         setMessages([]);
         localStorage.removeItem('chatHistory');
         threadsRef.current = [];
+        localStorage.setItem('threads', JSON.stringify([]));
     };
 
     const startEditing = (index, content) => {
@@ -528,9 +781,12 @@ function AIChat({ threadsRef, language, translations }) {
         if (!promptMessage || promptMessage.role !== 'user') return;
         setIsLoading(true);
         try {
-            const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
-            const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
-            drawThread(null, promptMessage.content, type);
+            const keyword = Object.keys(keywordRules).find(k => promptMessage.content.toLowerCase().includes(k));
+            if (keyword) {
+                const thread = createThread(keywordRules[keyword], threadsRef.current.length);
+                threadsRef.current.push(thread);
+                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+            }
             const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -560,62 +816,19 @@ function AIChat({ threadsRef, language, translations }) {
         }
     };
 
-    const detectEmotion = (text) => {
-        const positive = ['support', 'help', 'love', 'joy', 'поддержка', 'помощь', 'любовь', 'радость', 'apoyo', 'ayuda', 'amor', 'alegría'];
-        const negative = ['violence', 'fear', 'pain', 'насилие', 'страх', 'боль', 'violencia', 'miedo', 'dolor'];
-        return positive.some(word => text.toLowerCase().includes(word)) ? 'positive' :
-               negative.some(word => text.toLowerCase().includes(word)) ? 'negative' : 'neutral';
+    const createThread = (rule, index) => {
+        const yPos = 50 + index * 20;
+        return {
+            ...rule,
+            startX: 50,
+            startY: yPos,
+            endX: window.innerWidth - 50,
+            endY: yPos,
+            progress: 0,
+            opacity: 0,
+            timestamp: new Date().toISOString()
+        };
     };
-
-    const drawThread = (ctx, input, type) => {
-        const length = Math.min(input.length * 15, window.innerHeight);
-        const emotion = detectEmotion(input);
-        const isHorizontal = Math.random() > 0.5;
-        const padding = 50;
-        const startX = isHorizontal ? padding : Math.random() * (window.innerWidth - 2 * padding) + padding;
-        const startY = isHorizontal ? Math.random() * (window.innerHeight - 2 * padding) + padding : padding;
-        const endX = isHorizontal ? window.innerWidth - padding : startX;
-        const endY = isHorizontal ? startY : length + padding;
-        const color = emotion === 'positive' ? '#3b82f6' : emotion === 'negative' ? '#ec4899' : '#165DF5';
-        const thickness = Math.min(input.length / 5, 6);
-        let thread = { type, startX, startY, endX, endY, color, thickness, opacity: 0, progress: 0 };
-
-        switch (type) {
-            case 'line':
-                thread = { ...thread, controlX: (startX + endX) / 2, controlY: (startY + endY) / 2 };
-                break;
-            case 'wave':
-                thread = { ...thread, amplitude: 50 + Math.random() * 50, frequency: 0.02 + Math.random() * 0.03 };
-                break;
-            case 'text':
-                thread = { ...thread, text: input.slice(0, 10), fontSize: 12 + input.length / 10 };
-                break;
-            case 'pixels':
-                thread = { ...thread, particleCount: 20 + input.length * 2 };
-                break;
-            case 'fiber':
-                thread = { ...thread, segments: 5 + Math.floor(input.length / 10) };
-                break;
-            case 'glitch':
-                thread = { ...thread, glitchOffset: 5 + Math.random() * 10 };
-                break;
-            case 'spiral':
-                thread = { ...thread, radius: 20 + input.length, turns: 2 + input.length / 20 };
-                break;
-        }
-
-        threadsRef.current.push(thread);
-        if (threadsRef.current.length > 30) {
-            threadsRef.current.shift();
-        }
-    };
-
-    React.useEffect(() => {
-        if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-        localStorage.setItem('chatHistory', JSON.stringify(messages));
-    }, [messages]);
 
     const handleSubmit = async () => {
         if (!prompt) return;
@@ -625,9 +838,12 @@ function AIChat({ threadsRef, language, translations }) {
         setIsLoading(true);
         setPrompt('');
         try {
-            const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
-            const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
-            drawThread(null, prompt, type);
+            const keyword = Object.keys(keywordRules).find(k => prompt.toLowerCase().includes(k));
+            if (keyword) {
+                const thread = createThread(keywordRules[keyword], threadsRef.current.length);
+                threadsRef.current.push(thread);
+                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+            }
             const res = await fetch('https://SlavaYZMA-feminist-gobelin-server.hf.space/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -654,8 +870,16 @@ function AIChat({ threadsRef, language, translations }) {
     const cancelRequest = () => {
         setIsLoading(false);
         setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
-        threadsRef.current = [];
+        threadsRef.current.pop();
+        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
     };
+
+    React.useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+        localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }, [messages]);
 
     return (
         <div className="page">
