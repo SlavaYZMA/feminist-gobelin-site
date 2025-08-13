@@ -35,8 +35,29 @@ body {
     border-bottom: 1px solid var(--color-neutral-3);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 16px;
     z-index: 1000;
+}
+.language-switcher {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+.language-switcher select {
+    background: var(--gray-1);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 8px;
+    padding: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--color-text-1);
+    cursor: pointer;
+}
+.language-switcher select:focus {
+    outline: none;
+    border-color: var(--primary-6);
+    box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
 .hamburger {
     background: transparent;
@@ -164,6 +185,28 @@ body {
     font-size: 16px;
     line-height: 24px;
     color: rgba(0,0,0,0.8);
+}
+.gobelin-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+.gobelin-button {
+    background: var(--primary-6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.gobelin-button:hover {
+    transform: scale(1.05);
+}
+.gobelin-button:active {
+    transform: scale(0.95);
 }
 .chat-container {
     max-height: 400px;
@@ -490,6 +533,14 @@ canvas {
         width: 32px;
         height: 32px;
     }
+    .language-switcher {
+        top: 12px;
+        right: 12px;
+    }
+    .language-switcher select {
+        font-size: 12px;
+        padding: 6px;
+    }
     .side-menu {
         width: 260px;
         padding: 60px 12px 12px;
@@ -532,6 +583,10 @@ canvas {
         padding: 16px 12px;
     }
     .footer-menu {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .gobelin-buttons {
         flex-direction: column;
         gap: 12px;
     }
