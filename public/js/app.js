@@ -286,6 +286,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const [threads, setThreads] = React.useState([]);
 
     const createTexture = (material, ctx) => {
+        console.log('Creating texture for material:', material);
         const textureCanvas = document.createElement('canvas');
         textureCanvas.width = 100;
         textureCanvas.height = 100;
@@ -402,25 +403,37 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     React.useEffect(() => {
         const savedThreads = localStorage.getItem('threads');
         if (savedThreads) {
-            threadsRef.current = JSON.parse(savedThreads);
-            setThreads(JSON.parse(savedThreads));
+            const parsedThreads = JSON.parse(savedThreads);
+            threadsRef.current = parsedThreads;
+            setThreads(parsedThreads);
+            console.log('Loaded threads from localStorage:', parsedThreads);
         }
+        // Добавляем нити для страны и города только если они ещё не были добавлены
         const country = localStorage.getItem('country');
         const city = localStorage.getItem('city');
+        const newThreads = [];
         if (country && countryRules[country]) {
             countryRules[country].forEach(rule => {
-                const thread = createThread(rule, threadsRef.current.length);
-                threadsRef.current.push(thread);
-                setThreads(prev => [...prev, thread]);
+                // Проверяем, нет ли уже такой нити
+                if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
+                    const thread = createThread(rule, threadsRef.current.length + newThreads.length);
+                    newThreads.push(thread);
+                }
             });
         }
         if (city && cityRules[city]) {
-            const thread = createThread(cityRules[city], threadsRef.current.length);
-            threadsRef.current.push(thread);
-            setThreads(prev => [...prev, thread]);
+            // Проверяем, нет ли уже такой нити
+            if (!threadsRef.current.some(t => t.color === cityRules[city].color && t.material === cityRules[city].material)) {
+                const thread = createThread(cityRules[city], threadsRef.current.length + newThreads.length);
+                newThreads.push(thread);
+            }
         }
-        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-        console.log('Loaded threads:', threadsRef.current);
+        if (newThreads.length > 0) {
+            threadsRef.current = [...threadsRef.current, ...newThreads];
+            setThreads(threadsRef.current);
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+            console.log('Added country/city threads:', newThreads);
+        }
     }, []);
 
     const createThread = (rule, index) => {
@@ -438,18 +451,28 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     };
 
     const animateThreads = (ctx) => {
+        if (!ctx) {
+            console.error('Canvas context is not available');
+            return;
+        }
+        console.log('Animating threads:', threads);
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        let hasAnimatingThreads = false;
         threads.forEach(thread => {
             thread.progress = Math.min(thread.progress + 0.02, 1);
             thread.opacity = thread.progress < 0.8 ? thread.progress : Math.max(1 - (thread.progress - 0.8) / 0.2, 0);
             drawThread(ctx, thread);
+            if (thread.progress < 1) hasAnimatingThreads = true;
         });
-        if (threads.some(thread => thread.progress < 1)) {
+        if (hasAnimatingThreads) {
             requestAnimationFrame(() => animateThreads(ctx));
+        } else {
+            console.log('Animation completed for threads:', threads);
         }
     };
 
     const drawThread = (ctx, thread) => {
+        console.log('Drawing thread:', thread);
         ctx.globalAlpha = thread.opacity;
         ctx.strokeStyle = thread.color;
         ctx.fillStyle = thread.color;
@@ -573,22 +596,36 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
 
     React.useEffect(() => {
         const canvas = canvasRef.current;
+        if (!canvas) {
+            console.error('Canvas ref is null');
+            return;
+        }
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('Failed to get canvas context');
+            return;
+        }
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        console.log('Canvas initialized with size:', canvas.width, canvas.height);
+
         const handleResize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            threads.forEach(thread => drawThread(ctx, thread));
+            console.log('Canvas resized to:', canvas.width, canvas.height);
+            animateThreads(ctx);
         };
         window.addEventListener('resize', handleResize);
+
+        // Запускаем анимацию
         animateThreads(ctx);
+
         return () => window.removeEventListener('resize', handleResize);
     }, [threads]);
 
     React.useEffect(() => {
-        if (threadsRef.current.length !== threads.length) {
-            console.log('Updating threads:', threadsRef.current);
+        if (threadsRef.current.length !== threads.length || threadsRef.current.some((t, i) => t !== threads[i])) {
+            console.log('Updating threads state:', threadsRef.current);
             setThreads([...threadsRef.current]);
             localStorage.setItem('threads', JSON.stringify(threadsRef.current));
         }
@@ -607,6 +644,8 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                             link.href = canvas.toDataURL('image/png');
                             link.download = 'my-gobelin.png';
                             link.click();
+                        } else {
+                            console.error('Canvas not available for download');
                         }
                     }}
                 >
@@ -629,13 +668,15 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                                     setShareModalOpen(true);
                                 }
                             });
+                        } else {
+                            console.error('Canvas not available for share');
                         }
                     }}
                 >
                     {translations[language].share}
                 </button>
             </div>
-            <canvas ref={canvasRef}></canvas>
+            <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}></canvas>
         </div>
     );
 }
@@ -707,17 +748,22 @@ function AIChat({ threadsRef, language, translations }) {
         const newThreads = [];
         if (tempCountry && countryRules[tempCountry]) {
             countryRules[tempCountry].forEach(rule => {
-                const thread = createThread(rule, threadsRef.current.length + newThreads.length);
-                newThreads.push(thread);
+                if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
+                    const thread = createThread(rule, threadsRef.current.length + newThreads.length);
+                    newThreads.push(thread);
+                }
             });
         }
         if (tempCity && cityRules[tempCity]) {
-            const thread = createThread(cityRules[tempCity], threadsRef.current.length + newThreads.length);
-            newThreads.push(thread);
+            if (!threadsRef.current.some(t => t.color === cityRules[tempCity].color && t.material === cityRules[tempCity].material)) {
+                const thread = createThread(cityRules[tempCity], threadsRef.current.length + newThreads.length);
+                newThreads.push(thread);
+            }
         }
         if (newThreads.length > 0) {
             threadsRef.current = [...threadsRef.current, ...newThreads];
             localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+            console.log('Saved new threads from saveData:', newThreads);
         }
     };
 
@@ -741,6 +787,7 @@ function AIChat({ threadsRef, language, translations }) {
         if (newMessages.length === 0) {
             threadsRef.current = [];
             localStorage.setItem('threads', JSON.stringify([]));
+            console.log('Cleared all threads due to empty chat history');
         }
     };
 
@@ -749,6 +796,7 @@ function AIChat({ threadsRef, language, translations }) {
         localStorage.removeItem('chatHistory');
         threadsRef.current = [];
         localStorage.setItem('threads', JSON.stringify([]));
+        console.log('Cleared chat history and threads');
     };
 
     const startEditing = (index, content) => {
