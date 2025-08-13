@@ -11,173 +11,229 @@
     <meta property="og:title" content="Digital Tapestry | Feminist Gobelin">
     <meta property="og:description" content="Ask questions about feminism and get answers from our AI model, trained on multilingual resources.">
     <meta property="og:image" content="https://cdn.wegic.ai/assets/email/wegic-large-preview.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
     <style>
         :root {
-            --primary: #8b5cf6; /* Purple */
-            --accent: #ec4899; /* Pink */
-            --positive: #3b82f6; /* Blue */
-            --text: #333333; /* Darker text for contrast */
-            --bg: #ffffff; /* White background like wegic.ai */
+            --primary-6: #165DF5; /* Blue for buttons and accents */
+            --color-text-1: #333; /* Primary text */
+            --gray-1: #F7F8FA; /* Input background */
+            --gray-9: #272E3B; /* Secondary text */
+            --color-neutral-3: rgba(0,0,0,0.1); /* Borders */
         }
         body {
-            background: var(--bg);
+            margin: 0;
+            background: #fff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--text);
-            margin: 0;
-        }
-        #global-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100vw;
-            height: 100vh;
-            background: var(--bg);
-            z-index: 1000;
-        }
-        @keyframes rectAnimation {
-            0% { left: 30%; }
-            100% { left: 100%; }
-        }
-        #global-loading #rect {
-            position: absolute;
-            left: 0;
-            width: 15px;
-            height: 75px;
-            background-color: var(--primary);
-            filter: blur(2.56px);
-            transform: rotate(30deg);
-            animation: rectAnimation 2s linear infinite;
-        }
-        #global-loading .logo {
-            width: 150px;
-            height: auto;
+            font-family: 'Inter', system-ui, Arial, sans-serif;
+            color: var(--color-text-1);
         }
         .container {
             display: flex;
             flex-direction: column;
             width: 90vw;
-            max-width: 600px;
-            gap: 1rem;
-            padding: 1.5rem;
-            background: var(--bg);
+            max-width: 800px;
+            gap: 1.5rem;
+            padding: 50px 120px;
+            background: #fff;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             text-align: center;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         .prompt-container {
+            position: relative;
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
-        .response {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.9rem;
-            color: var(--text);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            max-height: 12rem;
-            overflow-y: auto;
-            line-height: 1.6;
-            position: relative;
-        }
-        input, select, textarea {
-            transition: all 0.2s ease;
-            appearance: none;
-            border: 1px solid #e5e7eb;
-            background: #f9fafb;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            padding: 0.75rem;
-            color: var(--text);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        .submit-input {
             flex-grow: 1;
-            min-height: 2.5rem;
-            line-height: 1.4;
-            width: 100%;
+            background: var(--gray-1);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 12px 40px 12px 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--color-text-1);
+            resize: none;
+            overflow: hidden;
+            min-height: 40px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        input:focus, select:focus, textarea:focus {
+        .submit-input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+            border-color: var(--primary-6);
+            box-shadow: 0 0 0 2px rgba(22,93,255,0.2);
         }
-        button.submit, button.clear {
-            background: var(--primary);
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            width: 2.5rem;
-            height: 2.5rem;
+        .submit-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #000;
+            border: 0;
+            border-radius: 12px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            box-shadow: 0 10px 10px 0 rgba(0,0,0,0.04) inset, 0 -1px 0.5px 0.5px rgba(255,255,255,0.2) inset, 0 0.5px 2px 0.5px rgba(255,255,255,0.2) inset, 0 -0.5px 0.5px 0 rgba(255,255,255,0.2) inset, 0 0.5px 0 0 rgba(255,255,255,0.2) inset, 0 0.5px 0.5px 0 rgba(0,0,0,0.2), 0 0 0 0.5px #000;
+            cursor: pointer;
+            transition: all 0.1s linear;
         }
-        button.submit:hover:not(:disabled), button.clear:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        .submit-button:hover:not(:disabled) {
+            transform: translateY(-50%) scale(1.1);
         }
-        button.submit:active:not(:disabled), button.clear:active:not(:disabled) {
-            transform: scale(0.95);
+        .submit-button:active:not(:disabled) {
+            transform: translateY(-50%) scale(0.9);
         }
-        button.submit:disabled, button.clear:disabled {
+        .submit-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        button.primary {
-            background: var(--primary);
-            color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-6);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        button.primary:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        button.primary:active:not(:disabled) {
-            transform: scale(0.95);
+        .response {
+            background: #F7F6F5;
+            border-radius: 12px;
+            padding: 24px;
+            font-size: 15px;
+            line-height: 24px;
+            color: rgba(0,0,0,0.8);
+            position: relative;
+            transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
         }
-        .details {
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-            max-height: 0;
+        .response:hover {
+            background: #000;
+            color: #fff;
+        }
+        .clear-button {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
             opacity: 0;
-            overflow: hidden;
+            transition: opacity 0.2s ease-in-out;
         }
-        .details.open {
-            max-height: 400px;
+        .response:hover .clear-button {
             opacity: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
         }
         .details-toggle {
             cursor: pointer;
-            color: var(--primary);
-            font-size: 0.85rem;
+            color: var(--primary-6);
+            font-size: 13px;
             font-weight: 500;
             transition: color 0.2s ease;
         }
         .details-toggle:hover {
-            color: var(--accent);
+            color: #000;
+        }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 576px;
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 20px;
+            animation: zoomModal-enter 0.4s cubic-bezier(0.3,1.3,0.3,1);
+        }
+        @keyframes zoomModal-enter {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .modal-content {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            height: 48px;
+            border-bottom: 1px solid var(--color-neutral-3);
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text-1);
+            flex: 1;
+            text-align: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--color-text-1);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--color-neutral-3);
+        }
+        .modal-button {
+            background: var(--primary-6);
+            color: #fff;
+            border: 0;
+            border-radius: 12px;
+            padding: 0 20px;
+            height: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.1s linear;
+        }
+        .modal-button:hover {
+            transform: scale(1.05);
+        }
+        .modal-button:active {
+            transform: scale(0.95);
+        }
+        .modal-input, .modal-select {
+            background: var(--gray-1);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--color-text-1);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .modal-input:focus, .modal-select:focus {
+            outline: none;
+            border-color: var(--primary-6);
+            box-shadow: 0 0 0 2px rgba(22,93,255,0.2);
         }
         canvas {
             position: fixed;
@@ -187,52 +243,41 @@
             width: 100vw;
             height: 100vh;
         }
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             .container {
-                padding: 1rem;
+                padding: 30px 24px;
                 max-width: 95%;
             }
-            input, select, textarea {
-                font-size: 0.8rem;
-                padding: 0.5rem;
+            .submit-input, .modal-input, .modal-select {
+                font-size: 12px;
+                padding: 10px 36px 10px 10px;
             }
-            button.submit, button.clear {
-                width: 2rem;
-                height: 2rem;
+            .submit-button, .modal-button {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
             }
-            button.submit svg, button.clear svg {
-                width: 1rem;
-                height: 1rem;
-            }
-            button.primary {
-                padding: 0.4rem 0.75rem;
-                font-size: 0.75rem;
-            }
-            .details-toggle {
-                font-size: 0.75rem;
-            }
-            .prompt-container {
-                gap: 0.3rem;
+            .spinner {
+                width: 18px;
+                height: 18px;
+                border-width: 1.5px;
             }
             .response {
-                font-size: 0.8rem;
-                padding: 0.75rem;
-                max-height: 10rem;
+                font-size: 14px;
+                padding: 16px;
             }
-        }
-        textarea {
-            resize: none;
-            overflow: hidden;
+            .modal {
+                width: 360px;
+                border-radius: 20px;
+            }
+            .modal-content {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="root">
-        <div id="global-loading">
-            <img class="logo" src="https://cdn.wegic.ai/static/svg/TextLogo-DUkRJclD.svg" alt="Feminist Gobelin" />
-            <div id="rect"></div>
-        </div>
-    </div>
+    <div id="root"></div>
     <script type="text/babel">
         function GobelinApp() {
             const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
@@ -249,7 +294,7 @@
             const [language, setLanguage] = React.useState('en');
             const canvasRef = React.useRef(null);
             const threadsRef = React.useRef([]);
-            const loadingRef = React.useRef(null);
+            const abortControllerRef = React.useRef(null);
 
             // Мультиязычные тексты
             const translations = {
@@ -263,7 +308,8 @@
                     reset: "Reset",
                     clear: "Clear",
                     errorResponse: "An error occurred. Please try again later.",
-                    fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)"
+                    fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
+                    modalTitle: "User Details"
                 },
                 ru: {
                     placeholder: "Задайте вопрос о феминизме...",
@@ -275,7 +321,8 @@
                     reset: "Сбросить",
                     clear: "Очистить",
                     errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
-                    fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)"
+                    fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
+                    modalTitle: "Данные пользователя"
                 },
                 es: {
                     placeholder: "Haz una pregunta sobre feminismo...",
@@ -287,7 +334,8 @@
                     reset: "Restablecer",
                     clear: "Limpiar",
                     errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
-                    fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)"
+                    fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
+                    modalTitle: "Detalles del usuario"
                 }
             };
 
@@ -324,6 +372,7 @@
                 localStorage.setItem('name', tempName);
                 localStorage.setItem('country', tempCountry);
                 localStorage.setItem('city', tempCity);
+                setShowDetails(false);
             };
 
             // Сброс данных
@@ -337,6 +386,7 @@
                 localStorage.removeItem('name');
                 localStorage.removeItem('country');
                 localStorage.removeItem('city');
+                setShowDetails(false);
             };
 
             // Очистка ответа
@@ -366,7 +416,7 @@
                 const startY = isHorizontal ? Math.random() * (ctx.canvas.height - 2 * padding) + padding : padding;
                 const endX = isHorizontal ? ctx.canvas.width - padding : startX;
                 const endY = isHorizontal ? startY : length + padding;
-                const color = emotion === 'positive' ? '#3b82f6' : emotion === 'negative' ? '#ec4899' : '#8b5cf6';
+                const color = emotion === 'positive' ? '#3b82f6' : emotion === 'negative' ? '#ec4899' : '#165DF5';
                 const thickness = Math.min(input.length / 5, 6);
                 let thread = { type, startX, startY, endX, endY, color, thickness, opacity: 0, progress: 0 };
 
@@ -488,7 +538,7 @@
                 }
             };
 
-            // Инициализация canvas и загрузка
+            // Инициализация canvas
             React.useEffect(() => {
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
@@ -499,23 +549,15 @@
                     canvas.height = window.innerHeight;
                 };
                 window.addEventListener('resize', handleResize);
-                // Скрыть загрузку через 2 секунды
-                setTimeout(() => {
-                    if (loadingRef.current) {
-                        loadingRef.current.style.display = 'none';
-                    }
-                }, 2000);
                 return () => window.removeEventListener('resize', handleResize);
             }, []);
 
-            // Обработка отправки
+            // Обработка отправки и отмены
             const handleSubmit = async () => {
                 if (!prompt) return;
                 setIsLoading(true);
                 setResponse('');
-                if (loadingRef.current) {
-                    loadingRef.current.style.display = 'flex';
-                }
+                abortControllerRef.current = new AbortController();
                 try {
                     const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
                     const type = threadTypes[Math.floor(Math.random() * threadTypes.length)];
@@ -527,7 +569,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_id: userId, name, country, city, prompt }),
-                        signal: AbortSignal.timeout(60000)
+                        signal: abortControllerRef.current.signal
                     });
                     const data = await res.json();
                     let responseText = data.response || 'No response received.';
@@ -540,20 +582,35 @@
                     }
                     setResponse(responseText);
                 } catch (error) {
-                    console.error('Error:', error);
-                    setResponse(translations[language].errorResponse);
+                    if (error.name === 'AbortError') {
+                        setResponse('');
+                    } else {
+                        console.error('Error:', error);
+                        setResponse(translations[language].errorResponse);
+                    }
                 } finally {
                     setIsLoading(false);
-                    setPrompt('');
-                    if (loadingRef.current) {
-                        loadingRef.current.style.display = 'none';
-                    }
+                    abortControllerRef.current = null;
+                }
+            };
+
+            // Отмена запроса
+            const cancelRequest = () => {
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                    setIsLoading(false);
+                    setResponse('');
+                    threadsRef.current = [];
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
                 }
             };
 
             return (
                 <div className="container">
                     <select
+                        className="modal-select"
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
                         style={{ width: '150px', alignSelf: 'center' }}
@@ -567,18 +624,18 @@
                             {response}
                             <button
                                 onClick={clearResponse}
-                                className="clear"
+                                className="clear-button"
                                 aria-label={translations[language].clear}
                             >
-                                <svg className="h-5 w-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
                     )}
                     <div className="prompt-container">
                         <textarea
-                            id="prompt"
+                            className="submit-input"
                             value={prompt}
                             onChange={(e) => {
                                 setPrompt(e.target.value);
@@ -591,73 +648,98 @@
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
-                                    handleSubmit();
+                                    if (!isLoading) {
+                                        handleSubmit();
+                                    } else {
+                                        cancelRequest();
+                                    }
                                 }
                             }}
                         />
                         <button
-                            onClick={handleSubmit}
-                            disabled={isLoading}
-                            className="submit"
-                            aria-label="Submit"
+                            onClick={isLoading ? cancelRequest : handleSubmit}
+                            disabled={!prompt && !isLoading}
+                            className="submit-button"
+                            aria-label={isLoading ? "Cancel" : "Submit"}
                         >
-                            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
+                            {isLoading ? (
+                                <div className="spinner"></div>
+                            ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                            )}
                         </button>
                     </div>
                     <span
                         className="details-toggle"
-                        onClick={() => setShowDetails(!showDetails)}
+                        onClick={() => setShowDetails(true)}
                         role="button"
                         tabIndex={0}
-                        onKeyPress={(e) => e.key === 'Enter' && setShowDetails(!showDetails)}
+                        onKeyPress={(e) => e.key === 'Enter' && setShowDetails(true)}
                         aria-expanded={showDetails}
                         aria-label={translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
                     >
                         {translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
                     </span>
                     {showDetails && (
-                        <div className="details open">
-                            <input
-                                id="name"
-                                type="text"
-                                value={tempName}
-                                onChange={(e) => setTempName(e.target.value)}
-                                placeholder={translations[language].namePlaceholder}
-                            />
-                            <select
-                                id="country"
-                                value={tempCountry}
-                                onChange={(e) => { setTempCountry(e.target.value); setTempCity(''); }}
-                            >
-                                <option value="">{translations[language].countryPlaceholder}</option>
-                                {countries.map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                            <select
-                                id="city"
-                                value={tempCity}
-                                onChange={(e) => setTempCity(e.target.value)}
-                                disabled={!tempCountry}
-                            >
-                                <option value="">{translations[language].cityPlaceholder}</option>
-                                {(citiesByCountry[tempCountry] || []).map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                            <div className="flex gap-3 justify-center">
+                        <div className="modal">
+                            <div className="modal-header">
+                                <span className="modal-title">{translations[language].modalTitle}</span>
+                                <span
+                                    className="modal-close"
+                                    onClick={() => setShowDetails(false)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyPress={(e) => e.key === 'Enter' && setShowDetails(false)}
+                                    aria-label="Close"
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <div className="modal-content">
+                                <input
+                                    className="modal-input"
+                                    type="text"
+                                    value={tempName}
+                                    onChange={(e) => setTempName(e.target.value)}
+                                    placeholder={translations[language].namePlaceholder}
+                                />
+                                <select
+                                    className="modal-select"
+                                    value={tempCountry}
+                                    onChange={(e) => { setTempCountry(e.target.value); setTempCity(''); }}
+                                >
+                                    <option value="">{translations[language].countryPlaceholder}</option>
+                                    {countries.map((c) => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    className="modal-select"
+                                    value={tempCity}
+                                    onChange={(e) => setTempCity(e.target.value)}
+                                    disabled={!tempCountry}
+                                >
+                                    <option value="">{translations[language].cityPlaceholder}</option>
+                                    {(citiesByCountry[tempCountry] || []).map((c) => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="modal-footer">
                                 <button
                                     onClick={saveData}
-                                    className="primary"
+                                    className="modal-button"
                                     aria-label={translations[language].save}
                                 >
                                     {translations[language].save}
                                 </button>
                                 <button
                                     onClick={resetData}
-                                    className="primary"
+                                    className="modal-button"
                                     aria-label={translations[language].reset}
                                 >
                                     {translations[language].reset}
@@ -666,10 +748,6 @@
                         </div>
                     )}
                     <canvas ref={canvasRef}></canvas>
-                    <div ref={loadingRef} id="global-loading">
-                        <img class="logo" src="https://cdn.wegic.ai/static/svg/TextLogo-DUkRJclD.svg" alt="Feminist Gobelin" />
-                        <div id="rect"></div>
-                    </div>
                 </div>
             );
         }
