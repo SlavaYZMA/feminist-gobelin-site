@@ -5,7 +5,7 @@ function App() {
     const [currentPage, setCurrentPage] = React.useState('about');
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [shareModalOpen, setShareModalOpen] = React.useState(false);
-    const [language, setLanguage] = React.useState('en');
+    const [language, setLanguage] = React.useState('ru'); // Изменено на 'ru' по умолчанию
 
     const pages = {
         about: { name: 'About', ru: 'О проекте', es: 'Acerca de' },
@@ -130,7 +130,7 @@ function App() {
                     <div className="page">
                         <h1>{pages.about[language] || pages.about.name}</h1>
                         <p>
-                            Feminist Gobelin is a digital platform dedicated to raising awareness about feminism and gender equality. Our mission is to provide a safe space for learning, creating data-art based on your questions, and supporting initiatives against domestic violence. Join us to explore, create, and contribute to a more equitable world.
+                            Feminist Gobelin — это цифровая платформа, посвящённая повышению осведомлённости о феминизме и гендерном равенстве. Наша миссия — предоставить безопасное пространство для обучения, создания дата-арта на основе ваших вопросов и поддержки инициатив против домашнего насилия. Присоединяйтесь, чтобы исследовать, создавать и способствовать более справедливому миру.
                         </p>
                     </div>
                 )}
@@ -138,15 +138,15 @@ function App() {
                     <div className="page">
                         <h1>{pages.instructions[language] || pages.instructions.name}</h1>
                         <p>
-                            If you or someone you know is experiencing domestic violence, here are steps to seek help:
+                            Если вы или кто-то из ваших знакомых сталкивается с домашним насилием, вот шаги для получения помощи:
                             <ul style={{ textAlign: 'left', margin: '16px 0' }}>
-                                <li>Call emergency services (e.g., 911 in the US, 112 in the EU, or local equivalents).</li>
-                                <li>Contact local shelters or hotlines for support (e.g., National Domestic Violence Hotline: 1-800-799-7233).</li>
-                                <li>Document incidents safely for legal purposes.</li>
-                                <li>Reach out to trusted friends or family for support.</li>
-                                <li>Explore legal options, such as restraining orders.</li>
+                                <li>Обратитесь в экстренные службы (например, 112 в ЕС, 102 в Украине или местные аналоги).</li>
+                                <li>Свяжитесь с местными приютами или горячими линиями (например, Национальная горячая линия по предотвращению домашнего насилия в Украине: 0 800 500 335).</li>
+                                <li>Безопасно документируйте инциденты для юридических целей.</li>
+                                <li>Обратитесь за поддержкой к доверенным друзьям или семье.</li>
+                                <li>Изучите юридические возможности, такие как запретительные ордера.</li>
                             </ul>
-                            Always prioritize your safety and seek professional help when needed.
+                            Всегда ставьте свою безопасность на первое место и обращайтесь за профессиональной помощью.
                         </p>
                     </div>
                 )}
@@ -156,7 +156,7 @@ function App() {
                     <div className="page">
                         <h1>{pages.socials[language] || pages.socials.name}</h1>
                         <p>
-                            Connect with us on social media to stay updated and join the conversation:
+                            Подключайтесь к нам в социальных сетях, чтобы оставаться в курсе и присоединиться к разговору:
                             <div className="footer-socials" style={{ marginTop: '16px' }}>
                                 <a href="https://twitter.com/feministgobelin" target="_blank" rel="noopener noreferrer">Twitter</a>
                                 <a href="https://instagram.com/feministgobelin" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -164,7 +164,7 @@ function App() {
                             </div>
                             Email: contact@feministgobelin.org
                             <br />
-                            Phone: +1-555-123-4567
+                            Телефон: +1-555-123-4567
                         </p>
                     </div>
                 )}
@@ -172,13 +172,13 @@ function App() {
                     <div className="page">
                         <h1>{pages.support[language] || pages.support.name}</h1>
                         <p>
-                            You can support Feminist Gobelin in the following ways:
+                            Вы можете поддержать Feminist Gobelin следующими способами:
                             <ul style={{ textAlign: 'left', margin: '16px 0' }}>
-                                <li>Donate via our crowdfunding platform: <a href="https://patreon.com/feministgobelin" target="_blank" rel="noopener noreferrer">Patreon</a></li>
-                                <li>Volunteer your skills (contact us at volunteer@feministgobelin.org).</li>
-                                <li>Spread the word by sharing our mission on social media.</li>
+                                <li>Пожертвуйте через нашу платформу: <a href="https://patreon.com/feministgobelin" target="_blank" rel="noopener noreferrer">Patreon</a></li>
+                                <li>Предложите свои навыки (свяжитесь с нами: volunteer@feministgobelin.org).</li>
+                                <li>Распространите информацию, поделившись нашей миссией в соцсетях.</li>
                             </ul>
-                            Your support helps us continue our work in promoting gender equality.
+                            Ваша поддержка помогает нам продолжать работу по продвижению гендерного равенства.
                         </p>
                     </div>
                 )}
@@ -196,7 +196,7 @@ function App() {
                     ))}
                 </div>
                 <div className="footer-contact">
-                    Email: contact@feministgobelin.org | Phone: +1-555-123-4567
+                    Email: contact@feministgobelin.org | Телефон: +1-555-123-4567
                 </div>
                 <div className="footer-socials">
                     <a href="https://twitter.com/feministgobelin" target="_blank" rel="noopener noreferrer">Twitter</a>
@@ -214,7 +214,7 @@ function App() {
                             role="button"
                             tabIndex={0}
                             onKeyPress={(e) => e.key === 'Enter' && setShareModalOpen(false)}
-                            aria-label="Close"
+                            aria-label="Закрыть"
                         >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -227,8 +227,8 @@ function App() {
                                 className="share-button"
                                 onClick={() => {
                                     navigator.share({
-                                        title: 'My Feminist Gobelin',
-                                        text: 'Check out my unique data-art gobelin created with Feminist Gobelin!',
+                                        title: 'Мой феминистский гобелен',
+                                        text: 'Посмотрите мой уникальный дата-арт гобелен, созданный с Feminist Gobelin!',
                                         url: 'https://feminist-gobelin-site.netlify.app'
                                     }).then(() => setShareModalOpen(false));
                                 }}
@@ -236,7 +236,7 @@ function App() {
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                                 </svg>
-                                Share via Native Share
+                                Поделиться через нативный шаринг
                             </button>
                         ) : (
                             <>
@@ -244,17 +244,17 @@ function App() {
                                     className="share-button"
                                     onClick={() => {
                                         navigator.clipboard.writeText('https://feminist-gobelin-site.netlify.app');
-                                        alert(translations[language].copy + 'ed!');
+                                        alert(translations[language].copy + '!');
                                         setShareModalOpen(false);
                                     }}
                                 >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
-                                    Copy Link
+                                    Скопировать ссылку
                                 </button>
                                 <a
-                                    href="https://twitter.com/intent/tweet?text=Check%20out%20my%20Feminist%20Gobelin!&url=https://feminist-gobelin-site.netlify.app"
+                                    href="https://twitter.com/intent/tweet?text=Посмотрите%20мой%20Феминистский%20Гобелен!&url=https://feminist-gobelin-site.netlify.app"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="share-button"
@@ -262,7 +262,7 @@ function App() {
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />
                                     </svg>
-                                    Share on Twitter
+                                    Поделиться в Twitter
                                 </a>
                                 <a
                                     href="https://www.facebook.com/sharer/sharer.php?u=https://feminist-gobelin-site.netlify.app"
@@ -273,7 +273,7 @@ function App() {
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
                                     </svg>
-                                    Share on Facebook
+                                    Поделиться в Facebook
                                 </a>
                             </>
                         )}
@@ -295,7 +295,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         textureCanvas.width = 100;
         textureCanvas.height = 100;
         const tCtx = textureCanvas.getContext('2d');
-        tCtx.fillStyle = color; // Use thread color as base
+        tCtx.fillStyle = color;
         tCtx.fillRect(0, 0, 100, 100);
         if (material === 'silk') {
             tCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -418,14 +418,14 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         if (country && countryRules[country]) {
             countryRules[country].forEach(rule => {
                 if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
-                    const thread = createThread(rule, threadsRef.current.length + newThreads.length);
+                    const thread = createThread(rule, threadsRef.current);
                     newThreads.push(thread);
                 }
             });
         }
         if (city && cityRules[city]) {
             if (!threadsRef.current.some(t => t.color === cityRules[city].color && t.material === cityRules[city].material)) {
-                const thread = createThread(cityRules[city], threadsRef.current.length + newThreads.length);
+                const thread = createThread(cityRules[city], threadsRef.current);
                 newThreads.push(thread);
             }
         }
@@ -437,8 +437,10 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         }
     }, []);
 
-    const createThread = (rule, index) => {
-        const yPos = 50 + index * 30; // Increased spacing for thicker threads
+    const createThread = (rule, existingThreads) => {
+        // Вычисляем суммарную толщину предыдущих нитей для определения yPos
+        const totalHeight = existingThreads.reduce((sum, thread) => sum + thread.thickness, 0);
+        const yPos = 50 + totalHeight; // Начальная позиция + суммарная толщина
         return {
             ...rule,
             startX: 50,
@@ -479,12 +481,12 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const drawThread = (ctx, thread) => {
         console.log('Drawing thread:', thread);
         ctx.globalAlpha = thread.opacity;
-        ctx.strokeStyle = thread.color; // Set stroke style to thread color
-        ctx.fillStyle = thread.color; // Set fill style to thread color
+        ctx.strokeStyle = thread.color;
+        ctx.fillStyle = thread.color;
         ctx.lineWidth = thread.thickness;
-        const texture = createTexture(thread.material, ctx, thread.color); // Pass thread color to texture
+        const texture = createTexture(thread.material, ctx, thread.color);
 
-        // Apply effects
+        // Применение эффектов
         if (thread.effect === 'glow') {
             ctx.shadowBlur = 15;
             ctx.shadowColor = `${thread.color}80`;
@@ -531,7 +533,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             ctx.shadowBlur = 0;
         }
 
-        // Apply texture only for stroke or fill if needed
+        // Применение текстуры
         if (['horizontal', 'wave', 'dashed', 'stripes'].includes(thread.shape)) {
             ctx.strokeStyle = texture;
         } else if (['rectangle', 'circle', 'crescent-star', 'skyline'].includes(thread.shape)) {
@@ -559,13 +561,13 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         } else if (thread.shape === 'stripes') {
             for (let i = 0; i < 5; i++) {
                 ctx.beginPath();
-                ctx.moveTo(thread.startX, thread.startY + i * 15);
-                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * 15);
+                ctx.moveTo(thread.startX, thread.startY + i * thread.thickness);
+                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * thread.thickness);
                 ctx.strokeStyle = i % 2 === 0 ? '#B22234' : '#FFFFFF';
                 ctx.stroke();
             }
         } else if (thread.shape === 'rectangle') {
-            ctx.fillRect(thread.startX, thread.startY - 20, (thread.endX - thread.startX) * thread.progress, 40);
+            ctx.fillRect(thread.startX, thread.startY - thread.thickness / 2, (thread.endX - thread.startX) * thread.progress, thread.thickness);
             if (thread.effect === 'stars') {
                 ctx.fillStyle = '#FFFFFF';
                 for (let i = 0; i < 10; i++) {
@@ -576,11 +578,11 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             }
         } else if (thread.shape === 'circle') {
             ctx.beginPath();
-            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, 20 * thread.progress, 0, Math.PI * 2);
+            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, thread.thickness / 2 * thread.progress, 0, Math.PI * 2);
             ctx.fill();
         } else if (thread.shape === 'crescent-star') {
             ctx.beginPath();
-            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, 20 * thread.progress, 0.5 * Math.PI, 2.5 * Math.PI);
+            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, thread.thickness / 2 * thread.progress, 0.5 * Math.PI, 2.5 * Math.PI);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo((thread.startX + thread.endX) / 2 + 10, thread.startY);
@@ -596,15 +598,15 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             ctx.beginPath();
             ctx.moveTo(thread.startX, thread.startY);
             for (let x = 0; x <= (thread.endX - thread.startX) * thread.progress; x += 20) {
-                ctx.lineTo(thread.startX + x, thread.startY - Math.random() * 20);
+                ctx.lineTo(thread.startX + x, thread.startY - Math.random() * thread.thickness);
             }
             ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
             ctx.stroke();
         }
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = thread.color; // Reset stroke style to thread color
-        ctx.fillStyle = thread.color; // Reset fill style to thread color
+        ctx.strokeStyle = thread.color;
+        ctx.fillStyle = thread.color;
     };
 
     React.useEffect(() => {
@@ -665,7 +667,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
 
     return (
         <div className="page">
-            <h1>{translations[language].myGobelin || 'My Gobelin'}</h1>
+            <h1>{translations[language].myGobelin || 'Мой гобелен'}</h1>
             <div className="gobelin-buttons">
                 <button
                     className="gobelin-button"
@@ -718,8 +720,8 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                                 const file = new File([blob], 'my-gobelin.png', { type: 'image/png' });
                                 if (navigator.share) {
                                     navigator.share({
-                                        title: 'My Feminist Gobelin',
-                                        text: 'Check out my unique data-art gobelin created with Feminist Gobelin!',
+                                        title: 'Мой феминистский гобелен',
+                                        text: 'Посмотрите мой уникальный дата-арт гобелен, созданный с Feminist Gobelin!',
                                         files: [file]
                                     }).then(() => setShareModalOpen(false)).catch(error => {
                                         console.error('Error sharing canvas:', error);
@@ -811,14 +813,14 @@ function AIChat({ threadsRef, language, translations }) {
         if (tempCountry && countryRules[tempCountry]) {
             countryRules[tempCountry].forEach(rule => {
                 if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
-                    const thread = createThread(rule, threadsRef.current.length + newThreads.length);
+                    const thread = createThread(rule, threadsRef.current);
                     newThreads.push(thread);
                 }
             });
         }
         if (tempCity && cityRules[tempCity]) {
             if (!threadsRef.current.some(t => t.color === cityRules[tempCity].color && t.material === cityRules[tempCity].material)) {
-                const thread = createThread(cityRules[tempCity], threadsRef.current.length + newThreads.length);
+                const thread = createThread(cityRules[tempCity], threadsRef.current);
                 newThreads.push(thread);
             }
         }
@@ -878,13 +880,13 @@ function AIChat({ threadsRef, language, translations }) {
 
     const copyText = (text) => {
         navigator.clipboard.writeText(text);
-        alert(translations[language].copy + 'ed!');
+        alert(translations[language].copy + '!');
     };
 
     const shareResponse = (content) => {
-        const shareText = `${content}\n\nGenerated by Feminist Gobelin: https://feminist-gobelin-site.netlify.app`;
+        const shareText = `${content}\n\nСоздано с Feminist Gobelin: https://feminist-gobelin-site.netlify.app`;
         navigator.clipboard.writeText(shareText);
-        alert(translations[language].share + ' link copied!');
+        alert(translations[language].share + ' скопировано!');
     };
 
     const regenerateResponse = async (index) => {
@@ -895,7 +897,7 @@ function AIChat({ threadsRef, language, translations }) {
             const keywords = Object.keys(keywordRules).filter(k => promptMessage.content.toLowerCase().includes(k));
             console.log('Regenerate keywords found:', keywords);
             keywords.forEach(keyword => {
-                const thread = createThread(keywordRules[keyword], threadsRef.current.length);
+                const thread = createThread(keywordRules[keyword], threadsRef.current);
                 threadsRef.current.push(thread);
             });
             localStorage.setItem('threads', JSON.stringify(threadsRef.current));
@@ -905,7 +907,7 @@ function AIChat({ threadsRef, language, translations }) {
                 body: JSON.stringify({ user_id: userId, name, country, city, prompt: promptMessage.content })
             });
             const data = await res.json();
-            let responseText = data.response || 'No response received.';
+            let responseText = data.response || 'Нет ответа.';
             const fullPrompt = promptMessage.fullPrompt || promptMessage.content;
             if (responseText.startsWith(fullPrompt)) {
                 responseText = responseText.substring(fullPrompt.length).trim();
@@ -918,7 +920,7 @@ function AIChat({ threadsRef, language, translations }) {
             setMessages(newMessages);
             localStorage.setItem('chatHistory', JSON.stringify(newMessages));
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Ошибка:', error);
             const newMessages = [...messages];
             newMessages[index] = { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() };
             setMessages(newMessages);
@@ -928,8 +930,10 @@ function AIChat({ threadsRef, language, translations }) {
         }
     };
 
-    const createThread = (rule, index) => {
-        const yPos = 50 + index * 30; // Increased spacing for thicker threads
+    const createThread = (rule, existingThreads) => {
+        // Вычисляем суммарную толщину предыдущих нитей для определения yPos
+        const totalHeight = existingThreads.reduce((sum, thread) => sum + thread.thickness, 0);
+        const yPos = 50 + totalHeight; // Начальная позиция + суммарная толщина
         return {
             ...rule,
             startX: 50,
@@ -951,9 +955,9 @@ function AIChat({ threadsRef, language, translations }) {
         setPrompt('');
         try {
             const keywords = Object.keys(keywordRules).filter(k => prompt.toLowerCase().includes(k));
-            console.log('Keywords found:', keywords);
+            console.log('Найдены ключевые слова:', keywords);
             keywords.forEach(keyword => {
-                const thread = createThread(keywordRules[keyword], threadsRef.current.length);
+                const thread = createThread(keywordRules[keyword], threadsRef.current);
                 threadsRef.current.push(thread);
             });
             localStorage.setItem('threads', JSON.stringify(threadsRef.current));
@@ -963,7 +967,7 @@ function AIChat({ threadsRef, language, translations }) {
                 body: JSON.stringify({ user_id: userId, name, country, city, prompt })
             });
             const data = await res.json();
-            let responseText = data.response || 'No response received.';
+            let responseText = data.response || 'Нет ответа.';
             const fullPromptForResponse = name && city && country ? `${name} from ${city}, ${country}: ${prompt}` : prompt;
             if (responseText.startsWith(fullPromptForResponse)) {
                 responseText = responseText.substring(fullPromptForResponse.length).trim();
@@ -973,7 +977,7 @@ function AIChat({ threadsRef, language, translations }) {
             }
             setMessages(prev => [...prev, { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() }]);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Ошибка:', error);
             setMessages(prev => [...prev, { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() }]);
         } finally {
             setIsLoading(false);
@@ -996,7 +1000,7 @@ function AIChat({ threadsRef, language, translations }) {
 
     return (
         <div className="page">
-            <h1>{translations[language].aiChat || 'AI Chat'}</h1>
+            <h1>{translations[language].aiChat || 'AI чат'}</h1>
             {messages.length > 0 && (
                 <>
                     <div className="chat-container" ref={chatContainerRef}>
@@ -1025,7 +1029,7 @@ function AIChat({ threadsRef, language, translations }) {
                                             <button
                                                 onClick={() => saveEdit(index)}
                                                 className="action-button"
-                                                aria-label="Save Edit"
+                                                aria-label="Сохранить изменения"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -1034,7 +1038,7 @@ function AIChat({ threadsRef, language, translations }) {
                                             <button
                                                 onClick={() => setEditingIndex(null)}
                                                 className="action-button"
-                                                aria-label="Cancel Edit"
+                                                aria-label="Отменить редактирование"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1141,7 +1145,7 @@ function AIChat({ threadsRef, language, translations }) {
                     onClick={isLoading ? cancelRequest : handleSubmit}
                     disabled={!prompt && !isLoading}
                     className="submit-button"
-                    aria-label={isLoading ? "Cancel" : "Submit"}
+                    aria-label={isLoading ? "Отменить" : "Отправить"}
                 >
                     {isLoading ? (
                         <div className="spinner"></div>
@@ -1173,7 +1177,7 @@ function AIChat({ threadsRef, language, translations }) {
                             role="button"
                             tabIndex={0}
                             onKeyPress={(e) => e.key === 'Enter' && setShowDetails(false)}
-                            aria-label="Close"
+                            aria-label="Закрыть"
                         >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
