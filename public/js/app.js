@@ -289,13 +289,13 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const [threads, setThreads] = React.useState([]);
     const animationFrameRef = React.useRef(null);
 
-    const createTexture = (material, ctx) => {
-        console.log('Creating texture for material:', material);
+    const createTexture = (material, ctx, color) => {
+        console.log('Creating texture for material:', material, 'with color:', color);
         const textureCanvas = document.createElement('canvas');
         textureCanvas.width = 100;
         textureCanvas.height = 100;
         const tCtx = textureCanvas.getContext('2d');
-        tCtx.fillStyle = '#fff';
+        tCtx.fillStyle = color; // Use thread color as base
         tCtx.fillRect(0, 0, 100, 100);
         if (material === 'silk') {
             tCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -306,21 +306,21 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                 tCtx.stroke();
             }
         } else if (material === 'cotton') {
-            tCtx.fillStyle = 'rgba(200, 200, 200, 0.1)';
+            tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
             for (let i = 0; i < 100; i += 5) {
                 for (let j = 0; j < 100; j += 5) {
                     tCtx.fillRect(i, j, 2, 2);
                 }
             }
         } else if (material === 'wool') {
-            tCtx.fillStyle = 'rgba(150, 150, 150, 0.3)';
+            tCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             for (let i = 0; i < 100; i += 3) {
                 tCtx.beginPath();
                 tCtx.arc(i, 50 + Math.random() * 10, 1, 0, Math.PI * 2);
                 tCtx.fill();
             }
         } else if (material === 'fur') {
-            tCtx.strokeStyle = 'rgba(100, 100, 100, 0.4)';
+            tCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             for (let i = 0; i < 100; i += 5) {
                 tCtx.beginPath();
                 tCtx.moveTo(i, 50);
@@ -337,71 +337,71 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     };
 
     const keywordRules = {
-        'насилие': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'поддержка': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'семья': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'страх': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'радость': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'помощь': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'свобода': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'надежда': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'потеря': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'любовь': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
-        'violence': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'support': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'family': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'fear': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'joy': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'help': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'freedom': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'hope': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'loss': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'love': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
+        'насилие': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'поддержка': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'семья': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'страх': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'радость': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'помощь': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'свобода': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'надежда': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'потеря': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'любовь': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
+        'violence': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'support': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'family': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'fear': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'joy': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'help': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'freedom': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'hope': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'loss': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'love': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
     };
 
     const countryRules = {
-        'Serbia': [{ color: '#FFC107', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }],
+        'Serbia': [{ color: '#FFC107', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }],
         'Ukraine': [
-            { color: '#005BBB', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFD500', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' }
+            { color: '#005BBB', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFD500', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' }
         ],
         'France': [
-            { color: '#0055A4', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#EF4135', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+            { color: '#0055A4', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#EF4135', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
         ],
         'Germany': [
-            { color: '#000000', thickness: 4, material: 'wool', shape: 'horizontal', effect: 'texture' },
-            { color: '#DD0000', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' },
-            { color: '#FFCE00', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+            { color: '#000000', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'texture' },
+            { color: '#DD0000', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' },
+            { color: '#FFCE00', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
         ],
         'Italy': [
-            { color: '#009246', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'matte' },
-            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#CE2B37', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' }
+            { color: '#009246', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' },
+            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#CE2B37', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
         ],
         'United States': [
-            { color: '#B22234', thickness: 2, material: 'cotton', shape: 'stripes', effect: 'matte' },
-            { color: '#FFFFFF', thickness: 2, material: 'cotton', shape: 'stripes', effect: 'matte' },
-            { color: '#3C3B6E', thickness: 4, material: 'satin', shape: 'rectangle', effect: 'stars' }
+            { color: '#B22234', thickness: 10, material: 'cotton', shape: 'stripes', effect: 'matte' },
+            { color: '#FFFFFF', thickness: 10, material: 'cotton', shape: 'stripes', effect: 'matte' },
+            { color: '#3C3B6E', thickness: 12, material: 'satin', shape: 'rectangle', effect: 'stars' }
         ],
         'Japan': [
-            { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#BC002D', thickness: 4, material: 'silk', shape: 'circle', effect: 'shine' }
+            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
+            { color: '#BC002D', thickness: 12, material: 'silk', shape: 'circle', effect: 'shine' }
         ],
         'Turkey': [
-            { color: '#E30A17', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFFFFF', thickness: 4, material: 'cotton', shape: 'crescent-star', effect: 'matte' }
+            { color: '#E30A17', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
+            { color: '#FFFFFF', thickness: 12, material: 'cotton', shape: 'crescent-star', effect: 'matte' }
         ]
     };
 
     const cityRules = {
-        'Belgrade': { color: '#FFC107', thickness: 4, material: 'cotton', shape: 'wave', effect: 'shine' },
-        'Kyiv': { color: '#005BBB', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'glow-gold' },
-        'Paris': { color: '#FFFFFF', thickness: 4, material: 'satin', shape: 'horizontal', effect: 'glow-pink' },
-        'Berlin': { color: '#000000', thickness: 4, material: 'wool', shape: 'dashed', effect: 'white-inserts' },
-        'New York': { color: '#6B7280', thickness: 4, material: 'cotton', shape: 'skyline', effect: 'matte' },
-        'Tokyo': { color: '#FFFFFF', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'red-splashes' }
+        'Belgrade': { color: '#FFC107', thickness: 12, material: 'cotton', shape: 'wave', effect: 'shine' },
+        'Kyiv': { color: '#005BBB', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'glow-gold' },
+        'Paris': { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'glow-pink' },
+        'Berlin': { color: '#000000', thickness: 12, material: 'wool', shape: 'dashed', effect: 'white-inserts' },
+        'New York': { color: '#6B7280', thickness: 12, material: 'cotton', shape: 'skyline', effect: 'matte' },
+        'Tokyo': { color: '#FFFFFF', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'red-splashes' }
     };
 
     React.useEffect(() => {
@@ -438,7 +438,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     }, []);
 
     const createThread = (rule, index) => {
-        const yPos = 50 + index * 20;
+        const yPos = 50 + index * 30; // Increased spacing for thicker threads
         return {
             ...rule,
             startX: 50,
@@ -465,7 +465,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                 thread.opacity = Math.min(thread.opacity + 0.02, 1);
                 hasAnimatingThreads = true;
             } else {
-                thread.opacity = 1; // Ensure opacity stays at 1 after animation completes
+                thread.opacity = 1;
             }
             drawThread(ctx, thread);
         });
@@ -479,24 +479,23 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const drawThread = (ctx, thread) => {
         console.log('Drawing thread:', thread);
         ctx.globalAlpha = thread.opacity;
-        ctx.strokeStyle = thread.color;
-        ctx.fillStyle = thread.color;
+        ctx.strokeStyle = thread.color; // Set stroke style to thread color
+        ctx.fillStyle = thread.color; // Set fill style to thread color
         ctx.lineWidth = thread.thickness;
-        const texture = createTexture(thread.material, ctx);
-        ctx.strokeStyle = texture;
-        ctx.fillStyle = texture;
+        const texture = createTexture(thread.material, ctx, thread.color); // Pass thread color to texture
 
+        // Apply effects
         if (thread.effect === 'glow') {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 15;
             ctx.shadowColor = `${thread.color}80`;
         } else if (thread.effect === 'shine') {
-            ctx.shadowBlur = 5;
+            ctx.shadowBlur = 8;
             ctx.shadowColor = '#FFFFFF80';
         } else if (thread.effect === 'strong-shine') {
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 20;
             ctx.shadowColor = '#FFFFFFCC';
         } else if (thread.effect === 'texture') {
-            ctx.shadowBlur = 3;
+            ctx.shadowBlur = 5;
             ctx.shadowColor = '#00000040';
         } else if (thread.effect === 'gradient') {
             const gradient = ctx.createLinearGradient(thread.startX, thread.startY, thread.endX, thread.endY);
@@ -515,21 +514,28 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         } else if (thread.effect === 'twinkle') {
             ctx.globalAlpha = thread.opacity * (0.8 + Math.random() * 0.2);
         } else if (thread.effect === 'glow-gold') {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 15;
             ctx.shadowColor = '#FFD70080';
         } else if (thread.effect === 'glow-pink') {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 15;
             ctx.shadowColor = '#EC489980';
         } else if (thread.effect === 'white-inserts') {
-            ctx.setLineDash([10, 5]);
+            ctx.setLineDash([15, 8]);
             ctx.strokeStyle = '#FFFFFF';
         } else if (thread.effect === 'red-splashes') {
             ctx.fillStyle = '#BC002D';
             for (let i = 0; i < 5; i++) {
-                ctx.fillRect(thread.startX + Math.random() * (thread.endX - thread.startX), thread.startY - 5, 2, 2);
+                ctx.fillRect(thread.startX + Math.random() * (thread.endX - thread.startX), thread.startY - 5, 3, 3);
             }
         } else if (thread.effect === 'matte') {
             ctx.shadowBlur = 0;
+        }
+
+        // Apply texture only for stroke or fill if needed
+        if (['horizontal', 'wave', 'dashed', 'stripes'].includes(thread.shape)) {
+            ctx.strokeStyle = texture;
+        } else if (['rectangle', 'circle', 'crescent-star', 'skyline'].includes(thread.shape)) {
+            ctx.fillStyle = texture;
         }
 
         ctx.beginPath();
@@ -545,7 +551,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             }
             ctx.stroke();
         } else if (thread.shape === 'dashed') {
-            ctx.setLineDash([10, 10]);
+            ctx.setLineDash([15, 15]);
             ctx.moveTo(thread.startX, thread.startY);
             ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
             ctx.stroke();
@@ -553,8 +559,8 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         } else if (thread.shape === 'stripes') {
             for (let i = 0; i < 5; i++) {
                 ctx.beginPath();
-                ctx.moveTo(thread.startX, thread.startY + i * 10);
-                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * 10);
+                ctx.moveTo(thread.startX, thread.startY + i * 15);
+                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * 15);
                 ctx.strokeStyle = i % 2 === 0 ? '#B22234' : '#FFFFFF';
                 ctx.stroke();
             }
@@ -597,6 +603,8 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         }
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
+        ctx.strokeStyle = thread.color; // Reset stroke style to thread color
+        ctx.fillStyle = thread.color; // Reset fill style to thread color
     };
 
     React.useEffect(() => {
@@ -618,11 +626,13 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             console.log('Canvas resized to:', canvas.width, canvas.height);
+            threads.forEach(thread => {
+                thread.endX = window.innerWidth - 50;
+            });
             animateThreads(ctx);
         };
         window.addEventListener('resize', handleResize);
 
-        // Запускаем анимацию
         animateThreads(ctx);
 
         return () => {
@@ -767,26 +777,26 @@ function AIChat({ threadsRef, language, translations }) {
     };
 
     const keywordRules = {
-        'насилие': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'поддержка': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'семья': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'страх': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'радость': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'помощь': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'свобода': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'надежда': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'потеря': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'любовь': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
-        'violence': { color: '#000000', thickness: 2, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'support': { color: '#F97316', thickness: 6, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'family': { color: '#EC4899', thickness: 2, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'fear': { color: '#1E3A8A', thickness: 4, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'joy': { color: '#FFD700', thickness: 2, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'help': { color: '#10B981', thickness: 4, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'freedom': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'hope': { color: '#2DD4BF', thickness: 4, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'loss': { color: '#6B7280', thickness: 2, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'love': { color: '#EF4444', thickness: 4, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
+        'насилие': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'поддержка': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'семья': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'страх': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'радость': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'помощь': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'свобода': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'надежда': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'потеря': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'любовь': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
+        'violence': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
+        'support': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
+        'family': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
+        'fear': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
+        'joy': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
+        'help': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
+        'freedom': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
+        'hope': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
+        'loss': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
+        'love': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
     };
 
     const saveData = () => {
@@ -919,7 +929,7 @@ function AIChat({ threadsRef, language, translations }) {
     };
 
     const createThread = (rule, index) => {
-        const yPos = 50 + index * 20;
+        const yPos = 50 + index * 30; // Increased spacing for thicker threads
         return {
             ...rule,
             startX: 50,
