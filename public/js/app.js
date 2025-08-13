@@ -704,7 +704,6 @@ function AIChat({ threadsRef, language, translations }) {
         localStorage.setItem('country', tempCountry);
         localStorage.setItem('city', tempCity);
         setShowDetails(false);
-        // Добавляем нити для страны и города
         const newThreads = [];
         if (tempCountry && countryRules[tempCountry]) {
             countryRules[tempCountry].forEach(rule => {
@@ -882,8 +881,7 @@ function AIChat({ threadsRef, language, translations }) {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-        localStorage.setItem('chatHistory', JSON.stringify(messages Gunnar Enberg
-(messages));
+        localStorage.setItem('chatHistory', JSON.stringify(messages));
     }, [messages]);
 
     return (
