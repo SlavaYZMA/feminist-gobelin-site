@@ -22,6 +22,8 @@
             --gray-1: #F7F8FA; /* Input background */
             --gray-9: #272E3B; /* Secondary text */
             --color-neutral-3: rgba(0,0,0,0.1); /* Borders */
+            --user-bg: #E6F0FA; /* User message background */
+            --assistant-bg: #F7F6F5; /* Assistant message background */
         }
         body {
             margin: 0;
@@ -44,6 +46,67 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             text-align: center;
+        }
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 16px;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .message {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            max-width: 80%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 24px;
+            color: rgba(0,0,0,0.8);
+            position: relative;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-bg);
+        }
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--assistant-bg);
+        }
+        .message:hover .clear-button {
+            opacity: 1;
+        }
+        .message-timestamp {
+            font-size: 12px;
+            color: var(--gray-9);
+            margin-top: 4px;
+        }
+        .clear-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .clear-history {
+            align-self: center;
+            background: transparent;
+            border: none;
+            color: var(--primary-6);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .clear-history:hover {
+            color: #000;
         }
         .prompt-container {
             position: relative;
@@ -110,33 +173,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        .response {
-            background: #F7F6F5;
-            border-radius: 12px;
-            padding: 24px;
-            font-size: 15px;
-            line-height: 24px;
-            color: rgba(0,0,0,0.8);
-            position: relative;
-            transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
-        }
-        .response:hover {
-            background: #000;
-            color: #fff;
-        }
-        .clear-button {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-        .response:hover .clear-button {
-            opacity: 1;
         }
         .details-toggle {
             cursor: pointer;
@@ -248,6 +284,15 @@
                 padding: 30px 24px;
                 max-width: 95%;
             }
+            .chat-container {
+                max-height: 300px;
+                padding: 12px;
+            }
+            .message {
+                font-size: 14px;
+                padding: 12px;
+                max-width: 90%;
+            }
             .submit-input, .modal-input, .modal-select {
                 font-size: 12px;
                 padding: 10px 36px 10px 10px;
@@ -261,10 +306,6 @@
                 width: 18px;
                 height: 18px;
                 border-width: 1.5px;
-            }
-            .response {
-                font-size: 14px;
-                padding: 16px;
             }
             .modal {
                 width: 360px;
@@ -288,13 +329,17 @@
             const [city, setCity] = React.useState(localStorage.getItem('city') || '');
             const [tempCity, setTempCity] = React.useState(city);
             const [prompt, setPrompt] = React.useState('');
-            const [response, setResponse] = React.useState('');
+            const [messages, setMessages] = React.useState(() => {
+                const saved = localStorage.getItem('chatHistory');
+                return saved ? JSON.parse(saved) : [];
+            });
             const [isLoading, setIsLoading] = React.useState(false);
             const [showDetails, setShowDetails] = React.useState(false);
             const [language, setLanguage] = React.useState('en');
             const canvasRef = React.useRef(null);
             const threadsRef = React.useRef([]);
             const abortControllerRef = React.useRef(null);
+            const chatContainerRef = React.useRef(null);
 
             // Мультиязычные тексты
             const translations = {
@@ -307,6 +352,7 @@
                     save: "Save",
                     reset: "Reset",
                     clear: "Clear",
+                    clearHistory: "Clear History",
                     errorResponse: "An error occurred. Please try again later.",
                     fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
                     modalTitle: "User Details"
@@ -320,6 +366,7 @@
                     save: "Сохранить",
                     reset: "Сбросить",
                     clear: "Очистить",
+                    clearHistory: "Очистить историю",
                     errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
                     fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
                     modalTitle: "Данные пользователя"
@@ -333,6 +380,7 @@
                     save: "Guardar",
                     reset: "Restablecer",
                     clear: "Limpiar",
+                    clearHistory: "Limpiar historial",
                     errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
                     fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
                     modalTitle: "Detalles del usuario"
@@ -389,9 +437,23 @@
                 setShowDetails(false);
             };
 
-            // Очистка ответа
-            const clearResponse = () => {
-                setResponse('');
+            // Очистка одного сообщения
+            const clearMessage = (index) => {
+                const newMessages = messages.filter((_, i) => i !== index);
+                setMessages(newMessages);
+                localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+                if (newMessages.length === 0) {
+                    threadsRef.current = [];
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            };
+
+            // Очистка истории
+            const clearHistory = () => {
+                setMessages([]);
+                localStorage.removeItem('chatHistory');
                 threadsRef.current = [];
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
@@ -538,7 +600,7 @@
                 }
             };
 
-            // Инициализация canvas
+            // Инициализация canvas и прокрутка чата
             React.useEffect(() => {
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
@@ -552,11 +614,22 @@
                 return () => window.removeEventListener('resize', handleResize);
             }, []);
 
+            // Прокрутка вниз при добавлении сообщений
+            React.useEffect(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+                localStorage.setItem('chatHistory', JSON.stringify(messages));
+            }, [messages]);
+
             // Обработка отправки и отмены
             const handleSubmit = async () => {
                 if (!prompt) return;
+                const timestamp = new Date().toLocaleString();
+                const fullPrompt = name && city && country ? `${name} from ${city}, ${country}: ${prompt}` : prompt;
+                setMessages([...messages, { role: 'user', content: fullPrompt, timestamp }]);
                 setIsLoading(true);
-                setResponse('');
+                setPrompt('');
                 abortControllerRef.current = new AbortController();
                 try {
                     const threadTypes = ['line', 'wave', 'text', 'pixels', 'fiber', 'glitch', 'spiral'];
@@ -573,20 +646,23 @@
                     });
                     const data = await res.json();
                     let responseText = data.response || 'No response received.';
-                    const fullPrompt = name && city && country ? `${name} from ${city}, ${country}: ${prompt}` : prompt;
                     if (responseText.startsWith(fullPrompt)) {
                         responseText = responseText.substring(fullPrompt.length).trim();
                     }
                     if (responseText.length < 10 || responseText.includes('What is it about')) {
                         responseText = translations[language].fallbackResponse;
                     }
-                    setResponse(responseText);
+                    setMessages(prev => [...prev, { role: 'assistant', content: responseText, timestamp }]);
                 } catch (error) {
                     if (error.name === 'AbortError') {
-                        setResponse('');
+                        setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
+                        threadsRef.current = [];
+                        const canvas = canvasRef.current;
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
                     } else {
                         console.error('Error:', error);
-                        setResponse(translations[language].errorResponse);
+                        setMessages(prev => [...prev, { role: 'assistant', content: translations[language].errorResponse, timestamp }]);
                     }
                 } finally {
                     setIsLoading(false);
@@ -599,7 +675,7 @@
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
                     setIsLoading(false);
-                    setResponse('');
+                    setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
                     threadsRef.current = [];
                     const canvas = canvasRef.current;
                     const ctx = canvas.getContext('2d');
@@ -619,19 +695,33 @@
                         <option value="ru">Русский</option>
                         <option value="es">Español</option>
                     </select>
-                    {response && (
-                        <div className="response">
-                            {response}
+                    {messages.length > 0 && (
+                        <>
+                            <div className="chat-container" ref={chatContainerRef}>
+                                {messages.map((msg, index) => (
+                                    <div key={index} className={`message ${msg.role}`}>
+                                        {msg.content}
+                                        <div className="message-timestamp">{msg.timestamp}</div>
+                                        <button
+                                            onClick={() => clearMessage(index)}
+                                            className="clear-button"
+                                            aria-label={translations[language].clear}
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                             <button
-                                onClick={clearResponse}
-                                className="clear-button"
-                                aria-label={translations[language].clear}
+                                onClick={clearHistory}
+                                className="clear-history"
+                                aria-label={translations[language].clearHistory}
                             >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                {translations[language].clearHistory}
                             </button>
-                        </div>
+                        </>
                     )}
                     <div className="prompt-container">
                         <textarea
