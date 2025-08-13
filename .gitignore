@@ -1,1 +1,15 @@
+Node modules
 
+node_modules/
+
+Environment variables
+
+.env
+
+System files
+
+.DS_Store Thumbs.db
+
+Editor files
+
+.vscode/ .idea/ *.suo .ntvs*.njsproj *.sln *.swp
