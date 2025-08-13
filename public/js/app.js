@@ -33,7 +33,8 @@ function App() {
             copy: "Copy",
             errorResponse: "An error occurred. Please try again later.",
             fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
-            modalTitle: "User Details"
+            modalTitle: "User Details",
+            canvasError: "Cannot download or share an empty canvas."
         },
         ru: {
             download: 'Скачать',
@@ -51,7 +52,8 @@ function App() {
             copy: "Скопировать",
             errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
             fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
-            modalTitle: "Данные пользователя"
+            modalTitle: "Данные пользователя",
+            canvasError: "Невозможно скачать или поделиться пустым холстом."
         },
         es: {
             download: 'Descargar',
@@ -69,7 +71,8 @@ function App() {
             copy: "Copiar",
             errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
             fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
-            modalTitle: "Detalles del usuario"
+            modalTitle: "Detalles del usuario",
+            canvasError: "No se puede descargar ni compartir un lienzo vacío."
         }
     };
 
@@ -284,6 +287,7 @@ function App() {
 function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const canvasRef = React.useRef(null);
     const [threads, setThreads] = React.useState([]);
+    const animationFrameRef = React.useRef(null);
 
     const createTexture = (material, ctx) => {
         console.log('Creating texture for material:', material);
@@ -408,13 +412,11 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             setThreads(parsedThreads);
             console.log('Loaded threads from localStorage:', parsedThreads);
         }
-        // Добавляем нити для страны и города только если они ещё не были добавлены
         const country = localStorage.getItem('country');
         const city = localStorage.getItem('city');
         const newThreads = [];
         if (country && countryRules[country]) {
             countryRules[country].forEach(rule => {
-                // Проверяем, нет ли уже такой нити
                 if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
                     const thread = createThread(rule, threadsRef.current.length + newThreads.length);
                     newThreads.push(thread);
@@ -422,7 +424,6 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             });
         }
         if (city && cityRules[city]) {
-            // Проверяем, нет ли уже такой нити
             if (!threadsRef.current.some(t => t.color === cityRules[city].color && t.material === cityRules[city].material)) {
                 const thread = createThread(cityRules[city], threadsRef.current.length + newThreads.length);
                 newThreads.push(thread);
@@ -459,13 +460,17 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         let hasAnimatingThreads = false;
         threads.forEach(thread => {
-            thread.progress = Math.min(thread.progress + 0.02, 1);
-            thread.opacity = thread.progress < 0.8 ? thread.progress : Math.max(1 - (thread.progress - 0.8) / 0.2, 0);
+            if (thread.progress < 1) {
+                thread.progress = Math.min(thread.progress + 0.02, 1);
+                thread.opacity = Math.min(thread.opacity + 0.02, 1);
+                hasAnimatingThreads = true;
+            } else {
+                thread.opacity = 1; // Ensure opacity stays at 1 after animation completes
+            }
             drawThread(ctx, thread);
-            if (thread.progress < 1) hasAnimatingThreads = true;
         });
         if (hasAnimatingThreads) {
-            requestAnimationFrame(() => animateThreads(ctx));
+            animationFrameRef.current = requestAnimationFrame(() => animateThreads(ctx));
         } else {
             console.log('Animation completed for threads:', threads);
         }
@@ -620,7 +625,12 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         // Запускаем анимацию
         animateThreads(ctx);
 
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
     }, [threads]);
 
     React.useEffect(() => {
@@ -631,6 +641,18 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         }
     }, [threadsRef.current]);
 
+    const checkCanvasContent = (canvas) => {
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] !== 0) {
+                return true; // Canvas has non-transparent pixels
+            }
+        }
+        return false; // Canvas is empty
+    };
+
     return (
         <div className="page">
             <h1>{translations[language].myGobelin || 'My Gobelin'}</h1>
@@ -639,13 +661,24 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                     className="gobelin-button"
                     onClick={() => {
                         const canvas = canvasRef.current;
-                        if (canvas) {
+                        if (!canvas) {
+                            console.error('Canvas not available for download');
+                            alert(translations[language].canvasError);
+                            return;
+                        }
+                        if (!checkCanvasContent(canvas)) {
+                            console.error('Canvas is empty, cannot download');
+                            alert(translations[language].canvasError);
+                            return;
+                        }
+                        try {
                             const link = document.createElement('a');
                             link.href = canvas.toDataURL('image/png');
                             link.download = 'my-gobelin.png';
                             link.click();
-                        } else {
-                            console.error('Canvas not available for download');
+                        } catch (error) {
+                            console.error('Error downloading canvas:', error);
+                            alert(translations[language].canvasError);
                         }
                     }}
                 >
@@ -655,28 +688,47 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                     className="gobelin-button"
                     onClick={() => {
                         const canvas = canvasRef.current;
-                        if (canvas) {
+                        if (!canvas) {
+                            console.error('Canvas not available for share');
+                            alert(translations[language].canvasError);
+                            return;
+                        }
+                        if (!checkCanvasContent(canvas)) {
+                            console.error('Canvas is empty, cannot share');
+                            alert(translations[language].canvasError);
+                            return;
+                        }
+                        try {
                             canvas.toBlob(blob => {
+                                if (!blob) {
+                                    console.error('Failed to create blob from canvas');
+                                    alert(translations[language].canvasError);
+                                    return;
+                                }
                                 const file = new File([blob], 'my-gobelin.png', { type: 'image/png' });
                                 if (navigator.share) {
                                     navigator.share({
                                         title: 'My Feminist Gobelin',
                                         text: 'Check out my unique data-art gobelin created with Feminist Gobelin!',
                                         files: [file]
-                                    }).then(() => setShareModalOpen(false));
+                                    }).then(() => setShareModalOpen(false)).catch(error => {
+                                        console.error('Error sharing canvas:', error);
+                                        alert(translations[language].canvasError);
+                                    });
                                 } else {
                                     setShareModalOpen(true);
                                 }
-                            });
-                        } else {
-                            console.error('Canvas not available for share');
+                            }, 'image/png');
+                        } catch (error) {
+                            console.error('Error creating blob for sharing:', error);
+                            alert(translations[language].canvasError);
                         }
                     }}
                 >
                     {translations[language].share}
                 </button>
             </div>
-            <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}></canvas>
+            <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1, backgroundColor: '#f0f0f0' }}></canvas>
         </div>
     );
 }
