@@ -1,7 +1,9 @@
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 import MyGobelin from './MyGobelin.js';
 import AIChat from './AIChat.js';
 import { translations, pages } from './config.js';
+import './css/styles.css';
 
 const threadsRef = React.createRef([]);
 threadsRef.current = [];
@@ -219,5 +221,8 @@ function App() {
         </div>
     );
 }
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
 
 export default App;
