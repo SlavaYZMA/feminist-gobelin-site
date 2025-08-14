@@ -1,5 +1,5 @@
 import React from 'react';
-import { keywordRules } from './keywordRules';
+import { keywordRules } from './keywordRules.js';
 
 function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const canvasRef = React.useRef(null);
