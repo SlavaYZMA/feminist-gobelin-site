@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import MyGobelin from './MyGobelin.js';
 import AIChat from './AIChat.js';
 import { translations, pages } from './config.js';
-import './css/styles.css';
+import './css/styles.css'; // Убедитесь, что путь начинается с ./css/, так как styles.css находится в src/css/
 
 const threadsRef = React.createRef([]);
 threadsRef.current = [];
