@@ -1,6 +1,6 @@
 import React from 'react';
-import { keywordRules } from './keywordRules';
-import { translations } from './config';
+import { keywordRules } from './keywordRules.js';
+import { translations } from './config.js';
 
 function AIChat({ threadsRef, language, translations }) {
     const [userId] = React.useState('user_' + Math.random().toString(36).substr(2, 9));
