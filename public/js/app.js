@@ -1,7 +1,7 @@
 import React from 'react';
-import MyGobelin from './MyGobelin';
-import AIChat from './AIChat';
-import { translations, pages } from './config';
+import MyGobelin from './MyGobelin.js';
+import AIChat from './AIChat.js';
+import { translations, pages } from './config.js';
 
 const threadsRef = React.createRef([]);
 threadsRef.current = [];
