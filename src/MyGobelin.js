@@ -380,7 +380,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
 
     return (
         <div className="page">
-            <h1>{translations[language].myGobelin || 'Мой гобелен'}</h1>
+            <h1>{translations[language]?.myGobelin || 'Мой гобелен'}</h1>
             <div className="gobelin-buttons">
                 <button
                     className="gobelin-button"
