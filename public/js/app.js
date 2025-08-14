@@ -5,7 +5,7 @@ function App() {
     const [currentPage, setCurrentPage] = React.useState('about');
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [shareModalOpen, setShareModalOpen] = React.useState(false);
-    const [language, setLanguage] = React.useState('ru'); // Изменено на 'ru' по умолчанию
+    const [language, setLanguage] = React.useState('ru');
 
     const pages = {
         about: { name: 'About', ru: 'О проекте', es: 'Acerca de' },
@@ -289,119 +289,253 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
     const [threads, setThreads] = React.useState([]);
     const animationFrameRef = React.useRef(null);
 
-    const createTexture = (material, ctx, color) => {
-        console.log('Creating texture for material:', material, 'with color:', color);
+    const createTexture = (material, ctx, color, texture) => {
+        console.log('Creating texture for material:', material, 'with color:', color, 'and texture:', texture);
         const textureCanvas = document.createElement('canvas');
         textureCanvas.width = 100;
         textureCanvas.height = 100;
         const tCtx = textureCanvas.getContext('2d');
         tCtx.fillStyle = color;
         tCtx.fillRect(0, 0, 100, 100);
-        if (material === 'silk') {
-            tCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+
+        if (material === 'wool') {
+            if (texture.includes('грубая') || texture.includes('шероховатая')) {
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                for (let i = 0; i < 100; i += 5) {
+                    tCtx.beginPath();
+                    tCtx.arc(i, 50 + Math.random() * 10, 1, 0, Math.PI * 2);
+                    tCtx.fill();
+                }
+            }
+            if (texture.includes('с узелками')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                for (let i = 0; i < 100; i += 10) {
+                    tCtx.fillRect(i, 50, 3, 3);
+                }
+            }
+            if (texture.includes('спутанная')) {
+                tCtx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                for (let i = 0; i < 100; i += 5) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(i, 50);
+                    tCtx.lineTo(i + Math.random() * 10, 50 + Math.random() * 10);
+                    tCtx.stroke();
+                }
+            }
+        } else if (material === 'linen') {
+            if (texture.includes('жёсткий') || texture.includes('грубая')) {
+                tCtx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                for (let i = 0; i < 100; i += 5) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(i, 0);
+                    tCtx.lineTo(i, 100);
+                    tCtx.stroke();
+                }
+            }
+            if (texture.includes('с пятнами')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                for (let i = 0; i < 5; i++) {
+                    tCtx.fillRect(Math.random() * 90, Math.random() * 90, 10, 10);
+                }
+            }
+            if (texture.includes('с узлами')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                for (let i = 0; i < 100; i += 15) {
+                    tCtx.fillRect(i, 50, 4, 4);
+                }
+            }
+        } else if (material === 'cotton') {
+            if (texture.includes('мягкий') || texture.includes('гладкая')) {
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                for (let i = 0; i < 100; i += 5) {
+                    for (let j = 0; j < 100; j += 5) {
+                        tCtx.fillRect(i, j, 2, 2);
+                    }
+                }
+            }
+            if (texture.includes('изношенный') || texture.includes('потёртая')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                for (let i = 0; i < 5; i++) {
+                    tCtx.fillRect(Math.random() * 90, Math.random() * 90, 8, 8);
+                }
+            }
+            if (texture.includes('рыхлая')) {
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                for (let i = 0; i < 100; i += 10) {
+                    tCtx.fillRect(i, 50, 5, 5);
+                }
+            }
+            if (texture.includes('хрупкая')) {
+                tCtx.globalAlpha = 0.5;
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                tCtx.fillRect(0, 0, 100, 100);
+            }
+        } else if (material === 'silk') {
+            if (texture.includes('гладкая') || texture.includes('струящаяся')) {
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                tCtx.fillRect(0, 0, 100, 50);
+            }
+            if (texture.includes('мятый')) {
+                tCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                for (let i = 0; i < 100; i += 10) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(i, 0);
+                    tCtx.lineTo(i + 5, 100);
+                    tCtx.stroke();
+                }
+            }
+            if (texture.includes('липкая')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                for (let i = 0; i < 5; i++) {
+                    tCtx.fillRect(Math.random() * 90, Math.random() * 90, 6, 6);
+                }
+            }
+            if (texture.includes('тяжёлая')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                tCtx.fillRect(0, 0, 100, 100);
+            }
+        } else if (material === 'synthetic') {
+            if (texture.includes('гладкая') || texture.includes('скользкая')) {
+                tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                tCtx.fillRect(0, 0, 100, 50);
+            }
+            if (texture.includes('жёсткая') || texture.includes('ломкая')) {
+                tCtx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                for (let i = 0; i < 100; i += 8) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(i, 0);
+                    tCtx.lineTo(i, 100);
+                    tCtx.stroke();
+                }
+            }
+            if (texture.includes('спутанная')) {
+                tCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                for (let i = 0; i < 100; i += 5) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(i, 50);
+                    tCtx.lineTo(i + Math.random() * 10, 50 + Math.random() * 10);
+                    tCtx.stroke();
+                }
+            }
+        } else if (material === 'velvet') {
+            tCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            for (let i = 0; i < 100; i += 5) {
+                tCtx.fillRect(i, 50, 2, 2);
+            }
+            if (texture.includes('потёртый')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                for (let i = 0; i < 5; i++) {
+                    tCtx.fillRect(Math.random() * 90, Math.random() * 90, 8, 8);
+                }
+            }
+        } else if (material === 'burlap') {
+            tCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
             for (let i = 0; i < 100; i += 5) {
                 tCtx.beginPath();
                 tCtx.moveTo(i, 0);
                 tCtx.lineTo(i, 100);
                 tCtx.stroke();
-            }
-        } else if (material === 'cotton') {
-            tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            for (let i = 0; i < 100; i += 5) {
-                for (let j = 0; j < 100; j += 5) {
-                    tCtx.fillRect(i, j, 2, 2);
-                }
-            }
-        } else if (material === 'wool') {
-            tCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            for (let i = 0; i < 100; i += 3) {
                 tCtx.beginPath();
-                tCtx.arc(i, 50 + Math.random() * 10, 1, 0, Math.PI * 2);
-                tCtx.fill();
-            }
-        } else if (material === 'fur') {
-            tCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            for (let i = 0; i < 100; i += 5) {
-                tCtx.beginPath();
-                tCtx.moveTo(i, 50);
-                tCtx.lineTo(i + Math.random() * 5, 50 + Math.random() * 10);
+                tCtx.moveTo(0, i);
+                tCtx.lineTo(100, i);
                 tCtx.stroke();
             }
-        } else if (material === 'satin') {
-            tCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            tCtx.fillRect(0, 0, 100, 100);
-            tCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            tCtx.fillRect(0, 0, 100, 50);
+            if (texture.includes('с комками')) {
+                tCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                for (let i = 0; i < 100; i += 15) {
+                    tCtx.fillRect(i, 50, 4, 4);
+                }
+            }
         }
+
         return ctx.createPattern(textureCanvas, 'repeat');
     };
 
     const keywordRules = {
-        'насилие': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'поддержка': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'семья': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'страх': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'радость': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'помощь': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'свобода': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'надежда': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'потеря': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'любовь': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
-        'violence': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'support': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'family': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'fear': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'joy': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'help': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'freedom': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'hope': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'loss': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'love': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
-    };
+        // Группа 1: Тяжёлые, триггерные слова
+        'насилие': { color: '#8B0000', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'сексуализированное': { color: '#4B0082', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'травма': { color: '#2F4F4F', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'torn' },
+        'страх': { color: '#4682B4', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'slippery' },
+        'вина': { color: '#708090', thickness: 18, material: 'silk', shape: 'horizontal', effect: 'sticky' },
+        'стыд': { color: '#5C4033', thickness: 18, material: 'burlap', shape: 'horizontal', effect: 'lumpy' },
+        'беспомощность': { color: '#D3D3D3', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'агрессия': { color: '#FF0000', thickness: 18, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'унижение': { color: '#B8860B', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'stained' },
+        'жертва': { color: '#4B0082', thickness: 12, material: 'velvet', shape: 'horizontal', effect: 'worn' },
 
-    const countryRules = {
-        'Serbia': [{ color: '#FFC107', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }],
-        'Ukraine': [
-            { color: '#005BBB', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFD500', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' }
-        ],
-        'France': [
-            { color: '#0055A4', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#EF4135', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
-        ],
-        'Germany': [
-            { color: '#000000', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'texture' },
-            { color: '#DD0000', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' },
-            { color: '#FFCE00', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
-        ],
-        'Italy': [
-            { color: '#009246', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'matte' },
-            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#CE2B37', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' }
-        ],
-        'United States': [
-            { color: '#B22234', thickness: 10, material: 'cotton', shape: 'stripes', effect: 'matte' },
-            { color: '#FFFFFF', thickness: 10, material: 'cotton', shape: 'stripes', effect: 'matte' },
-            { color: '#3C3B6E', thickness: 12, material: 'satin', shape: 'rectangle', effect: 'stars' }
-        ],
-        'Japan': [
-            { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'transparent' },
-            { color: '#BC002D', thickness: 12, material: 'silk', shape: 'circle', effect: 'shine' }
-        ],
-        'Turkey': [
-            { color: '#E30A17', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'shine' },
-            { color: '#FFFFFF', thickness: 12, material: 'cotton', shape: 'crescent-star', effect: 'matte' }
-        ]
-    };
+        // Группа 2: Слова, связанные с отсутствием согласия
+        'секс': { color: '#C71585', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'torn' },
+        'согласие': { color: '#98FB98', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'нет': { color: '#000000', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'knotty' },
+        'принуждение': { color: '#00008B', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'brittle' },
+        'игнорирование': { color: '#87CEEB', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+        'проникновение': { color: '#A52A2A', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'отказ': { color: '#696969', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'сопротивление': { color: '#FF4500', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
 
-    const cityRules = {
-        'Belgrade': { color: '#FFC107', thickness: 12, material: 'cotton', shape: 'wave', effect: 'shine' },
-        'Kyiv': { color: '#005BBB', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'glow-gold' },
-        'Paris': { color: '#FFFFFF', thickness: 12, material: 'satin', shape: 'horizontal', effect: 'glow-pink' },
-        'Berlin': { color: '#000000', thickness: 12, material: 'wool', shape: 'dashed', effect: 'white-inserts' },
-        'New York': { color: '#6B7280', thickness: 12, material: 'cotton', shape: 'skyline', effect: 'matte' },
-        'Tokyo': { color: '#FFFFFF', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'red-splashes' }
+        // Группа 3: Эмоциональные и психологические слова
+        'плач': { color: '#ADD8E6', thickness: 8, material: 'silk', shape: 'wave', effect: 'wet' },
+        'слёзы': { color: '#E6E6FA', thickness: 4, material: 'silk', shape: 'wave', effect: 'transparent' },
+        'оцепенение': { color: '#E6E6FA', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fluffy' },
+        'манипуляция': { color: '#006400', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'sticky' },
+        'ретравиатизация': { color: '#800080', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'tangled' },
+        'виктимблейминг': { color: '#FF8C00', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'stained' },
+        'слатшейминг': { color: '#DAA520', thickness: 12, material: 'burlap', shape: 'horizontal', effect: 'knotty' },
+        'обвинение': { color: '#8B4513', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'frayed' },
+
+        // Группа 4: Позитивные и восстановительные слова
+        'поддержка': { color: '#FFC107', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'fluffy' },
+        'исцеление': { color: '#00FF7F', thickness: 8, material: 'silk', shape: 'wave', effect: 'smooth' },
+        'справедливость': { color: '#FFFFFF', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'помощь': { color: '#87CEFA', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'феминизм': { color: '#E6E6FA', thickness: 8, material: 'silk', shape: 'wave', effect: 'smooth' },
+        'сестры': { color: '#FFB6C1', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'fluffy' },
+        'свобода': { color: '#87CEEB', thickness: 8, material: 'silk', shape: 'wave', effect: 'flowing' },
+
+        // Группа 5: Контекстуальные и социальные слова
+        'семья': { color: '#8B4513', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'родители': { color: '#F5F5DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'knotty' },
+        'брат': { color: '#8B5A2B', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'rough' },
+        'свекровь': { color: '#FF4500', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'муж': { color: '#5C4033', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'квартира': { color: '#808080', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+        'вечеринка': { color: '#FF69B4', thickness: 8, material: 'synthetic', shape: 'wave', effect: 'sticky' },
+        'переписка': { color: '#D3D3D3', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'алкоголь': { color: '#8B0000', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'stained' },
+        'угроза': { color: '#4B0082', thickness: 18, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'суд': { color: '#2F4F4F', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'анонимность': { color: '#00008B', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'heavy' },
+        'история': { color: '#F5F5DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'свидетельство': { color: '#FFF8DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'чат': { color: '#D3D3D3', thickness: 8, material: 'synthetic', shape: 'horizontal', effect: 'smooth' },
+
+        // Группа 6: Физические и поведенческие слова
+        'поцелуй': { color: '#FF4040', thickness: 8, material: 'silk', shape: 'wave', effect: 'sticky' },
+        'минет': { color: '#C71585', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'slippery' },
+        'боль': { color: '#FF0000', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'синяки': { color: '#483D8B', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'stained' },
+        'крики': { color: '#FF4500', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'вспыльчивость': { color: '#FF4500', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'rough' },
+        'непредсказуемость': { color: '#808080', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'tangled' },
+        'шантаж': { color: '#000000', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'frayed' },
+        'оскорбление': { color: '#B8860B', thickness: 12, material: 'burlap', shape: 'horizontal', effect: 'stained' },
+        'насмешка': { color: '#DAA520', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+
+        // Группа 7: Прочие слова
+        'самообвинение': { color: '#8B4513', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'knotty' },
+        'серьёзность': { color: '#2F4F4F', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'heavy' },
+        'влюблённость': { color: '#FFB6C1', thickness: 8, material: 'silk', shape: 'wave', effect: 'flowing' },
+        'общение': { color: '#F5F5DC', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'деньги': { color: '#FFD700', thickness: 8, material: 'synthetic', shape: 'horizontal', effect: 'smooth' },
+        'контроль': { color: '#006400', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'безопасность': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'smooth' },
+        'дети': { color: '#FFFFE0', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fluffy' },
+        'школьница': { color: '#FFE4E1', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'подростки': { color: '#00FF00', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'дисциплина': { color: '#00008B', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'бдсм': { color: '#4B0082', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'knotty' },
+        'фетиш': { color: '#800080', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'sticky' }
     };
 
     React.useEffect(() => {
@@ -412,35 +546,11 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
             setThreads(parsedThreads);
             console.log('Loaded threads from localStorage:', parsedThreads);
         }
-        const country = localStorage.getItem('country');
-        const city = localStorage.getItem('city');
-        const newThreads = [];
-        if (country && countryRules[country]) {
-            countryRules[country].forEach(rule => {
-                if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
-                    const thread = createThread(rule, threadsRef.current);
-                    newThreads.push(thread);
-                }
-            });
-        }
-        if (city && cityRules[city]) {
-            if (!threadsRef.current.some(t => t.color === cityRules[city].color && t.material === cityRules[city].material)) {
-                const thread = createThread(cityRules[city], threadsRef.current);
-                newThreads.push(thread);
-            }
-        }
-        if (newThreads.length > 0) {
-            threadsRef.current = [...threadsRef.current, ...newThreads];
-            setThreads(threadsRef.current);
-            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-            console.log('Added country/city threads:', newThreads);
-        }
     }, []);
 
     const createThread = (rule, existingThreads) => {
-        // Вычисляем суммарную толщину предыдущих нитей для определения yPos
         const totalHeight = existingThreads.reduce((sum, thread) => sum + thread.thickness, 0);
-        const yPos = 50 + totalHeight; // Начальная позиция + суммарная толщина
+        const yPos = 50 + totalHeight;
         return {
             ...rule,
             startX: 50,
@@ -484,60 +594,81 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         ctx.strokeStyle = thread.color;
         ctx.fillStyle = thread.color;
         ctx.lineWidth = thread.thickness;
-        const texture = createTexture(thread.material, ctx, thread.color);
+        const texture = createTexture(thread.material, ctx, thread.color, thread.effect);
 
         // Применение эффектов
-        if (thread.effect === 'glow') {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = `${thread.color}80`;
-        } else if (thread.effect === 'shine') {
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = '#FFFFFF80';
-        } else if (thread.effect === 'strong-shine') {
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#FFFFFFCC';
-        } else if (thread.effect === 'texture') {
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = '#00000040';
-        } else if (thread.effect === 'gradient') {
-            const gradient = ctx.createLinearGradient(thread.startX, thread.startY, thread.endX, thread.endY);
-            gradient.addColorStop(0, thread.color);
-            gradient.addColorStop(1, '#FFFFFF80');
-            ctx.strokeStyle = gradient;
-            ctx.fillStyle = gradient;
-        } else if (thread.effect === 'gradient-pink') {
-            const gradient = ctx.createLinearGradient(thread.startX, thread.startY, thread.endX, thread.endY);
-            gradient.addColorStop(0, thread.color);
-            gradient.addColorStop(1, '#F472B680');
-            ctx.strokeStyle = gradient;
-            ctx.fillStyle = gradient;
-        } else if (thread.effect === 'transparent') {
-            ctx.globalAlpha = thread.opacity * 0.5;
-        } else if (thread.effect === 'twinkle') {
-            ctx.globalAlpha = thread.opacity * (0.8 + Math.random() * 0.2);
-        } else if (thread.effect === 'glow-gold') {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#FFD70080';
-        } else if (thread.effect === 'glow-pink') {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#EC489980';
-        } else if (thread.effect === 'white-inserts') {
-            ctx.setLineDash([15, 8]);
-            ctx.strokeStyle = '#FFFFFF';
-        } else if (thread.effect === 'red-splashes') {
-            ctx.fillStyle = '#BC002D';
-            for (let i = 0; i < 5; i++) {
-                ctx.fillRect(thread.startX + Math.random() * (thread.endX - thread.startX), thread.startY - 5, 3, 3);
-            }
-        } else if (thread.effect === 'matte') {
-            ctx.shadowBlur = 0;
-        }
-
-        // Применение текстуры
-        if (['horizontal', 'wave', 'dashed', 'stripes'].includes(thread.shape)) {
+        if (thread.effect === 'knotty') {
             ctx.strokeStyle = texture;
-        } else if (['rectangle', 'circle', 'crescent-star', 'skyline'].includes(thread.shape)) {
-            ctx.fillStyle = texture;
+            ctx.setLineDash([10, 5]);
+        } else if (thread.effect === 'rough') {
+            ctx.strokeStyle = texture;
+            ctx.lineCap = 'square';
+        } else if (thread.effect === 'torn') {
+            ctx.strokeStyle = texture;
+            ctx.setLineDash([5, 10]);
+        } else if (thread.effect === 'slippery') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.8;
+        } else if (thread.effect === 'sticky') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.9;
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        } else if (thread.effect === 'lumpy') {
+            ctx.strokeStyle = texture;
+            ctx.setLineDash([15, 5]);
+        } else if (thread.effect === 'fragile') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.5;
+        } else if (thread.effect === 'sharp') {
+            ctx.strokeStyle = texture;
+            ctx.lineCap = 'square';
+            ctx.setLineDash([10, 10]);
+        } else if (thread.effect === 'stained') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.7;
+        } else if (thread.effect === 'worn') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.6;
+        } else if (thread.effect === 'smooth') {
+            ctx.strokeStyle = texture;
+            ctx.lineCap = 'round';
+        } else if (thread.effect === 'fluffy') {
+            ctx.strokeStyle = texture;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+        } else if (thread.effect === 'resilient') {
+            ctx.strokeStyle = texture;
+            ctx.lineWidth = thread.thickness * 1.2;
+        } else if (thread.effect === 'brittle') {
+            ctx.strokeStyle = texture;
+            ctx.setLineDash([5, 15]);
+        } else if (thread.effect === 'faded') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.6;
+        } else if (thread.effect === 'wet') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.7;
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'rgba(0, 0, 255, 0.2)';
+        } else if (thread.effect === 'transparent') {
+            ctx.strokeStyle = texture;
+            ctx.globalAlpha = thread.opacity * 0.3;
+        } else if (thread.effect === 'flowing') {
+            ctx.strokeStyle = texture;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = thread.opacity * 0.8;
+        } else if (thread.effect === 'tangled') {
+            ctx.strokeStyle = texture;
+            ctx.setLineDash([10, 5]);
+            ctx.lineCap = 'square';
+        } else if (thread.effect === 'heavy') {
+            ctx.strokeStyle = texture;
+            ctx.lineWidth = thread.thickness * 1.5;
+        } else if (thread.effect === 'frayed') {
+            ctx.strokeStyle = texture;
+            ctx.setLineDash([5, 10]);
+            ctx.globalAlpha = thread.opacity * 0.7;
         }
 
         ctx.beginPath();
@@ -552,59 +683,11 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
                 ctx.lineTo(thread.startX + x, thread.startY + y);
             }
             ctx.stroke();
-        } else if (thread.shape === 'dashed') {
-            ctx.setLineDash([15, 15]);
-            ctx.moveTo(thread.startX, thread.startY);
-            ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        } else if (thread.shape === 'stripes') {
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(thread.startX, thread.startY + i * thread.thickness);
-                ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY + i * thread.thickness);
-                ctx.strokeStyle = i % 2 === 0 ? '#B22234' : '#FFFFFF';
-                ctx.stroke();
-            }
-        } else if (thread.shape === 'rectangle') {
-            ctx.fillRect(thread.startX, thread.startY - thread.thickness / 2, (thread.endX - thread.startX) * thread.progress, thread.thickness);
-            if (thread.effect === 'stars') {
-                ctx.fillStyle = '#FFFFFF';
-                for (let i = 0; i < 10; i++) {
-                    ctx.beginPath();
-                    ctx.arc(thread.startX + i * 20, thread.startY, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        } else if (thread.shape === 'circle') {
-            ctx.beginPath();
-            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, thread.thickness / 2 * thread.progress, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (thread.shape === 'crescent-star') {
-            ctx.beginPath();
-            ctx.arc((thread.startX + thread.endX) / 2, thread.startY, thread.thickness / 2 * thread.progress, 0.5 * Math.PI, 2.5 * Math.PI);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo((thread.startX + thread.endX) / 2 + 10, thread.startY);
-            for (let i = 0; i < 5; i++) {
-                const angle = i * (Math.PI * 2 / 5);
-                ctx.lineTo(
-                    (thread.startX + thread.endX) / 2 + Math.cos(angle) * 5 * thread.progress,
-                    thread.startY + Math.sin(angle) * 5 * thread.progress
-                );
-            }
-            ctx.fill();
-        } else if (thread.shape === 'skyline') {
-            ctx.beginPath();
-            ctx.moveTo(thread.startX, thread.startY);
-            for (let x = 0; x <= (thread.endX - thread.startX) * thread.progress; x += 20) {
-                ctx.lineTo(thread.startX + x, thread.startY - Math.random() * thread.thickness);
-            }
-            ctx.lineTo(thread.startX + (thread.endX - thread.startX) * thread.progress, thread.startY);
-            ctx.stroke();
         }
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
+        ctx.lineCap = 'butt';
+        ctx.setLineDash([]);
         ctx.strokeStyle = thread.color;
         ctx.fillStyle = thread.color;
     };
@@ -659,10 +742,10 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         const data = imageData.data;
         for (let i = 0; i < data.length; i += 4) {
             if (data[i + 3] !== 0) {
-                return true; // Canvas has non-transparent pixels
+                return true;
             }
         }
-        return false; // Canvas is empty
+        return false;
     };
 
     return (
@@ -779,26 +862,78 @@ function AIChat({ threadsRef, language, translations }) {
     };
 
     const keywordRules = {
-        'насилие': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'поддержка': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'семья': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'страх': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'радость': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'помощь': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'свобода': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'надежда': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'потеря': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'любовь': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' },
-        'violence': { color: '#000000', thickness: 10, material: 'fur', shape: 'horizontal', effect: 'matte' },
-        'support': { color: '#F97316', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'glow' },
-        'family': { color: '#EC4899', thickness: 10, material: 'silk', shape: 'horizontal', effect: 'shine' },
-        'fear': { color: '#1E3A8A', thickness: 12, material: 'fur', shape: 'dashed', effect: 'texture' },
-        'joy': { color: '#FFD700', thickness: 10, material: 'satin', shape: 'wave', effect: 'strong-shine' },
-        'help': { color: '#10B981', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'gradient' },
-        'freedom': { color: '#FFFFFF', thickness: 20, material: 'silk', shape: 'horizontal', effect: 'transparent' },
-        'hope': { color: '#2DD4BF', thickness: 12, material: 'satin', shape: 'wave', effect: 'twinkle' },
-        'loss': { color: '#6B7280', thickness: 10, material: 'wool', shape: 'dashed', effect: 'texture' },
-        'love': { color: '#EF4444', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'gradient-pink' }
+        // Повторяем keywordRules для AIChat
+        'насилие': { color: '#8B0000', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'сексуализированное': { color: '#4B0082', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'травма': { color: '#2F4F4F', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'torn' },
+        'страх': { color: '#4682B4', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'slippery' },
+        'вина': { color: '#708090', thickness: 18, material: 'silk', shape: 'horizontal', effect: 'sticky' },
+        'стыд': { color: '#5C4033', thickness: 18, material: 'burlap', shape: 'horizontal', effect: 'lumpy' },
+        'беспомощность': { color: '#D3D3D3', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'агрессия': { color: '#FF0000', thickness: 18, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'унижение': { color: '#B8860B', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'stained' },
+        'жертва': { color: '#4B0082', thickness: 12, material: 'velvet', shape: 'horizontal', effect: 'worn' },
+        'секс': { color: '#C71585', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'torn' },
+        'согласие': { color: '#98FB98', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'нет': { color: '#000000', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'knotty' },
+        'принуждение': { color: '#00008B', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'brittle' },
+        'игнорирование': { color: '#87CEEB', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+        'проникновение': { color: '#A52A2A', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'отказ': { color: '#696969', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'сопротивление': { color: '#FF4500', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'плач': { color: '#ADD8E6', thickness: 8, material: 'silk', shape: 'wave', effect: 'wet' },
+        'слёзы': { color: '#E6E6FA', thickness: 4, material: 'silk', shape: 'wave', effect: 'transparent' },
+        'оцепенение': { color: '#E6E6FA', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fluffy' },
+        'манипуляция': { color: '#006400', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'sticky' },
+        'ретравиатизация': { color: '#800080', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'tangled' },
+        'виктимблейминг': { color: '#FF8C00', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'stained' },
+        'слатшейминг': { color: '#DAA520', thickness: 12, material: 'burlap', shape: 'horizontal', effect: 'knotty' },
+        'обвинение': { color: '#8B4513', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'frayed' },
+        'поддержка': { color: '#FFC107', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'fluffy' },
+        'исцеление': { color: '#00FF7F', thickness: 8, material: 'silk', shape: 'wave', effect: 'smooth' },
+        'справедливость': { color: '#FFFFFF', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'помощь': { color: '#87CEFA', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'феминизм': { color: '#E6E6FA', thickness: 8, material: 'silk', shape: 'wave', effect: 'smooth' },
+        'сестры': { color: '#FFB6C1', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'fluffy' },
+        'свобода': { color: '#87CEEB', thickness: 8, material: 'silk', shape: 'wave', effect: 'flowing' },
+        'семья': { color: '#8B4513', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'родители': { color: '#F5F5DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'knotty' },
+        'брат': { color: '#8B5A2B', thickness: 12, material: 'wool', shape: 'horizontal', effect: 'rough' },
+        'свекровь': { color: '#FF4500', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'rough' },
+        'муж': { color: '#5C4033', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'квартира': { color: '#808080', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+        'вечеринка': { color: '#FF69B4', thickness: 8, material: 'synthetic', shape: 'wave', effect: 'sticky' },
+        'переписка': { color: '#D3D3D3', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'алкоголь': { color: '#8B0000', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'stained' },
+        'угроза': { color: '#4B0082', thickness: 18, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'суд': { color: '#2F4F4F', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'анонимность': { color: '#00008B', thickness: 12, material: 'silk', shape: 'horizontal', effect: 'heavy' },
+        'история': { color: '#F5F5DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'свидетельство': { color: '#FFF8DC', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'чат': { color: '#D3D3D3', thickness: 8, material: 'synthetic', shape: 'horizontal', effect: 'smooth' },
+        'поцелуй': { color: '#FF4040', thickness: 8, material: 'silk', shape: 'wave', effect: 'sticky' },
+        'минет': { color: '#C71585', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'slippery' },
+        'боль': { color: '#FF0000', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
+        'синяки': { color: '#483D8B', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'stained' },
+        'крики': { color: '#FF4500', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'sharp' },
+        'вспыльчивость': { color: '#FF4500', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'rough' },
+        'непредсказуемость': { color: '#808080', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'tangled' },
+        'шантаж': { color: '#000000', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'frayed' },
+        'оскорбление': { color: '#B8860B', thickness: 12, material: 'burlap', shape: 'horizontal', effect: 'stained' },
+        'насмешка': { color: '#DAA520', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'faded' },
+        'самообвинение': { color: '#8B4513', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'knotty' },
+        'серьёзность': { color: '#2F4F4F', thickness: 12, material: 'cotton', shape: 'horizontal', effect: 'heavy' },
+        'влюблённость': { color: '#FFB6C1', thickness: 8, material: 'silk', shape: 'wave', effect: 'flowing' },
+        'общение': { color: '#F5F5DC', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'smooth' },
+        'деньги': { color: '#FFD700', thickness: 8, material: 'synthetic', shape: 'horizontal', effect: 'smooth' },
+        'контроль': { color: '#006400', thickness: 18, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'безопасность': { color: '#FFFFFF', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'smooth' },
+        'дети': { color: '#FFFFE0', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fluffy' },
+        'школьница': { color: '#FFE4E1', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'fragile' },
+        'подростки': { color: '#00FF00', thickness: 8, material: 'cotton', shape: 'horizontal', effect: 'resilient' },
+        'дисциплина': { color: '#00008B', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'resilient' },
+        'бдсм': { color: '#4B0082', thickness: 12, material: 'synthetic', shape: 'horizontal', effect: 'knotty' },
+        'фетиш': { color: '#800080', thickness: 8, material: 'silk', shape: 'horizontal', effect: 'sticky' }
     };
 
     const saveData = () => {
@@ -809,26 +944,6 @@ function AIChat({ threadsRef, language, translations }) {
         localStorage.setItem('country', tempCountry);
         localStorage.setItem('city', tempCity);
         setShowDetails(false);
-        const newThreads = [];
-        if (tempCountry && countryRules[tempCountry]) {
-            countryRules[tempCountry].forEach(rule => {
-                if (!threadsRef.current.some(t => t.color === rule.color && t.material === rule.material)) {
-                    const thread = createThread(rule, threadsRef.current);
-                    newThreads.push(thread);
-                }
-            });
-        }
-        if (tempCity && cityRules[tempCity]) {
-            if (!threadsRef.current.some(t => t.color === cityRules[tempCity].color && t.material === cityRules[tempCity].material)) {
-                const thread = createThread(cityRules[tempCity], threadsRef.current);
-                newThreads.push(thread);
-            }
-        }
-        if (newThreads.length > 0) {
-            threadsRef.current = [...threadsRef.current, ...newThreads];
-            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-            console.log('Saved new threads from saveData:', newThreads);
-        }
     };
 
     const resetData = () => {
@@ -931,9 +1046,8 @@ function AIChat({ threadsRef, language, translations }) {
     };
 
     const createThread = (rule, existingThreads) => {
-        // Вычисляем суммарную толщину предыдущих нитей для определения yPos
         const totalHeight = existingThreads.reduce((sum, thread) => sum + thread.thickness, 0);
-        const yPos = 50 + totalHeight; // Начальная позиция + суммарная толщина
+        const yPos = 50 + totalHeight;
         return {
             ...rule,
             startX: 50,
@@ -968,272 +1082,4 @@ function AIChat({ threadsRef, language, translations }) {
             });
             const data = await res.json();
             let responseText = data.response || 'Нет ответа.';
-            const fullPromptForResponse = name && city && country ? `${name} from ${city}, ${country}: ${prompt}` : prompt;
-            if (responseText.startsWith(fullPromptForResponse)) {
-                responseText = responseText.substring(fullPromptForResponse.length).trim();
-            }
-            if (responseText.length < 10 || responseText.includes('What is it about')) {
-                responseText = translations[language].fallbackResponse;
-            }
-            setMessages(prev => [...prev, { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() }]);
-        } catch (error) {
-            console.error('Ошибка:', error);
-            setMessages(prev => [...prev, { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() }]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const cancelRequest = () => {
-        setIsLoading(false);
-        setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
-        threadsRef.current.pop();
-        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-    };
-
-    React.useEffect(() => {
-        if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
-        localStorage.setItem('chatHistory', JSON.stringify(messages));
-    }, [messages]);
-
-    return (
-        <div className="page">
-            <h1>{translations[language].aiChat || 'AI чат'}</h1>
-            {messages.length > 0 && (
-                <>
-                    <div className="chat-container" ref={chatContainerRef}>
-                        {messages.map((msg, index) => (
-                            <div key={index} className={`message ${msg.role}`}>
-                                {editingIndex === index && msg.role === 'user' ? (
-                                    <div style={{ width: '100%' }}>
-                                        <textarea
-                                            className="edit-input"
-                                            value={editText}
-                                            onChange={(e) => {
-                                                setEditText(e.target.value);
-                                                e.target.style.height = 'auto';
-                                                e.target.style.height = e.target.scrollHeight + 'px';
-                                            }}
-                                            rows={Math.max(1, editText.split('\n').length)}
-                                            style={{ resize: 'none', overflow: 'hidden', minHeight: '40px' }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    saveEdit(index);
-                                                }
-                                            }}
-                                        />
-                                        <div className="message-actions" style={{ opacity: 1 }}>
-                                            <button
-                                                onClick={() => saveEdit(index)}
-                                                className="action-button"
-                                                aria-label="Сохранить изменения"
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                onClick={() => setEditingIndex(null)}
-                                                className="action-button"
-                                                aria-label="Отменить редактирование"
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {msg.content}
-                                        <div className="message-timestamp">{msg.timestamp}</div>
-                                        <div className="message-actions">
-                                            {msg.role === 'user' && (
-                                                <button
-                                                    onClick={() => startEditing(index, msg.content)}
-                                                    className="action-button"
-                                                    aria-label={translations[language].edit}
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => copyText(msg.content)}
-                                                className="action-button"
-                                                aria-label={translations[language].copy}
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                            </button>
-                                            {msg.role === 'assistant' && (
-                                                <>
-                                                    <button
-                                                        onClick={() => regenerateResponse(index)}
-                                                        className="action-button"
-                                                        aria-label={translations[language].regenerate}
-                                                        disabled={isLoading}
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => shareResponse(msg.content)}
-                                                        className="action-button"
-                                                        aria-label={translations[language].share}
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                                        </svg>
-                                                    </button>
-                                                </>
-                                            )}
-                                            <button
-                                                onClick={() => clearMessage(index)}
-                                                className="action-button"
-                                                aria-label={translations[language].clear}
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <button
-                        onClick={clearHistory}
-                        className="clear-history"
-                        aria-label={translations[language].clearHistory}
-                    >
-                        {translations[language].clearHistory}
-                    </button>
-                </>
-            )}
-            <div className="prompt-container">
-                <textarea
-                    className="submit-input"
-                    value={prompt}
-                    onChange={(e) => {
-                        setPrompt(e.target.value);
-                        e.target.style.height = "auto";
-                        e.target.style.height = e.target.scrollHeight + "px";
-                    }}
-                    placeholder={translations[language].placeholder}
-                    rows={1}
-                    style={{ resize: "none", overflow: "hidden" }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            if (!isLoading) {
-                                handleSubmit();
-                            } else {
-                                cancelRequest();
-                            }
-                        }
-                    }}
-                />
-                <button
-                    onClick={isLoading ? cancelRequest : handleSubmit}
-                    disabled={!prompt && !isLoading}
-                    className="submit-button"
-                    aria-label={isLoading ? "Отменить" : "Отправить"}
-                >
-                    {isLoading ? (
-                        <div className="spinner"></div>
-                    ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                    )}
-                </button>
-            </div>
-            <span
-                className="clear-history"
-                onClick={() => setShowDetails(true)}
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => e.key === 'Enter' && setShowDetails(true)}
-                aria-expanded={showDetails}
-                aria-label={translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
-            >
-                {translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
-            </span>
-            {showDetails && (
-                <div className="modal">
-                    <div className="modal-header">
-                        <span className="modal-title">{translations[language].modalTitle}</span>
-                        <span
-                            className="modal-close"
-                            onClick={() => setShowDetails(false)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyPress={(e) => e.key === 'Enter' && setShowDetails(false)}
-                            aria-label="Закрыть"
-                        >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </span>
-                    </div>
-                    <div className="modal-content">
-                        <input
-                            className="modal-input"
-                            type="text"
-                            value={tempName}
-                            onChange={(e) => setTempName(e.target.value)}
-                            placeholder={translations[language].namePlaceholder}
-                        />
-                        <select
-                            className="modal-select"
-                            value={tempCountry}
-                            onChange={(e) => { setTempCountry(e.target.value); setTempCity(''); }}
-                        >
-                            <option value="">{translations[language].countryPlaceholder}</option>
-                            {countries.map((c) => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                        <select
-                            className="modal-select"
-                            value={tempCity}
-                            onChange={(e) => setTempCity(e.target.value)}
-                            disabled={!tempCountry}
-                        >
-                            <option value="">{translations[language].cityPlaceholder}</option>
-                            {(citiesByCountry[tempCountry] || []).map((c) => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="modal-footer">
-                        <button
-                            onClick={saveData}
-                            className="modal-button"
-                            aria-label={translations[language].save}
-                        >
-                            {translations[language].save}
-                        </button>
-                        <button
-                            onClick={resetData}
-                            className="modal-button"
-                            aria-label={translations[language].reset}
-                        >
-                            {translations[language].reset}
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-ReactDOM.render(<App />, document.getElementById('root'));
+            const fullPrompt
