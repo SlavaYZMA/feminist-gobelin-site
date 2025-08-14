@@ -862,7 +862,6 @@ function AIChat({ threadsRef, language, translations }) {
     };
 
     const keywordRules = {
-        // Повторяем keywordRules для AIChat
         'насилие': { color: '#8B0000', thickness: 18, material: 'wool', shape: 'horizontal', effect: 'knotty' },
         'сексуализированное': { color: '#4B0082', thickness: 12, material: 'linen', shape: 'horizontal', effect: 'rough' },
         'травма': { color: '#2F4F4F', thickness: 18, material: 'cotton', shape: 'horizontal', effect: 'torn' },
@@ -1082,4 +1081,52 @@ function AIChat({ threadsRef, language, translations }) {
             });
             const data = await res.json();
             let responseText = data.response || 'Нет ответа.';
-            const fullPrompt
+            if (responseText.startsWith(fullPrompt)) {
+                responseText = responseText.substring(fullPrompt.length).trim();
+            }
+            if (responseText.length < 10 || responseText.includes('What is it about')) {
+                responseText = translations[language].fallbackResponse;
+            }
+            const newMessages = [...messages, { role: 'user', content: prompt, fullPrompt, timestamp }, { role: 'assistant', content: responseText, timestamp: new Date().toLocaleString() }];
+            setMessages(newMessages);
+            localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        } catch (error) {
+            console.error('Ошибка:', error);
+            const newMessages = [...messages, { role: 'user', content: prompt, fullPrompt, timestamp }, { role: 'assistant', content: translations[language].errorResponse, timestamp: new Date().toLocaleString() }];
+            setMessages(newMessages);
+            localStorage.setItem('chatHistory', JSON.stringify(newMessages));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    return (
+        <div className="page chat-page">
+            <h1>{translations[language].aiChat || 'AI чат'}</h1>
+            <div className="details-toggle" onClick={() => setShowDetails(!showDetails)}>
+                {translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
+            </div>
+            {showDetails && (
+                <div className="modal">
+                    <div className="modal-header">
+                        <span className="modal-title">{translations[language].modalTitle}</span>
+                        <span
+                            className="modal-close"
+                            onClick={() => setShowDetails(false)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={(e) => e.key === 'Enter' && setShowDetails(false)}
+                            aria-label="Закрыть"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div
