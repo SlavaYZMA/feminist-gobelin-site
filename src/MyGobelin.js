@@ -355,8 +355,9 @@ function MyGobelin({ threadsRef, language }) {
 
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const cssWidth = Math.min(window.innerWidth - 32, 600);
-            const radius = 20 + 10 * Math.sin(t * 3);
-            const amplitude = cssWidth * 0.5 - radius;
+            const margin = 10;
+            const radius = 15 + 7.5 * Math.sin(t * 3);
+            const amplitude = cssWidth * 0.5 - radius - margin;
             const centerX = cssWidth / 2;
             const centerY = blsCanvas.height / (2 * dpr);
             const x = centerX + amplitude * Math.sin(t * blsFrequency * 2 * Math.PI);
