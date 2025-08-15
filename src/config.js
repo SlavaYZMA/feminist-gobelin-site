@@ -44,12 +44,13 @@ export const translations = {
         frequency: "BLS Frequency (Hz)",
         soft: "Soft",
         standard: "Standard",
-        intense: "Intense",
         survey: "How do you feel?",
         distress: "Distress",
         tension: "Tension",
         calm: "Calm",
-        submitSurvey: "Submit"
+        submitSurvey: "Submit",
+        loading: "Loading...",
+        fpsWarning: "Low performance detected. Try a smaller screen or simpler settings."
     },
     ru: {
         download: 'Скачать',
@@ -87,12 +88,13 @@ export const translations = {
         frequency: "Частота BLS (Гц)",
         soft: "Мягко",
         standard: "Стандарт",
-        intense: "Интенсивнее",
         survey: "Как вы себя чувствуете?",
         distress: "Дистресс",
         tension: "Напряжение",
         calm: "Спокойствие",
-        submitSurvey: "Отправить"
+        submitSurvey: "Отправить",
+        loading: "Загрузка...",
+        fpsWarning: "Обнаружена низкая производительность. Попробуйте уменьшить экран или упростить настройки."
     },
     es: {
         download: 'Descargar',
@@ -130,11 +132,12 @@ export const translations = {
         frequency: "Frecuencia BLS (Hz)",
         soft: "Suave",
         standard: "Estándar",
-        intense: "Intenso",
         survey: "¿Cómo te sientes?",
         distress: "Malestar",
         tension: "Tensión",
         calm: "Calma",
-        submitSurvey: "Enviar"
+        submitSurvey: "Enviar",
+        loading: "Cargando...",
+        fpsWarning: "Se detectó bajo rendimiento. Intenta con una pantalla más pequeña o configuraciones más simples."
     }
 };
