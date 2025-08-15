@@ -580,6 +580,70 @@ body {
     z-index: 1002;
     max-width: 500px;
 }
+.consent-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+}
+.consent-screen h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+.consent-screen p {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text-1);
+}
+.consent-screen a {
+    color: var(--primary-6);
+    text-decoration: none;
+}
+.consent-screen a:hover {
+    text-decoration: underline;
+}
+.consent-sensitivity {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+.consent-sensitivity-button {
+    background: var(--primary-6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.consent-sensitivity-button:hover {
+    transform: scale(1.05);
+}
+.consent-sensitivity-button:active {
+    transform: scale(0.95);
+}
+.consent-sensitivity-button.active {
+    background: #003087;
+}
+.consent-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+.consent-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.consent-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
 .consent-button {
     margin-top: 16px;
     background: var(--primary-6);
@@ -597,6 +661,9 @@ body {
 }
 .consent-button:active {
     transform: scale(0.95);
+}
+.consent-button.decline {
+    background: #ff4d4f;
 }
 .consent-button:disabled {
     background: #ccc;
@@ -620,7 +687,7 @@ body {
     margin: 16px 0;
     font-family: 'Inter', sans-serif;
 }
-.bls-button, .bls-mode-button {
+.bls-button {
     background: var(--primary-6);
     color: #fff;
     border: none;
@@ -632,18 +699,15 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.bls-button:hover, .bls-mode-button:hover {
+.bls-button:hover {
     transform: scale(1.05);
 }
-.bls-button:active, .bls-mode-button:active {
+.bls-button:active {
     transform: scale(0.95);
 }
-.bls-button:disabled, .bls-mode-button:disabled {
+.bls-button:disabled {
     background: #ccc;
     cursor: not-allowed;
-}
-.bls-mode-button.active {
-    background: #003087;
 }
 .bls-frequency {
     display: flex;
