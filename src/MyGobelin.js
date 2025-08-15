@@ -9,6 +9,7 @@ function MyGobelin({ threadsRef, language }) {
     const [submittedHistory, setSubmittedHistory] = React.useState(localStorage.getItem('submittedHistory') || '');
     const [isEditing, setIsEditing] = React.useState(false);
 
+    // Анализирует текст, извлекая метрики для управления фракталом
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
         const wordCount = words.length;
@@ -35,59 +36,78 @@ function MyGobelin({ threadsRef, language }) {
         };
     };
 
+    // Подсчитывает триггерные слова для эмоционального отклика
     const countTriggers = (text, triggerWords) => {
         const words = text.toLowerCase().split(/\s+/);
         return triggerWords.reduce((sum, word) => sum + words.includes(word), 0);
     };
 
+    // Генерирует параметры фрактала на основе текста
     const getFractalParams = (text) => {
         const metrics = analyzeText(text);
         const params = {
-            cX: (metrics.avgWordLen / 10) - 0.5,
-            cY: (metrics.avgSentLen / 50) - 0.5,
-            zoom: Math.min(10, 1 + (metrics.textLen / 500)),
-            iterations: Math.min(500, 100 + metrics.uniqueWords * 5),
-            hue: (metrics.upperCaseCount * 3) % 360,
-            sat: Math.min(100, metrics.maxWordFreq * 10),
-            bright: Math.min(100, metrics.vowelsRatio * 100),
-            speed: Math.max(0.1, metrics.punctuationCount * 0.1),
-            distortion: metrics.lineBreakCount * 0.05,
-            symmetryBreak: metrics.digitCount * 0.1,
-            breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)),
-            waveAmplitude: metrics.punctuationCount * 0.02,
-            textureGrain: (1 - metrics.vowelsRatio) * 5,
-            depthLayers: Math.max(1, metrics.lineBreakCount),
-            rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1,
-            flashFreq: 0,
-            rgbSplit: 0
+            cX: (metrics.avgWordLen / 10) - 0.5, // Центр фрактала по X (длина слова)
+            cY: (metrics.avgSentLen / 50) - 0.5, // Центр фрактала по Y (длина предложения)
+            zoom: Math.min(10, 1 + (metrics.textLen / 500)), // Масштаб (длина текста)
+            iterations: Math.min(500, 100 + metrics.uniqueWords * 5), // Детализация (уникальные слова)
+            hue: (metrics.upperCaseCount * 3) % 360, // Базовый цвет (заглавные буквы)
+            sat: Math.min(100, metrics.maxWordFreq * 10), // Насыщенность (частота слов)
+            bright: Math.min(100, metrics.vowelsRatio * 100), // Яркость (гласные/согласные)
+            speed: Math.max(0.1, metrics.punctuationCount * 0.1), // Скорость анимации (знаки препинания)
+            distortion: metrics.lineBreakCount * 0.05, // Искажение (переносы строк)
+            symmetryBreak: metrics.digitCount * 0.1, // Асимметрия (цифры)
+            breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)), // Пульсация (длина предложения)
+            waveAmplitude: metrics.punctuationCount * 0.02, // Волны (знаки препинания)
+            textureGrain: (1 - metrics.vowelsRatio) * 5, // Зернистость (согласные)
+            depthLayers: Math.max(1, metrics.lineBreakCount), // Глубина (переносы строк)
+            rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1, // Направление вращения (гласные)
+            flashFreq: 0, // Мерцание (для anger)
+            rgbSplit: 0 // Хроматическая аберрация (для fear)
         };
 
-        // Модификаторы от триггерных слов
+        // Модификаторы от триггерных слов для эмоционального отклика
+        let palette = 'default'; // Базовая палитра
         Object.keys(keywordRules.TRIGGERS).forEach(category => {
             const count = countTriggers(text, keywordRules.TRIGGERS[category]);
-            if (category === 'fear') {
-                params.zoom += count * 0.3;
-                params.rgbSplit += count * 0.05; // Усиленный RGB-сплит
-            } else if (category === 'anger') {
-                params.sat += count * 10;
-                params.flashFreq += count * 0.8; // Более частое мерцание
-            } else if (category === 'body') {
-                params.iterations += count * 20;
-            } else if (category === 'place') {
-                params.cX -= count * 0.03;
-                params.cY -= count * 0.03;
-            } else if (category === 'silence') {
-                params.speed -= count * 0.1;
-            } else if (category === 'escape') {
-                params.distortion += count * 0.2; // Усиленное искажение
-            } else if (category === 'nature') {
-                params.distortion += count * 0.1;
-                params.textureGrain += count * 2; // Хаотичная текстура
-            } else if (category === 'hope') {
-                params.bright += count * 10; // Яркое свечение
+            if (count > 0) {
+                if (category === 'fear') {
+                    params.zoom += count * 0.3; // Увеличение масштаба
+                    params.rgbSplit += count * 0.03; // Мягкий RGB-сплит
+                    params.hue = (params.hue + 180) % 360; // Прохладные тона (голубой/фиолетовый)
+                    palette = 'fear';
+                } else if (category === 'anger') {
+                    params.sat += count * 8; // Контрастная насыщенность
+                    params.flashFreq += count * 0.5; // Мягкое мерцание
+                    params.hue = (params.hue + 360) % 360; // Красный/пурпурный
+                    palette = 'anger';
+                } else if (category === 'body') {
+                    params.iterations += count * 15; // Более детализированные узоры
+                    palette = palette === 'default' ? 'body' : palette;
+                } else if (category === 'place') {
+                    params.cX -= count * 0.03; // Смещение центра
+                    params.cY -= count * 0.03;
+                    palette = palette === 'default' ? 'place' : palette;
+                } else if (category === 'silence') {
+                    params.speed -= count * 0.08; // Замедление для умиротворения
+                    params.bright = Math.min(100, params.bright * 0.8); // Пастельные тона
+                    palette = 'silence';
+                } else if (category === 'escape') {
+                    params.distortion += count * 0.15; // Текучие искажения
+                    palette = palette === 'default' ? 'escape' : palette;
+                } else if (category === 'nature') {
+                    params.distortion += count * 0.08; // Естественные волны
+                    params.textureGrain += count * 1.5; // Лёгкие вспышки
+                    params.hue = (params.hue + 120) % 360; // Зелёный/бирюзовый
+                    palette = 'nature';
+                } else if (category === 'hope') {
+                    params.bright += count * 8; // Тёплое свечение
+                    params.hue = (params.hue + 60) % 360; // Золотой/розовый
+                    palette = 'hope';
+                }
             }
         });
 
+        params.palette = palette; // Сохраняем палитру для рендеринга
         return params;
     };
 
@@ -134,12 +154,19 @@ function MyGobelin({ threadsRef, language }) {
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth - 32;
-            canvas.height = 800; // Увеличено для эпичности
+            canvas.height = 800; // Эпичный размер
         };
 
-        const hsvToRgb = (h, s, v) => {
+        // Конвертирует HSV в RGB с учётом палитры
+        const hsvToRgb = (h, s, v, palette) => {
             s /= 100;
             v /= 100;
+            // Модуляция цвета в зависимости от палитры
+            if (palette === 'hope') h = (h + 60) % 360; // Золотой/розовый
+            else if (palette === 'fear') h = (h + 180) % 360; // Голубой/фиолетовый
+            else if (palette === 'anger') h = (h + 360) % 360; // Красный/пурпурный
+            else if (palette === 'nature') h = (h + 120) % 360; // Зелёный/бирюзовый
+            else if (palette === 'silence') s *= 0.7; // Пастельные тона
             const c = v * s;
             const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
             const m = v - c;
@@ -157,8 +184,9 @@ function MyGobelin({ threadsRef, language }) {
             ];
         };
 
+        // Рендерит Julia-фрактал с синестетическими эффектами
         const renderFractal = (params, t) => {
-            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit } = params;
+            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit, palette } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
 
@@ -166,24 +194,24 @@ function MyGobelin({ threadsRef, language }) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Анимационные параметры
-            const breathe = Math.sin(t * breathingRate * 1.5) * 0.15; // Усиленная пульсация
-            const wave = Math.sin(t * speed) * waveAmplitude * 2; // Усиленные волны
-            const rotation = t * speed * rotationDir * 0.02; // Спиральное вращение
-            const chaos = Math.tan(t * distortion) * 0.01; // Странное искажение
+            // Анимационные параметры для успокаивающего эффекта
+            const breathe = Math.sin(t * breathingRate) * 0.1; // Мягкое "дыхание"
+            const wave = Math.sin(t * speed) * waveAmplitude; // Плавные волны
+            const rotation = t * speed * rotationDir * 0.015; // Плавное вращение
+            const chaos = Math.sin(t * distortion) * 0.01; // Лёгкое искажение
 
             for (let x = 0; x < canvas.width; x += 4) {
                 for (let y = 0; y < canvas.height; y += 4) {
                     let zx = ((x - centerX) / canvas.width) * scale;
                     let zy = ((y - centerY) / canvas.height) * scale;
-                    // Применяем спиральное вращение
+                    // Плавное вращение для гипнотичности
                     const rotatedZx = zx * Math.cos(rotation) - zy * Math.sin(rotation);
                     const rotatedZy = zx * Math.sin(rotation) + zy * Math.cos(rotation);
-                    zx = rotatedZx + chaos * Math.sin(zy); // Странное искажение
+                    zx = rotatedZx + chaos * Math.sin(zy);
                     zy = rotatedZy + chaos * Math.cos(zx);
-                    // Применяем distortion и symmetryBreak
-                    zx += Math.sin(zy * distortion * 2) * wave; // Усиленное искажение
-                    zy += Math.cos(zx * distortion * 2) * symmetryBreak;
+                    // Мягкие искажения
+                    zx += Math.sin(zy * distortion) * wave;
+                    zy += Math.cos(zx * distortion) * symmetryBreak;
 
                     let i = 0;
                     let tempZx, tempZy;
@@ -201,28 +229,28 @@ function MyGobelin({ threadsRef, language }) {
                     if (i === iterations) {
                         color = [0, 0, 0]; // Внутри множества — чёрный
                     } else {
-                        const h = (hue + (i * 15) % 360) % 360; // Динамичный градиент
-                        const s = Math.min(100, sat + (Math.sin(t * flashFreq * 2) * 30)); // Яркое мерцание
-                        const v = Math.min(100, bright + (i / iterations) * 70); // Неоновое свечение
-                        color = hsvToRgb(h, s, v);
-                        // Усиленный RGB-сплит
+                        const h = (hue + (i * 10) % 360) % 360; // Плавный градиент
+                        const s = Math.min(100, sat + (Math.sin(t * flashFreq) * 15)); // Мягкое мерцание
+                        const v = Math.min(100, bright + (i / iterations) * 60); // Успокаивающее свечение
+                        color = hsvToRgb(h, s, v, palette);
+                        // Мягкий RGB-сплит для fear
                         if (rgbSplit > 0) {
-                            color[0] += Math.sin(t + x * 0.02) * rgbSplit * 100;
-                            color[1] += Math.sin(t + y * 0.02) * rgbSplit * 100;
-                            color[2] += Math.cos(t + (x + y) * 0.02) * rgbSplit * 100;
+                            color[0] += Math.sin(t + x * 0.01) * rgbSplit * 50;
+                            color[1] += Math.sin(t + y * 0.01) * rgbSplit * 50;
+                            color[2] += Math.cos(t + (x + y) * 0.01) * rgbSplit * 50;
                         }
-                        // Хаотичная текстура
+                        // Лёгкая текстура
                         if (textureGrain > 0) {
-                            const noise = (Math.random() - 0.5) * textureGrain * 2;
+                            const noise = (Math.random() - 0.5) * textureGrain;
                             color = color.map(c => Math.max(0, Math.min(255, c + noise)));
-                            if (Math.random() < 0.01 * textureGrain) { // Случайные вспышки
-                                color = color.map(c => Math.min(255, c + 50));
+                            if (palette === 'nature' && Math.random() < 0.005 * textureGrain) {
+                                color = color.map(c => Math.min(255, c + 30)); // Вспышки для nature
                             }
                         }
                     }
 
-                    // Глубина и свечение
-                    const layerFactor = 1 - (i / iterations) * depthLayers * 0.8;
+                    // Мягкая глубина для умиротворения
+                    const layerFactor = 1 - (i / iterations) * depthLayers * 0.6;
                     color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
 
                     data[idx] = color[0];
