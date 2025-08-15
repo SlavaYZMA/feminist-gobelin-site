@@ -206,7 +206,7 @@ function AIChat({ threadsRef, language, translations }) {
         }
     }, [messages]);
 
-    return <div>Testing</div>;
+    return React.createElement('div', null, 'Testing');
 }
 
 export default AIChat;
