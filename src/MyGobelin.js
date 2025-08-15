@@ -4,7 +4,7 @@ import { translations } from './config.js';
 
 function MyGobelin({ threadsRef, language }) {
     const canvasRef = React.useRef(null);
-    const [mode, setMode] = React.useState('history'); // По умолчанию режим "Моя история"
+    const [mode, setMode] = React.useState('history');
     const [historyText, setHistoryText] = React.useState('');
     const [submittedHistory, setSubmittedHistory] = React.useState(localStorage.getItem('submittedHistory') || '');
     const [isEditing, setIsEditing] = React.useState(false);
@@ -76,6 +76,71 @@ function MyGobelin({ threadsRef, language }) {
             canvas.height = 400;
         };
 
+        const drawSmoothThread = (ctx, thread, currentX) => {
+            ctx.beginPath();
+            ctx.moveTo(thread.startX, thread.startY);
+            ctx.lineTo(currentX, thread.endY);
+            ctx.lineWidth = thread.thickness;
+            const gradient = ctx.createLinearGradient(thread.startX, thread.startY, currentX, thread.endY);
+            gradient.addColorStop(0, thread.color);
+            gradient.addColorStop(1, thread.color + 'cc');
+            ctx.strokeStyle = gradient;
+            ctx.stroke();
+        };
+
+        const drawTornThread = (ctx, thread, currentX) => {
+            ctx.beginPath();
+            ctx.moveTo(thread.startX, thread.startY);
+            let x = thread.startX;
+            while (x < currentX) {
+                const nextX = Math.min(x + 10, currentX);
+                const yOffset = (Math.random() - 0.5) * thread.thickness * 0.5;
+                ctx.lineTo(nextX, thread.startY + yOffset);
+                x = nextX;
+            }
+            ctx.lineWidth = thread.thickness;
+            ctx.strokeStyle = thread.color;
+            ctx.stroke();
+        };
+
+        const drawTwistedThread = (ctx, thread, currentX) => {
+            ctx.beginPath();
+            ctx.moveTo(thread.startX, thread.startY);
+            let x = thread.startX;
+            while (x < currentX) {
+                const nextX = Math.min(x + 5, currentX);
+                const yOffset = Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3;
+                ctx.lineTo(nextX, thread.startY + yOffset);
+                x = nextX;
+            }
+            ctx.lineWidth = thread.thickness;
+            ctx.strokeStyle = thread.color;
+            ctx.stroke();
+        };
+
+        const drawFuzzyThread = (ctx, thread, currentX) => {
+            ctx.beginPath();
+            ctx.moveTo(thread.startX, thread.startY);
+            ctx.lineTo(currentX, thread.endY);
+            ctx.lineWidth = thread.thickness;
+            ctx.strokeStyle = thread.color;
+            ctx.stroke();
+            for (let i = 0; i < thread.thickness * 2; i++) {
+                ctx.beginPath();
+                let x = thread.startX;
+                while (x < currentX) {
+                    const nextX = Math.min(x + 10, currentX);
+                    const yOffset = (Math.random() - 0.5) * thread.thickness * 0.2;
+                    ctx.moveTo(x, thread.startY + yOffset);
+                    ctx.lineTo(nextX, thread.startY + yOffset);
+                    x = nextX;
+                }
+                ctx.lineWidth = 0.5;
+                ctx.strokeStyle = thread.color + '33';
+                ctx.stroke();
+            }
+        };
+
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             threadsRef.current.forEach(thread => {
@@ -83,14 +148,24 @@ function MyGobelin({ threadsRef, language }) {
                     thread.progress += 0.01;
                     thread.opacity = Math.min(thread.opacity + 0.02, 1);
                 }
-                ctx.beginPath();
-                ctx.moveTo(thread.startX, thread.startY);
                 const currentX = thread.startX + (thread.endX - thread.startX) * thread.progress;
-                ctx.lineTo(currentX, thread.endY);
-                ctx.lineWidth = thread.thickness;
-                ctx.strokeStyle = thread.color;
                 ctx.globalAlpha = thread.opacity;
-                ctx.stroke();
+                switch (thread.threadType) {
+                    case 'smooth':
+                        drawSmoothThread(ctx, thread, currentX);
+                        break;
+                    case 'torn':
+                        drawTornThread(ctx, thread, currentX);
+                        break;
+                    case 'twisted':
+                        drawTwistedThread(ctx, thread, currentX);
+                        break;
+                    case 'fuzzy':
+                        drawFuzzyThread(ctx, thread, currentX);
+                        break;
+                    default:
+                        drawSmoothThread(ctx, thread, currentX);
+                }
             });
             animationFrameId = requestAnimationFrame(animate);
         };
