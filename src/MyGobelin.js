@@ -354,20 +354,31 @@ function MyGobelin({ threadsRef, language }) {
             if (!blsActive || !setActive) return;
 
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const cssWidth = blsCanvas.width / dpr;
+            const cssWidth = Math.min(window.innerWidth - 32, 600);
             const radius = 20 + 10 * Math.sin(t * 3);
-            const amplitude = (cssWidth * 0.5 - radius) / dpr;
-            const centerX = blsCanvas.width / 2;
-            const centerY = blsCanvas.height / 2;
+            const amplitude = cssWidth * 0.5 - radius;
+            const centerX = cssWidth / 2;
+            const centerY = blsCanvas.height / (2 * dpr);
             const x = centerX + amplitude * Math.sin(t * blsFrequency * 2 * Math.PI);
             const hueShift = x < centerX ? -5 : 5;
 
-            console.log('Rendering BLS marker', { x, radius, amplitude, cssWidth, centerX, blsCanvasWidth: blsCanvas.width, dpr });
+            console.log('Rendering BLS marker', { 
+                x, 
+                radius, 
+                amplitude, 
+                cssWidth, 
+                centerX, 
+                blsCanvasWidth: blsCanvas.width, 
+                blsCanvasHeight: blsCanvas.height, 
+                dpr, 
+                minX: centerX - amplitude, 
+                maxX: centerX + amplitude 
+            });
 
             blsCtx.shadowBlur = 20;
             blsCtx.shadowColor = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.beginPath();
-            blsCtx.arc(x, centerY, radius, 0, 2 * Math.PI);
+            blsCtx.arc(x * dpr, centerY * dpr, radius, 0, 2 * Math.PI);
             blsCtx.fillStyle = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.fill();
             blsCtx.shadowBlur = 0;
