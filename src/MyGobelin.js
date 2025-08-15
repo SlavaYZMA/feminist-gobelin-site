@@ -16,6 +16,8 @@ function MyGobelin({ threadsRef, language }) {
     const [setCount, setSetCount] = React.useState(0);
     const [showConsent, setShowConsent] = React.useState(true);
     const [survey, setSurvey] = React.useState({ distress: 0, tension: 0, calm: 0, completed: false });
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [fpsWarning, setFpsWarning] = React.useState(false);
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -28,18 +30,9 @@ function MyGobelin({ threadsRef, language }) {
         const uniqueWords = new Set(words).size;
         const wordFreq = words.reduce((acc, w) => { acc[w] = (acc[w] || 0) + 1; return acc; }, {});
         const maxWordFreq = Math.max(...Object.values(wordFreq), 1);
-        const upperCaseCount = text.split('').filter(c => c.match(/[A-ZА-Я]/)).length;
-        const digitCount = text.split('').filter(c => c.match(/\d/)).length;
-        const punctuationCount = text.split('').filter(c => c.match(/[.,!?;:]/)).length;
-        const lineBreakCount = text.split('\n').length - 1;
-        const vowels = text.split('').filter(c => c.match(/[aeiouyаеёиоуыэюя]/i)).length;
-        const consonants = text.split('').filter(c => c.match(/[bcdfghjklmnpqrstvwxyzбвгджзйклмнпрстфхцчшщ]/i)).length;
-        const vowelsRatio = consonants ? vowels / consonants : 0;
-
         return {
             textLen, wordCount, avgWordLen, sentCount, avgSentLen,
-            uniqueWords, maxWordFreq, upperCaseCount, digitCount,
-            punctuationCount, lineBreakCount, vowelsRatio
+            uniqueWords, maxWordFreq
         };
     };
 
@@ -48,28 +41,26 @@ function MyGobelin({ threadsRef, language }) {
         return triggerWords.reduce((sum, word) => sum + words.includes(word), 0);
     };
 
-    const getFractalParams = (text, setProgress) => {
+    const getFractalParams = React.useMemo(() => (text, setProgress) => {
         const metrics = analyzeText(text);
         const params = {
             cX: (metrics.avgWordLen / 10) - 0.5,
             cY: (metrics.avgSentLen / 50) - 0.5,
-            zoom: Math.min(10, 1 + (metrics.textLen / 500)),
-            iterations: Math.min(400, 100 + metrics.uniqueWords * 5),
-            hue: (metrics.upperCaseCount * 3) % 360,
-            sat: Math.min(100, metrics.maxWordFreq * 15 * (setProgress < 0.75 ? 1 : 0.8)),
-            bright: Math.min(100, metrics.vowelsRatio * 120 * (setProgress < 0.75 ? 1 : 0.9)),
-            speed: Math.max(0.1, metrics.punctuationCount * 0.15 * (setProgress < 0.75 ? 1 : 0.5)),
-            distortion: metrics.lineBreakCount * 0.1,
-            symmetryBreak: metrics.digitCount * 0.15,
-            breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)) * (setProgress < 0.75 ? 1 : 0.5),
-            waveAmplitude: metrics.punctuationCount * 0.05,
-            textureGrain: (1 - metrics.vowelsRatio) * 2,
-            depthLayers: Math.max(1, metrics.lineBreakCount),
-            rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1,
-            flashFreq: 0,
-            rgbSplit: 0,
+            zoom: Math.min(8, 1 + (metrics.textLen / 500)),
+            iterations: Math.min(200, 50 + metrics.uniqueWords * 5),
+            hue: (metrics.maxWordFreq * 10) % 360,
+            sat: Math.min(90, metrics.maxWordFreq * 10 * (setProgress < 0.75 ? 1 : 0.8)),
+            bright: Math.min(90, metrics.avgWordLen * 15 * (setProgress < 0.75 ? 1 : 0.9)),
+            speed: Math.max(0.05, metrics.sentCount * 0.1 * (setProgress < 0.75 ? 1 : 0.5)),
+            distortion: metrics.avgSentLen * 0.05,
+            symmetryBreak: metrics.wordCount * 0.01,
+            breathingRate: Math.max(0.3, Math.min(1.5, metrics.avgSentLen / 15)),
+            waveAmplitude: metrics.sentCount * 0.03,
+            textureGrain: 0, // Убираем шум
+            depthLayers: Math.max(1, metrics.sentCount / 2),
+            rotationDir: metrics.avgWordLen > 5 ? 1 : -1,
             escapeRadius: 4 + metrics.textLen / 1000,
-            twist: metrics.uniqueWords * 0.01
+            twist: metrics.uniqueWords * 0.005
         };
 
         let palette = 'default';
@@ -77,44 +68,42 @@ function MyGobelin({ threadsRef, language }) {
             const count = countTriggers(text, keywordRules.TRIGGERS[category]);
             if (count > 0) {
                 if (category === 'fear') {
-                    params.zoom += count * 0.3;
-                    params.rgbSplit += count * 0.015;
+                    params.zoom += count * 0.2;
                     params.hue = (params.hue + 180) % 360;
-                    params.twist += count * 0.02;
+                    params.twist += count * 0.01;
                     palette = 'fear';
                 } else if (category === 'anger') {
-                    params.sat += count * 10;
-                    params.flashFreq += count * 0.2;
+                    params.sat += count * 5;
                     params.hue = (params.hue + 360) % 360;
-                    params.distortion += count * 0.1;
+                    params.distortion += count * 0.05;
                     palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations += count * 20;
-                    params.cX += count * 0.02;
+                    params.iterations += count * 10;
+                    params.cX += count * 0.01;
                     palette = palette === 'default' ? 'body' : palette;
                 } else if (category === 'place') {
-                    params.cX -= count * 0.04;
-                    params.cY -= count * 0.04;
-                    params.twist += count * 0.01;
+                    params.cX -= count * 0.02;
+                    params.cY -= count * 0.02;
+                    params.twist += count * 0.005;
                     palette = palette === 'default' ? 'place' : palette;
                 } else if (category === 'silence') {
-                    params.speed -= count * 0.1;
-                    params.bright = Math.min(100, params.bright * 0.9);
+                    params.speed -= count * 0.05;
+                    params.bright = Math.min(90, params.bright * 0.9);
                     params.hue = (params.hue + 200) % 360;
                     palette = 'silence';
                 } else if (category === 'escape') {
-                    params.distortion += count * 0.2;
-                    params.twist += count * 0.03;
+                    params.distortion += count * 0.1;
+                    params.twist += count * 0.015;
                     palette = palette === 'default' ? 'escape' : palette;
                 } else if (category === 'nature') {
-                    params.distortion += count * 0.1;
+                    params.distortion += count * 0.05;
                     params.hue = (params.hue + 120) % 360;
-                    params.waveAmplitude += count * 0.03;
+                    params.waveAmplitude += count * 0.015;
                     palette = 'nature';
                 } else if (category === 'hope') {
-                    params.bright += count * 10;
+                    params.bright += count * 5;
                     params.hue = (params.hue + 60) % 360;
-                    params.breathingRate += count * 0.2;
+                    params.breathingRate += count * 0.1;
                     palette = 'hope';
                 }
             }
@@ -122,7 +111,7 @@ function MyGobelin({ threadsRef, language }) {
 
         params.palette = palette;
         return params;
-    };
+    }, []);
 
     const handleSubmitHistory = () => {
         if (!historyText) return;
@@ -133,6 +122,7 @@ function MyGobelin({ threadsRef, language }) {
         setHistoryText('');
         setIsEditing(false);
         setShowConsent(true);
+        setIsLoading(true);
     };
 
     const handleClearHistory = () => {
@@ -143,6 +133,7 @@ function MyGobelin({ threadsRef, language }) {
         localStorage.setItem('threads', JSON.stringify([]));
         setBlsActive(false);
         setSetCount(0);
+        setIsLoading(true);
     };
 
     const handleEditHistory = () => {
@@ -185,9 +176,7 @@ function MyGobelin({ threadsRef, language }) {
             bright: 80,
             speed: 0,
             breathingRate: 0,
-            waveAmplitude: 0,
-            rgbSplit: 0,
-            flashFreq: 0
+            waveAmplitude: 0
         }];
     };
 
@@ -197,7 +186,7 @@ function MyGobelin({ threadsRef, language }) {
             ...threadsRef.current[0],
             sat: Math.max(20, threadsRef.current[0].sat * 0.8),
             bright: Math.max(20, threadsRef.current[0].bright * 0.9),
-            speed: Math.max(0.05, threadsRef.current[0].speed * 0.7),
+            speed: Math.max(0.03, threadsRef.current[0].speed * 0.7),
             zoom: Math.max(1, threadsRef.current[0].zoom * 0.9)
         }];
     };
@@ -205,6 +194,7 @@ function MyGobelin({ threadsRef, language }) {
     const handleConsent = () => {
         setShowConsent(false);
         setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
+        setIsLoading(true);
     };
 
     const handleSurveySubmit = (type, value) => {
@@ -231,16 +221,27 @@ function MyGobelin({ threadsRef, language }) {
             return;
         }
 
+        ctx.imageSmoothingEnabled = true;
         let animationFrameId;
         let time = 0;
         let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
         let setStartTime = 0;
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
 
         const resizeCanvas = () => {
-            canvas.width = window.innerWidth - 32;
-            canvas.height = 600;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.min(window.innerWidth - 32, 800) * dpr;
+            canvas.height = 600 * dpr;
+            canvas.style.width = `${canvas.width / dpr}px`;
+            canvas.style.height = `${canvas.height / dpr}px`;
             blsCanvas.width = canvas.width;
             blsCanvas.height = canvas.height;
+            blsCanvas.style.width = canvas.style.width;
+            blsCanvas.style.height = canvas.style.height;
+            ctx.scale(dpr, dpr);
+            blsCtx.scale(dpr, dpr);
         };
 
         const lerp = (start, end, factor) => start + (end - start) * factor;
@@ -274,7 +275,7 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         const renderFractal = (params, t, setProgress) => {
-            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit, palette, escapeRadius, twist } = params;
+            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, depthLayers, rotationDir, escapeRadius, twist } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
 
@@ -282,10 +283,10 @@ function MyGobelin({ threadsRef, language }) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            const targetBreathe = Math.sin(t * breathingRate * 0.8) * 0.1;
+            const targetBreathe = Math.sin(t * breathingRate * 0.8) * 0.05;
             const targetWave = Math.sin(t * speed * 1.2) * waveAmplitude * 1.2;
-            const targetRotation = t * speed * rotationDir * 0.015;
-            const targetTwist = Math.sin(t * twist) * 0.04;
+            const targetRotation = t * speed * rotationDir * 0.01;
+            const targetTwist = Math.sin(t * twist) * 0.02;
 
             const breathe = lerp(prevBreathe, targetBreathe, 0.1);
             const wave = lerp(prevWave, targetWave, 0.1);
@@ -297,8 +298,9 @@ function MyGobelin({ threadsRef, language }) {
             prevRotation = rotation;
             prevTwist = twistEffect;
 
-            for (let x = 0; x < canvas.width; x += 1) {
-                for (let y = 0; y < canvas.height; y += 1) {
+            const step = 2; // Уменьшаем плотность
+            for (let x = 0; x < canvas.width; x += step) {
+                for (let y = 0; y < canvas.height; y += step) {
                     let zx = ((x - centerX) / canvas.width) * scale;
                     let zy = ((y - centerY) / canvas.height) * scale;
                     const rotatedZx = zx * Math.cos(rotation + twistEffect) - zy * Math.sin(rotation + twistEffect);
@@ -322,28 +324,26 @@ function MyGobelin({ threadsRef, language }) {
                     if (i === iterations) {
                         color = [0, 0, 0];
                     } else {
-                        const h = (hue + (i * 20) % 360) % 360;
-                        const s = Math.min(100, sat + (Math.sin(t * flashFreq) * 15));
-                        const v = Math.min(100, bright + (i / iterations) * 80);
-                        color = hsvToRgb(h, s, v, palette);
-                        if (rgbSplit > 0) {
-                            color[0] += Math.sin(t + x * 0.01) * rgbSplit * 30;
-                            color[1] += Math.sin(t + y * 0.01) * rgbSplit * 30;
-                            color[2] += Math.cos(t + (x + y) * 0.01) * rgbSplit * 30;
-                        }
-                        if (textureGrain > 0) {
-                            const noise = (Math.random() - 0.5) * textureGrain;
-                            color = color.map(c => Math.max(0, Math.min(255, c + noise)));
-                        }
+                        const h = (hue + (i * 15) % 360) % 360;
+                        const s = Math.min(90, sat);
+                        const v = Math.min(90, bright + (i / iterations) * 70);
+                        color = hsvToRgb(h, s, v, params.palette);
                     }
 
                     const layerFactor = 1 - (i / iterations) * depthLayers * 0.5;
                     color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
 
-                    data[idx] = color[0];
-                    data[idx + 1] = color[1];
-                    data[idx + 2] = color[2];
-                    data[idx + 3] = 255;
+                    for (let dx = 0; dx < step; dx++) {
+                        for (let dy = 0; dy < step; dy++) {
+                            if (x + dx < canvas.width && y + dy < canvas.height) {
+                                const dIdx = ((y + dy) * canvas.width + (x + dx)) * 4;
+                                data[dIdx] = color[0];
+                                data[dIdx + 1] = color[1];
+                                data[dIdx + 2] = color[2];
+                                data[dIdx + 3] = 255;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -359,21 +359,23 @@ function MyGobelin({ threadsRef, language }) {
             const centerY = blsCanvas.height / 2;
             const x = centerX + amplitude * 0.5 * Math.sin(t * blsFrequency * 2 * Math.PI);
             const hueShift = x < centerX ? -5 : 5;
-            const brightShift = Math.abs(x - centerX) < amplitude * 0.1 ? 1.05 : 1;
-
-            const gradient = blsCtx.createRadialGradient(x, centerY, 0, x, centerY, 30);
-            const baseHue = (threadsRef.current[0]?.hue || 0) + hueShift;
-            const [r, g, b] = hsvToRgb(baseHue, 80 * brightShift, 90 * brightShift, threadsRef.current[0]?.palette);
-            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
-            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
 
             blsCtx.beginPath();
-            blsCtx.arc(x, centerY, 30, 0, 2 * Math.PI);
-            blsCtx.fillStyle = gradient;
+            blsCtx.arc(x, centerY, 20, 0, 2 * Math.PI);
+            blsCtx.fillStyle = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.fill();
         };
 
         const animate = () => {
+            const now = performance.now();
+            frameCount++;
+            if (now - lastFrameTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = now;
+                if (fps < 20) setFpsWarning(true);
+            }
+
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -400,22 +402,21 @@ function MyGobelin({ threadsRef, language }) {
 
                 renderFractal(threadsRef.current[0], time, setCount / maxSets);
                 renderBlsMarker(time);
-                time += 0.008;
+                time += 0.016; // ~60fps
             }
 
             animationFrameId = requestAnimationFrame(animate);
         };
 
         resizeCanvas();
-        // Запускаем анимацию только после проверки
-        const startAnimation = () => {
+        setTimeout(() => {
             if (canvasRef.current && blsCanvasRef.current) {
+                setIsLoading(false);
                 animate();
             } else {
-                setTimeout(startAnimation, 100); // Пробуем снова через 100 мс
+                console.error('Canvas refs still not initialized after delay');
             }
-        };
-        startAnimation();
+        }, 100);
         window.addEventListener('resize', resizeCanvas);
 
         return () => {
@@ -476,6 +477,8 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
+        isLoading && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
+        fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
         showConsent ? renderConsentScreen() : [
             React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
             React.createElement(
@@ -490,6 +493,7 @@ function MyGobelin({ threadsRef, language }) {
                             if (submittedHistory) {
                                 threadsRef.current = [getFractalParams(submittedHistory, 0)];
                                 localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+                                setIsLoading(true);
                             }
                         }
                     },
@@ -503,13 +507,16 @@ function MyGobelin({ threadsRef, language }) {
                             setMode('aiGorgon');
                             const savedThreads = localStorage.getItem('threads');
                             threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
+                            setIsLoading(true);
                         }
                     },
                     translations[language].aiGorgon || 'Create based on AI Gorgon'
                 )
             ),
-            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
-            React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', pointerEvents: 'none' } }),
+            React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
+                React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+                React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
+            ]),
             mode === 'history' && React.createElement(
                 'div',
                 { key: 'history-container', className: 'history-container' },
@@ -575,7 +582,7 @@ function MyGobelin({ threadsRef, language }) {
                     React.createElement('input', {
                         type: 'range',
                         min: 0.8,
-                        max: 2.0,
+                        max: 1.6,
                         step: 0.1,
                         value: blsFrequency,
                         onChange: (e) => setBlsFrequency(parseFloat(e.target.value))
@@ -585,7 +592,7 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement(
                     'div',
                     { className: 'bls-mode' },
-                    ['soft', 'standard', 'intense'].map(mode => (
+                    ['soft', 'standard'].map(mode => (
                         React.createElement(
                             'button',
                             {
@@ -593,7 +600,7 @@ function MyGobelin({ threadsRef, language }) {
                                 className: `bls-mode-button ${blsMode === mode ? 'active' : ''}`,
                                 onClick: () => {
                                     setBlsMode(mode);
-                                    setBlsFrequency(mode === 'soft' ? 0.8 : mode === 'standard' ? 1.2 : 1.8);
+                                    setBlsFrequency(mode === 'soft' ? 0.8 : 1.2);
                                 }
                             },
                             translations[language][mode] || mode.charAt(0).toUpperCase() + mode.slice(1)
@@ -606,7 +613,7 @@ function MyGobelin({ threadsRef, language }) {
                 { key: 'gobelin-buttons', className: 'gobelin-buttons' },
                 React.createElement(
                     'button',
-                    { onClick: shareGobelin, className: 'gobelin-button share-button' },
+                    { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: isLoading },
                     translations[language].share || 'Share'
                 )
             ),
