@@ -16,6 +16,7 @@ function MyGobelin({ threadsRef, language }) {
     const [setCount, setSetCount] = React.useState(0);
     const [showConsent, setShowConsent] = React.useState(true);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
 
     const analyzeText = (text) => {
@@ -197,22 +198,31 @@ function MyGobelin({ threadsRef, language }) {
     React.useEffect(() => {
         console.log('useEffect triggered', { canvasRef: !!canvasRef.current, blsCanvasRef: !!blsCanvasRef.current });
 
-        if (!canvasRef.current || !blsCanvasRef.current) {
-            console.error('Canvas refs are not initialized at start of useEffect');
-            setIsLoading(true);
-            return;
-        }
+        const checkCanvas = () => {
+            if (!canvasRef.current || !blsCanvasRef.current) {
+                console.error('Canvas refs are not initialized', {
+                    canvas: !!document.querySelector('.data-art-canvas'),
+                    blsCanvas: !!document.querySelector('.bls-canvas')
+                });
+                setTimeout(checkCanvas, 500);
+                return false;
+            }
+            return true;
+        };
 
         const canvas = canvasRef.current;
         const blsCanvas = blsCanvasRef.current;
-        const ctx = canvas.getContext('2d');
-        const blsCtx = blsCanvas.getContext('2d');
-        if (!ctx || !blsCtx) {
-            console.error('Failed to get 2D context for canvas');
-            return;
+        let ctx, blsCtx;
+        if (canvas && blsCanvas) {
+            ctx = canvas.getContext('2d');
+            blsCtx = blsCanvas.getContext('2d');
+            if (!ctx || !blsCtx) {
+                console.error('Failed to get 2D context for canvas');
+                return;
+            }
+            ctx.imageSmoothingEnabled = true;
         }
 
-        ctx.imageSmoothingEnabled = true;
         let animationFrameId;
         let time = 0;
         let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
@@ -222,6 +232,7 @@ function MyGobelin({ threadsRef, language }) {
         let fps = 0;
 
         const resizeCanvas = () => {
+            if (!canvas || !blsCanvas) return;
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             canvas.width = Math.min(window.innerWidth - 32, 800) * dpr;
             canvas.height = 600 * dpr;
@@ -267,6 +278,7 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         const renderFractal = (params, t, setProgress) => {
+            if (!ctx) return;
             const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, depthLayers, rotationDir, escapeRadius, twist } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
@@ -343,6 +355,7 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         const renderBlsMarker = (t) => {
+            if (!blsCtx) return;
             blsCtx.clearRect(0, 0, blsCanvas.width, blsCanvas.height);
             if (!blsActive || !setActive) return;
 
@@ -359,6 +372,10 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         const animate = () => {
+            if (!ctx || !blsCtx) {
+                console.error('Context not available for animation');
+                return;
+            }
             const now = performance.now();
             frameCount++;
             if (now - lastFrameTime >= 1000) {
@@ -400,19 +417,21 @@ function MyGobelin({ threadsRef, language }) {
             animationFrameId = requestAnimationFrame(animate);
         };
 
-        resizeCanvas();
         const startAnimation = () => {
-            if (canvasRef.current && blsCanvasRef.current) {
-                console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current });
+            if (checkCanvas()) {
+                console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current, ctx: !!ctx, blsCtx: !!blsCtx });
+                resizeCanvas();
+                setCanvasReady(true);
                 setIsLoading(false);
                 animate();
             } else {
-                console.error('Canvas refs still not initialized after delay');
-                setTimeout(startAnimation, 500); // Повторная попытка через 500 мс
+                console.warn('Retrying animation start');
+                setTimeout(startAnimation, 500);
             }
         };
 
-        setTimeout(startAnimation, 500); // Увеличенная задержка
+        setTimeout(startAnimation, 500);
+        setTimeout(() => setIsLoading(false), 2000); // Force hide loading screen after 2s
         window.addEventListener('resize', resizeCanvas);
 
         return () => {
@@ -446,8 +465,13 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        isLoading && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
+        console.log('Rendering canvas', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current }),
+        isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
         fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
+        React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
+            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+            React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
+        ]),
         showConsent ? renderConsentScreen() : [
             React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
             React.createElement(
@@ -538,10 +562,6 @@ function MyGobelin({ threadsRef, language }) {
                     ))
                 )
             ),
-            React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
-                React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
-                React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
-            ]),
             mode === 'history' && React.createElement(
                 'div',
                 { key: 'history-container', className: 'history-container' },
@@ -582,7 +602,7 @@ function MyGobelin({ threadsRef, language }) {
                 { key: 'gobelin-buttons', className: 'gobelin-buttons' },
                 React.createElement(
                     'button',
-                    { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: isLoading },
+                    { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
                     translations[language].share || 'Share'
                 )
             )
