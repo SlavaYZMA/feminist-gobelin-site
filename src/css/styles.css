@@ -555,17 +555,19 @@ body {
 }
 .data-art-canvas {
     width: 100%;
+    max-width: 800px;
     height: 600px;
     background: #fff;
     border-radius: 8px;
 }
 .bls-canvas {
     width: 100%;
+    max-width: 800px;
     height: 600px;
     position: absolute;
     pointer-events: none;
 }
-.consent-screen, .survey-screen {
+.consent-screen, .survey-screen, .loading-screen, .fps-warning {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -639,7 +641,7 @@ body {
     cursor: not-allowed;
 }
 .bls-mode-button.active {
-    background: #003087; /* Темнее для активного состояния */
+    background: #003087;
 }
 .bls-frequency, .survey-item {
     display: flex;
@@ -652,4 +654,14 @@ body {
 }
 .bls-frequency label, .survey-item label {
     font-weight: 500;
+}
+.loading-screen {
+    font-size: 16px;
+    font-weight: 500;
+}
+.fps-warning {
+    background: #ff4d4f;
+    color: #fff;
+    padding: 16px;
+    font-size: 14px;
 }
