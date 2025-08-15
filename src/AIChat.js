@@ -206,7 +206,7 @@ function AIChat({ threadsRef, language, translations }) {
         }
     }, [messages]);
 
-    return null;
+    return <div>Testing</div>;
 }
 
 export default AIChat;
