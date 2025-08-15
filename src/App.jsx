@@ -10,7 +10,7 @@ threadsRef.current = [];
 
 function App() {
     const [currentPage, setCurrentPage] = React.useState('about');
-    const [menuOpen, setMenuOpen] = React.useState(falsehiba);
+    const [menuOpen, setMenuOpen] = React.useState(false);
     const [shareModalOpen, setShareModalOpen] = React.useState(false);
     const [language, setLanguage] = React.useState('ru');
 
