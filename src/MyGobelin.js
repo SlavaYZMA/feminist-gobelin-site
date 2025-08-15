@@ -2,7 +2,7 @@ import React from 'react';
 import { keywordRules } from './keywordRules.js';
 import { translations } from './config.js';
 
-function MyGobelin({ threadsRef, language = 'en' }) {
+function MyGobelin({ threadsRef, language = 'en' }) { // Добавлено значение по умолчанию 'en'
     const canvasRef = React.useRef(null);
     const blsCanvasRef = React.useRef(null);
     const [mode, setMode] = React.useState('history');
@@ -21,10 +21,9 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
     const [showInfoModal, setShowInfoModal] = React.useState(false);
-    const [showBlsEmdrModal, setShowBlsEmdrModal] = React.useState(false); // Новое состояние для модального окна BLS и EMDR
 
     // Проверка корректности language
-    const validLanguage = ['en', 'ru', 'es'].includes(language) ? language : 'en';
+    const validLanguage = ['en', 'ru'].includes(language) ? language : 'en';
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -242,14 +241,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
 
     const closeInfoModal = () => {
         setShowInfoModal(false);
-    };
-
-    const openBlsEmdrModal = () => {
-        setShowBlsEmdrModal(true);
-    };
-
-    const closeBlsEmdrModal = () => {
-        setShowBlsEmdrModal(false);
     };
 
     React.useEffect(() => {
@@ -649,35 +640,11 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 translations[validLanguage].close || 'Close'
             )
         ),
-        showBlsEmdrModal && React.createElement(
-            'div',
-            { className: 'info-modal' },
-            React.createElement('h2', { key: 'bls-emdr-title' }, translations[validLanguage].blsEmdrTitle || 'What is BLS and EMDR?'),
-            React.createElement(
-                'p',
-                { key: 'bls-emdr-info' },
-                translations[validLanguage].blsEmdrInfo || (
-                    <>
-                        BLS (Bilateral Stimulation) — двусторонняя стимуляция, при которой внимание поочерёдно переключается между левым и правым направлением. Это может быть визуальное движение, звуки или лёгкие тактильные стимулы.<br /><br />
-                        EMDR (Eye Movement Desensitization and Reprocessing) — метод психотерапии, в котором ритмичные движения глаз помогают переработать травматические воспоминания.<br /><br />
-                        Исследования (NICE, APA) показывают, что такие стимулы могут помогать мозгу переключать обработку информации, снижать интенсивность негативных эмоций и улучшать интеграцию воспоминаний.<br /><br />
-                        В нашем проекте этот принцип используется только в художественном формате — для создания ритмичной визуализации, которая может способствовать расслаблению и концентрации, но не является терапией.
-                    </>
-                )
-            ),
-            React.createElement(
-                'button',
-                { key: 'close-bls-emdr', onClick: closeBlsEmdrModal },
-                translations[validLanguage].close || 'Close'
-            )
-        ),
         showInfoModal && React.createElement('div', { className: 'overlay open', onClick: closeInfoModal }),
-        showBlsEmdrModal && React.createElement('div', { className: 'overlay open', onClick: closeBlsEmdrModal }),
         React.createElement(
             'div',
             { className: 'header' },
-            React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[validLanguage].whatIsBls || 'What is BLS?'),
-            React.createElement('button', { className: 'bls-emdr-button', onClick: openBlsEmdrModal }, translations[validLanguage].whatIsBls || 'What is BLS?')
+            React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[validLanguage].whatIsBls || 'What is BLS?')
         ),
         React.createElement('h1', { key: 'title' }, translations[validLanguage].myGobelin || 'My Data Art'),
         React.createElement(
