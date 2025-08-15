@@ -20,6 +20,7 @@ function MyGobelin({ threadsRef, language }) {
     const [showConsentScreen, setShowConsentScreen] = React.useState(false);
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
+    const [showInfoModal, setShowInfoModal] = React.useState(false);
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -124,7 +125,7 @@ function MyGobelin({ threadsRef, language }) {
         cY: 0,
         zoom: 2,
         iterations: 100,
-        hue: 40, // Жёлто-оранжевый
+        hue: 40,
         sat: 80,
         bright: 90,
         speed: 0,
@@ -231,6 +232,14 @@ function MyGobelin({ threadsRef, language }) {
         setShowConsentScreen(false);
     };
 
+    const openInfoModal = () => {
+        setShowInfoModal(true);
+    };
+
+    const closeInfoModal = () => {
+        setShowInfoModal(false);
+    };
+
     React.useEffect(() => {
         console.log('useEffect triggered', { canvasRef: !!canvasRef.current, blsCanvasRef: !!blsCanvasRef.current });
 
@@ -263,7 +272,7 @@ function MyGobelin({ threadsRef, language }) {
         let time = 0;
         let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
         let setStartTime = 0;
-        let lastFrameTime = performance.now();
+        let lastFrameFPS = performance.now();
         let frameCount = 0;
         let fps = 0;
         let cachedImageData = null;
@@ -445,10 +454,10 @@ function MyGobelin({ threadsRef, language }) {
             }
             const now = performance.now();
             frameCount++;
-            if (now - lastFrameTime >= 1000) {
+            if (now - lastFrameFPS >= 1000) {
                 fps = frameCount;
                 frameCount = 0;
-                lastFrameTime = now;
+                lastFrameFPS = now;
                 console.log('FPS:', fps);
                 if (fps < 15) setFpsWarning(true);
                 else setFpsWarning(false);
@@ -599,6 +608,40 @@ function MyGobelin({ threadsRef, language }) {
                     translations[language].decline || 'Decline'
                 )
             )
+        ),
+        showInfoModal && React.createElement(
+            'div',
+            { className: 'info-modal' },
+            React.createElement('h2', { key: 'info-title' }, translations[language].whatIsBls || 'What is BLS?'),
+            React.createElement(
+                'p',
+                { key: 'bls-info' },
+                translations[language].blsInfo ||
+                'Bilateral Stimulation (BLS) is when attention alternates between the left and right sides (visually, auditory, or tactile). It is used in EMDR therapy to process traumatic memories.'
+            ),
+            React.createElement(
+                'p',
+                { key: 'emdr-info' },
+                translations[language].emdrInfo ||
+                'Eye Movement Desensitization and Reprocessing (EMDR) is a scientifically validated psychotherapy method for trauma. We use only an artistic visualization inspired by this method.'
+            ),
+            React.createElement(
+                'p',
+                { key: 'not-therapy' },
+                translations[language].notTherapy ||
+                'Important: This is not therapy and does not replace working with a psychologist.'
+            ),
+            React.createElement(
+                'button',
+                { key: 'close-info', onClick: closeInfoModal },
+                translations[language].close || 'Close'
+            )
+        ),
+        showInfoModal && React.createElement('div', { className: 'overlay open', onClick: closeInfoModal }),
+        React.createElement(
+            'div',
+            { className: 'header' },
+            React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[language].whatIsBls || 'What is BLS?')
         ),
         // 1. Верхняя панель
         React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
