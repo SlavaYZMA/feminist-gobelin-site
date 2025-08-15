@@ -10,14 +10,13 @@ function MyGobelin({ threadsRef, language }) {
     const [submittedHistory, setSubmittedHistory] = React.useState(localStorage.getItem('submittedHistory') || '');
     const [isEditing, setIsEditing] = React.useState(false);
     const [blsActive, setBlsActive] = React.useState(false);
-    const [blsFrequency, setBlsFrequency] = React.useState(1.2); // Гц
-    const [blsMode, setBlsMode] = React.useState('standard'); // Мягко, Стандарт, Интенсивнее
+    const [blsFrequency, setBlsFrequency] = React.useState(1.2);
+    const [blsMode, setBlsMode] = React.useState('standard');
     const [setActive, setSetActive] = React.useState(false);
     const [setCount, setSetCount] = React.useState(0);
     const [showConsent, setShowConsent] = React.useState(true);
     const [survey, setSurvey] = React.useState({ distress: 0, tension: 0, calm: 0, completed: false });
 
-    // Анализирует текст
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
         const wordCount = words.length;
@@ -44,13 +43,11 @@ function MyGobelin({ threadsRef, language }) {
         };
     };
 
-    // Подсчитывает триггерные слова
     const countTriggers = (text, triggerWords) => {
         const words = text.toLowerCase().split(/\s+/);
         return triggerWords.reduce((sum, word) => sum + words.includes(word), 0);
     };
 
-    // Генерирует параметры фрактала
     const getFractalParams = (text, setProgress) => {
         const metrics = analyzeText(text);
         const params = {
@@ -127,7 +124,6 @@ function MyGobelin({ threadsRef, language }) {
         return params;
     };
 
-    // Обработка текста и сохранение
     const handleSubmitHistory = () => {
         if (!historyText) return;
         setSubmittedHistory(historyText);
@@ -167,7 +163,6 @@ function MyGobelin({ threadsRef, language }) {
         alert(translations[language].share + ' скопировано!');
     };
 
-    // Управление BLS и сетами
     const handleStartBls = () => {
         setBlsActive(true);
         setSetActive(true);
@@ -212,7 +207,6 @@ function MyGobelin({ threadsRef, language }) {
         setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
     };
 
-    // Обработка опроса
     const handleSurveySubmit = (type, value) => {
         setSurvey(prev => ({ ...prev, [type]: value }));
     };
@@ -223,10 +217,20 @@ function MyGobelin({ threadsRef, language }) {
     };
 
     React.useEffect(() => {
+        if (!canvasRef.current || !blsCanvasRef.current) {
+            console.error('Canvas refs are not initialized');
+            return;
+        }
+
         const canvas = canvasRef.current;
         const blsCanvas = blsCanvasRef.current;
         const ctx = canvas.getContext('2d');
         const blsCtx = blsCanvas.getContext('2d');
+        if (!ctx || !blsCtx) {
+            console.error('Failed to get 2D context for canvas');
+            return;
+        }
+
         let animationFrameId;
         let time = 0;
         let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
@@ -234,7 +238,7 @@ function MyGobelin({ threadsRef, language }) {
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth - 32;
-            canvas.height = 600; // Из твоего CSS
+            canvas.height = 600;
             blsCanvas.width = canvas.width;
             blsCanvas.height = canvas.height;
         };
@@ -403,7 +407,15 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         resizeCanvas();
-        animate();
+        // Запускаем анимацию только после проверки
+        const startAnimation = () => {
+            if (canvasRef.current && blsCanvasRef.current) {
+                animate();
+            } else {
+                setTimeout(startAnimation, 100); // Пробуем снова через 100 мс
+            }
+        };
+        startAnimation();
         window.addEventListener('resize', resizeCanvas);
 
         return () => {
@@ -464,8 +476,7 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        showConsent && renderConsentScreen(),
-        !showConsent && [
+        showConsent ? renderConsentScreen() : [
             React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
             React.createElement(
                 'div',
