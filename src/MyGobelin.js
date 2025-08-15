@@ -466,145 +466,161 @@ function MyGobelin({ threadsRef, language }) {
         { className: 'page gobelin-page' },
         isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
         fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
-        React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
-            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
-            React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
-        ]),
-        [
-            React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
+        // 1. Верхняя панель (header уже в App.js, здесь только контент)
+        React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
+        // 2. Кнопки режимов
+        React.createElement(
+            'div',
+            { key: 'mode-switcher', className: 'mode-switcher' },
             React.createElement(
-                'div',
-                { key: 'mode-switcher', className: 'mode-switcher' },
-                React.createElement(
-                    'button',
-                    {
-                        className: `mode-button ${mode === 'history' ? 'active' : ''}`,
-                        onClick: () => {
-                            setMode('history');
-                            if (submittedHistory) {
-                                threadsRef.current = [getFractalParams(submittedHistory)];
-                                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-                                setIsLoading(false);
-                            }
-                        }
-                    },
-                    translations[language].myHistory || 'Create based on my history'
-                ),
-                React.createElement(
-                    'button',
-                    {
-                        className: `mode-button ${mode === 'aiGorgon' ? 'active' : ''}`,
-                        onClick: () => {
-                            setMode('aiGorgon');
-                            const savedThreads = localStorage.getItem('threads');
-                            threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
+                'button',
+                {
+                    key: 'history-mode',
+                    className: `mode-button ${mode === 'history' ? 'active' : ''}`,
+                    onClick: () => {
+                        setMode('history');
+                        if (submittedHistory) {
+                            threadsRef.current = [getFractalParams(submittedHistory)];
+                            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
                             setIsLoading(false);
                         }
-                    },
-                    translations[language].aiGorgon || 'Create based on AI Gorgon'
-                )
+                    }
+                },
+                translations[language].myHistory || 'Create based on my history'
             ),
-            submittedHistory && React.createElement(
-                'div',
-                { key: 'bls-controls', className: 'bls-controls bls-controls-top' },
-                React.createElement(
-                    'button',
-                    { onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
-                    translations[language].startBls || 'Start BLS'
-                ),
-                React.createElement(
-                    'button',
-                    { onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
-                    translations[language].pauseBls || 'Pause BLS'
-                ),
-                React.createElement(
-                    'button',
-                    { onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
-                    translations[language].stopBls || 'Stop BLS'
-                ),
-                React.createElement(
-                    'button',
-                    { onClick: handleCalmDown, className: 'bls-button' },
-                    translations[language].calmDown || 'Make Calmer'
-                ),
-                React.createElement(
-                    'div',
-                    { className: 'bls-frequency' },
-                    React.createElement('label', null, translations[language].frequency || 'BLS Frequency (Hz)'),
-                    React.createElement('input', {
-                        type: 'range',
-                        min: 0.8,
-                        max: 1.6,
-                        step: 0.1,
-                        value: blsFrequency,
-                        onChange: (e) => setBlsFrequency(parseFloat(e.target.value))
-                    }),
-                    React.createElement('span', null, blsFrequency.toFixed(1))
-                ),
-                React.createElement(
-                    'div',
-                    { className: 'bls-mode' },
-                    ['soft', 'standard'].map(mode => (
-                        React.createElement(
-                            'button',
-                            {
-                                key: mode,
-                                className: `bls-mode-button ${blsMode === mode ? 'active' : ''}`,
-                                onClick: () => {
-                                    setBlsMode(mode);
-                                    setBlsFrequency(mode === 'soft' ? 0.8 : 1.2);
-                                }
-                            },
-                            translations[language][mode] || mode.charAt(0).toUpperCase() + mode.slice(1)
-                        )
-                    ))
-                )
+            React.createElement(
+                'button',
+                {
+                    key: 'aiGorgon-mode',
+                    className: `mode-button ${mode === 'aiGorgon' ? 'active' : ''}`,
+                    onClick: () => {
+                        setMode('aiGorgon');
+                        const savedThreads = localStorage.getItem('threads');
+                        threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
+                        setIsLoading(false);
+                    }
+                },
+                translations[language].aiGorgon || 'Create based on AI Gorgon'
+            )
+        ),
+        // 3. Блок фрактала и BLS
+        React.createElement(
+            'div',
+            { key: 'canvas-container', style: { position: 'relative', margin: '0 auto', maxWidth: '600px' } },
+            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+            React.createElement('canvas', {
+                key: 'bls-canvas',
+                ref: blsCanvasRef,
+                className: 'bls-canvas',
+                style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }
+            })
+        ),
+        // 4. Блок настроек BLS
+        submittedHistory && React.createElement(
+            'div',
+            { key: 'bls-controls', className: 'bls-controls' },
+            React.createElement(
+                'button',
+                { key: 'start-bls', onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
+                translations[language].startBls || 'Start BLS'
             ),
-            mode === 'history' && React.createElement(
-                'div',
-                { key: 'history-container', className: 'history-container' },
-                React.createElement('textarea', {
-                    value: historyText,
-                    onChange: (e) => setHistoryText(e.target.value),
-                    placeholder: translations[language].historyPlaceholder || 'Enter your story...',
-                    rows: 5,
-                    className: 'history-textarea'
-                }),
-                React.createElement(
-                    'div',
-                    { className: 'history-buttons' },
-                    React.createElement(
-                        'button',
-                        { onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
-                        translations[language].submit || 'Submit'
-                    ),
-                    React.createElement(
-                        'button',
-                        { onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
-                        translations[language].clear || 'Clear'
-                    )
-                ),
-                submittedHistory && !isEditing && React.createElement(
-                    'div',
-                    { className: 'history-text' },
-                    React.createElement('p', null, submittedHistory),
-                    React.createElement(
-                        'button',
-                        { onClick: handleEditHistory, className: 'history-button edit' },
-                        translations[language].edit || 'Edit'
-                    )
-                )
+            React.createElement(
+                'button',
+                { key: 'pause-bls', onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
+                translations[language].pauseBls || 'Pause BLS'
+            ),
+            React.createElement(
+                'button',
+                { key: 'stop-bls', onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
+                translations[language].stopBls || 'Stop BLS'
+            ),
+            React.createElement(
+                'button',
+                { key: 'calm-down', onClick: handleCalmDown, className: 'bls-button' },
+                translations[language].calmDown || 'Make Calmer'
             ),
             React.createElement(
                 'div',
-                { key: 'gobelin-buttons', className: 'gobelin-buttons' },
+                { key: 'bls-frequency', className: 'bls-frequency' },
+                React.createElement('label', null, translations[language].frequency || 'BLS Frequency (Hz)'),
+                React.createElement('input', {
+                    type: 'range',
+                    min: 0.8,
+                    max: 1.6,
+                    step: 0.1,
+                    value: blsFrequency,
+                    onChange: (e) => setBlsFrequency(parseFloat(e.target.value))
+                }),
+                React.createElement('span', null, blsFrequency.toFixed(1))
+            ),
+            React.createElement(
+                'div',
+                { key: 'bls-mode', className: 'bls-mode' },
+                ['soft', 'standard'].map(mode => (
+                    React.createElement(
+                        'button',
+                        {
+                            key: `bls-mode-${mode}`,
+                            className: `bls-mode-button ${blsMode === mode ? 'active' : ''}`,
+                            onClick: () => {
+                                setBlsMode(mode);
+                                setBlsFrequency(mode === 'soft' ? 0.8 : 1.2);
+                            }
+                        },
+                        translations[language][mode] || mode.charAt(0).toUpperCase() + mode.slice(1)
+                    )
+                ))
+            )
+        ),
+        // 5. Кнопка «Поделиться»
+        React.createElement(
+            'div',
+            { key: 'gobelin-buttons', className: 'gobelin-buttons' },
+            React.createElement(
+                'button',
+                { key: 'share-button', onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
+                translations[language].share || 'Share'
+            )
+        ),
+        // 6. Текстовое поле для ввода истории
+        mode === 'history' && React.createElement(
+            'div',
+            { key: 'history-container', className: 'history-container' },
+            React.createElement('textarea', {
+                key: 'history-textarea',
+                value: historyText,
+                onChange: (e) => setHistoryText(e.target.value),
+                placeholder: translations[language].historyPlaceholder || 'Enter your story...',
+                rows: 5,
+                className: 'history-textarea'
+            }),
+            // 7. Блок кнопок отправки
+            React.createElement(
+                'div',
+                { key: 'history-buttons', className: 'history-buttons' },
                 React.createElement(
                     'button',
-                    { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
-                    translations[language].share || 'Share'
+                    { key: 'submit-button', onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
+                    translations[language].submit || 'Submit'
+                ),
+                React.createElement(
+                    'button',
+                    { key: 'clear-button', onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
+                    translations[language].clear || 'Clear'
+                )
+            ),
+            // 8. Отображение сохранённой истории
+            submittedHistory && !isEditing && React.createElement(
+                'div',
+                { key: 'history-text', className: 'history-text' },
+                React.createElement('p', { key: 'history-content' }, submittedHistory),
+                React.createElement(
+                    'button',
+                    { key: 'edit-button', onClick: handleEditHistory, className: 'history-button edit' },
+                    translations[language].edit || 'Edit'
                 )
             )
-        ]
+        )
     );
 }
 
