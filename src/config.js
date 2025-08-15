@@ -39,16 +39,7 @@ export const translations = {
         blsInfo: "Bilateral Stimulation (BLS) is when attention alternates between the left and right sides (visually, auditory, or tactile). It is used in EMDR therapy to process traumatic memories.",
         emdrInfo: "Eye Movement Desensitization and Reprocessing (EMDR) is a scientifically validated psychotherapy method for trauma. We use only an artistic visualization inspired by this method.",
         notTherapy: "Important: This is not therapy and does not replace working with a psychologist.",
-        close: "Close",
-        blsEmdrTitle: "What is BLS and EMDR?",
-        blsEmdrInfo: (
-            <>
-                BLS (Bilateral Stimulation) is when attention alternates between the left and right sides, using visual movement, sounds, or light tactile stimuli.<br /><br />
-                EMDR (Eye Movement Desensitization and Reprocessing) is a psychotherapy method where rhythmic eye movements help process traumatic memories.<br /><br />
-                Research (NICE, APA) shows that such stimuli can help the brain shift information processing, reduce the intensity of negative emotions, and improve memory integration.<br /><br />
-                In our project, this principle is used only in an artistic format — to create rhythmic visualizations that may promote relaxation and focus, but it is not therapy.
-            </>
-        )
+        close: "Close"
     },
     ru: {
         title: "Феминистское искусство данных",
@@ -90,16 +81,7 @@ export const translations = {
         blsInfo: "Двусторонняя стимуляция (BLS) — это когда внимание попеременно смещается между левой и правой стороной (визуально, звуком или касанием). Используется в EMDR-терапии для переработки травматических воспоминаний.",
         emdrInfo: "Десенсибилизация и переработка движением глаз (EMDR) — научно подтверждённый метод психотерапии травм. Мы используем только художественную визуализацию по мотивам метода.",
         notTherapy: "Важно: Это не терапия и не заменяет работу с психологом.",
-        close: "Закрыть",
-        blsEmdrTitle: "Что такое BLS и EMDR?",
-        blsEmdrInfo: (
-            <>
-                BLS (Bilateral Stimulation) — двусторонняя стимуляция, при которой внимание поочерёдно переключается между левым и правым направлением. Это может быть визуальное движение, звуки или лёгкие тактильные стимулы.<br /><br />
-                EMDR (Eye Movement Desensitization and Reprocessing) — метод психотерапии, в котором ритмичные движения глаз помогают переработать травматические воспоминания.<br /><br />
-                Исследования (NICE, APA) показывают, что такие стимулы могут помогать мозгу переключать обработку информации, снижать интенсивность негативных эмоций и улучшать интеграцию воспоминаний.<br /><br />
-                В нашем проекте этот принцип используется только в художественном формате — для создания ритмичной визуализации, которая может способствовать расслаблению и концентрации, но не является терапией.
-            </>
-        )
+        close: "Закрыть"
     },
     es: {
         title: "Arte de Datos Feminista",
@@ -141,16 +123,7 @@ export const translations = {
         blsInfo: "La estimulación bilateral (BLS) es cuando la atención alterna entre los lados izquierdo y derecho (visual, auditivo o táctil). Se utiliza en la terapia EMDR para procesar recuerdos traumáticos.",
         emdrInfo: "La Desensibilización y Reprocesamiento por Movimientos Oculares (EMDR) es un método de psicoterapia validado científicamente para el trauma. Utilizamos solo una visualización artística inspirada en este método.",
         notTherapy: "Importante: Esto no es terapia y no reemplaza el trabajo con un psicólogo.",
-        close: "Cerrar",
-        blsEmdrTitle: "¿Qué es BLS y EMDR?",
-        blsEmdrInfo: (
-            <>
-                BLS (Estimulación Bilateral) es cuando la atención alterna entre los lados izquierdo y derecho, utilizando movimientos visuales, sonidos o estímulos táctiles ligeros.<br /><br />
-                EMDR (Desensibilización y Reprocesamiento por Movimientos Oculares) es un método de psicoterapia en el que los movimientos rítmicos de los ojos ayudan a procesar recuerdos traumáticos.<br /><br />
-                Investigaciones (NICE, APA) muestran que estos estímulos pueden ayudar al cerebro a cambiar el procesamiento de la información, reducir la intensidad de las emociones negativas y mejorar la integración de los recuerdos.<br /><br />
-                En nuestro proyecto, este principio se utiliza solo en un formato artístico — para crear visualizaciones rítmicas que pueden promover la relajación y la concentración, pero no es terapia.
-            </>
-        )
+        close: "Cerrar"
     }
 };
 
