@@ -1,11 +1,11 @@
 :root {
-    --primary-6: #165DF5; /* Blue for buttons and accents */
-    --color-text-1: #333; /* Primary text */
-    --gray-1: #F7F8FA; /* Input background */
-    --gray-9: #272E3B; /* Secondary text */
-    --color-neutral-3: rgba(0,0,0,0.1); /* Borders */
-    --user-bg: #E6F0FA; /* User message background */
-    --assistant-bg: #F7F6F5; /* Assistant message background */
+    --primary-6: #165DF5;
+    --color-text-1: #333;
+    --gray-1: #F7F8FA;
+    --gray-9: #272E3B;
+    --color-neutral-3: rgba(0,0,0,0.1);
+    --user-bg: #E6F0FA;
+    --assistant-bg: #F7F6F5;
 }
 * {
     box-sizing: border-box;
@@ -567,7 +567,7 @@ body {
     position: absolute;
     pointer-events: none;
 }
-.consent-screen, .survey-screen, .loading-screen, .fps-warning {
+.consent-screen, .loading-screen, .fps-warning {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -580,7 +580,7 @@ body {
     z-index: 1002;
     max-width: 500px;
 }
-.consent-button, .survey-button {
+.consent-button {
     margin-top: 16px;
     background: var(--primary-6);
     color: #fff;
@@ -592,13 +592,13 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.consent-button:hover, .survey-button:hover {
+.consent-button:hover {
     transform: scale(1.05);
 }
-.consent-button:active, .survey-button:active {
+.consent-button:active {
     transform: scale(0.95);
 }
-.consent-button:disabled, .survey-button:disabled {
+.consent-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
@@ -617,7 +617,10 @@ body {
     flex-wrap: wrap;
     gap: 16px;
     justify-content: center;
-    margin-top: 16px;
+    margin: 16px 0;
+}
+.bls-controls-top {
+    z-index: 3;
 }
 .bls-button, .bls-mode-button {
     background: var(--primary-6);
@@ -643,16 +646,16 @@ body {
 .bls-mode-button.active {
     background: #003087;
 }
-.bls-frequency, .survey-item {
+.bls-frequency {
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 14px;
 }
-.bls-frequency input, .survey-item input {
+.bls-frequency input {
     width: 100px;
 }
-.bls-frequency label, .survey-item label {
+.bls-frequency label {
     font-weight: 500;
 }
 .loading-screen {
