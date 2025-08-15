@@ -218,17 +218,19 @@ function MyGobelin({ threadsRef, language }) {
         const resizeCanvas = () => {
             if (!canvas || !blsCanvas) return;
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = Math.min(window.innerWidth - 32, 600) * dpr;
-            canvas.height = 450 * dpr;
-            canvas.style.width = `${canvas.width / dpr}px`;
-            canvas.style.height = `${canvas.height / dpr}px`;
+            const cssWidth = Math.min(window.innerWidth - 32, 600);
+            const cssHeight = 450;
+            canvas.width = cssWidth * dpr;
+            canvas.height = cssHeight * dpr;
+            canvas.style.width = `${cssWidth}px`;
+            canvas.style.height = `${cssHeight}px`;
             blsCanvas.width = canvas.width;
             blsCanvas.height = canvas.height;
             blsCanvas.style.width = canvas.style.width;
             blsCanvas.style.height = canvas.style.height;
             ctx.scale(dpr, dpr);
             blsCtx.scale(dpr, dpr);
-            console.log('Canvas resized', { width: canvas.width, height: canvas.height });
+            console.log('Canvas resized', { width: canvas.width, height: canvas.height, cssWidth, cssHeight, dpr });
             cachedImageData = null;
         };
 
@@ -351,12 +353,16 @@ function MyGobelin({ threadsRef, language }) {
             blsCtx.clearRect(0, 0, blsCanvas.width, blsCanvas.height);
             if (!blsActive || !setActive) return;
 
-            const amplitude = blsCanvas.width * 0.8;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const cssWidth = blsCanvas.width / dpr;
+            const radius = 20 + 10 * Math.sin(t * 3);
+            const amplitude = (cssWidth * 0.5 - radius) / dpr;
             const centerX = blsCanvas.width / 2;
             const centerY = blsCanvas.height / 2;
-            const x = centerX + amplitude * 0.5 * Math.sin(t * blsFrequency * 2 * Math.PI);
+            const x = centerX + amplitude * Math.sin(t * blsFrequency * 2 * Math.PI);
             const hueShift = x < centerX ? -5 : 5;
-            const radius = 20 + 10 * Math.sin(t * 3);
+
+            console.log('Rendering BLS marker', { x, radius, amplitude, cssWidth, centerX, blsCanvasWidth: blsCanvas.width, dpr });
 
             blsCtx.shadowBlur = 20;
             blsCtx.shadowColor = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
