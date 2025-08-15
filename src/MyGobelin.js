@@ -4,12 +4,20 @@ import { translations } from './config.js';
 
 function MyGobelin({ threadsRef, language }) {
     const canvasRef = React.useRef(null);
+    const blsCanvasRef = React.useRef(null);
     const [mode, setMode] = React.useState('history');
     const [historyText, setHistoryText] = React.useState('');
     const [submittedHistory, setSubmittedHistory] = React.useState(localStorage.getItem('submittedHistory') || '');
     const [isEditing, setIsEditing] = React.useState(false);
+    const [blsActive, setBlsActive] = React.useState(false);
+    const [blsFrequency, setBlsFrequency] = React.useState(1.2); // Гц
+    const [blsMode, setBlsMode] = React.useState('standard'); // Мягко, Стандарт, Интенсивнее
+    const [setActive, setSetActive] = React.useState(false);
+    const [setCount, setSetCount] = React.useState(0);
+    const [showConsent, setShowConsent] = React.useState(true);
+    const [survey, setSurvey] = React.useState({ distress: 0, tension: 0, calm: 0, completed: false });
 
-    // Анализирует текст, извлекая метрики для управления фракталом
+    // Анализирует текст
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
         const wordCount = words.length;
@@ -36,72 +44,81 @@ function MyGobelin({ threadsRef, language }) {
         };
     };
 
-    // Подсчитывает триггерные слова для эмоционального отклика
+    // Подсчитывает триггерные слова
     const countTriggers = (text, triggerWords) => {
         const words = text.toLowerCase().split(/\s+/);
         return triggerWords.reduce((sum, word) => sum + words.includes(word), 0);
     };
 
-    // Генерирует параметры фрактала на основе текста
-    const getFractalParams = (text) => {
+    // Генерирует параметры фрактала
+    const getFractalParams = (text, setProgress) => {
         const metrics = analyzeText(text);
         const params = {
-            cX: (metrics.avgWordLen / 10) - 0.5, // Центр фрактала по X
-            cY: (metrics.avgSentLen / 50) - 0.5, // Центр фрактала по Y
-            zoom: Math.min(10, 1 + (metrics.textLen / 500)), // Масштаб
-            iterations: Math.min(200, 100 + metrics.uniqueWords * 5), // Детализация (оптимизировано)
-            hue: (metrics.upperCaseCount * 3) % 360, // Базовый цвет
-            sat: Math.min(100, metrics.maxWordFreq * 20), // Насыщенность
-            bright: Math.min(100, metrics.vowelsRatio * 120), // Яркость
-            speed: Math.max(0.1, metrics.punctuationCount * 0.12), // Скорость анимации
-            distortion: metrics.lineBreakCount * 0.1, // Искажение
-            symmetryBreak: metrics.digitCount * 0.15, // Асимметрия
-            breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)), // Пульсация
-            waveAmplitude: metrics.punctuationCount * 0.04, // Волны
-            textureGrain: (1 - metrics.vowelsRatio) * 1, // Минимальная зернистость
-            depthLayers: Math.max(1, metrics.lineBreakCount), // Глубина
-            rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1, // Направление вращения
-            rgbSplit: 0, // RGB-сплит (смягчён)
-            escapeRadius: 4 + metrics.textLen / 1000, // Радиус выхода
-            twist: metrics.uniqueWords * 0.01 // Скручивание форм
+            cX: (metrics.avgWordLen / 10) - 0.5,
+            cY: (metrics.avgSentLen / 50) - 0.5,
+            zoom: Math.min(10, 1 + (metrics.textLen / 500)),
+            iterations: Math.min(400, 100 + metrics.uniqueWords * 5),
+            hue: (metrics.upperCaseCount * 3) % 360,
+            sat: Math.min(100, metrics.maxWordFreq * 15 * (setProgress < 0.75 ? 1 : 0.8)),
+            bright: Math.min(100, metrics.vowelsRatio * 120 * (setProgress < 0.75 ? 1 : 0.9)),
+            speed: Math.max(0.1, metrics.punctuationCount * 0.15 * (setProgress < 0.75 ? 1 : 0.5)),
+            distortion: metrics.lineBreakCount * 0.1,
+            symmetryBreak: metrics.digitCount * 0.15,
+            breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)) * (setProgress < 0.75 ? 1 : 0.5),
+            waveAmplitude: metrics.punctuationCount * 0.05,
+            textureGrain: (1 - metrics.vowelsRatio) * 2,
+            depthLayers: Math.max(1, metrics.lineBreakCount),
+            rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1,
+            flashFreq: 0,
+            rgbSplit: 0,
+            escapeRadius: 4 + metrics.textLen / 1000,
+            twist: metrics.uniqueWords * 0.01
         };
 
-        // Модификаторы от триггерных слов для синестетической гаммы
-        let palette = 'feminist';
+        let palette = 'default';
         Object.keys(keywordRules.TRIGGERS).forEach(category => {
             const count = countTriggers(text, keywordRules.TRIGGERS[category]);
             if (count > 0) {
                 if (category === 'fear') {
                     params.zoom += count * 0.3;
-                    params.rgbSplit += count * 0.01;
-                    params.hue = (params.hue + 180) % 360; // Бирюзовый с фиолетовым
+                    params.rgbSplit += count * 0.015;
+                    params.hue = (params.hue + 180) % 360;
                     params.twist += count * 0.02;
+                    palette = 'fear';
                 } else if (category === 'anger') {
-                    params.sat += count * 15;
-                    params.hue = (params.hue + 330) % 360; // Розовый с фиолетовым
+                    params.sat += count * 10;
+                    params.flashFreq += count * 0.2;
+                    params.hue = (params.hue + 360) % 360;
                     params.distortion += count * 0.1;
+                    palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations += count * 15;
+                    params.iterations += count * 20;
                     params.cX += count * 0.02;
+                    palette = palette === 'default' ? 'body' : palette;
                 } else if (category === 'place') {
                     params.cX -= count * 0.04;
                     params.cY -= count * 0.04;
                     params.twist += count * 0.01;
+                    palette = palette === 'default' ? 'place' : palette;
                 } else if (category === 'silence') {
                     params.speed -= count * 0.1;
                     params.bright = Math.min(100, params.bright * 0.9);
-                    params.hue = (params.hue + 300) % 360; // Пастельный розовый/фиолетовый
+                    params.hue = (params.hue + 200) % 360;
+                    palette = 'silence';
                 } else if (category === 'escape') {
                     params.distortion += count * 0.2;
                     params.twist += count * 0.03;
+                    palette = palette === 'default' ? 'escape' : palette;
                 } else if (category === 'nature') {
                     params.distortion += count * 0.1;
-                    params.hue = (params.hue + 180) % 360; // Бирюзовый с персиковым
+                    params.hue = (params.hue + 120) % 360;
                     params.waveAmplitude += count * 0.03;
+                    palette = 'nature';
                 } else if (category === 'hope') {
-                    params.bright += count * 15;
-                    params.hue = (params.hue + 60) % 360; // Золотой с персиковым
+                    params.bright += count * 10;
+                    params.hue = (params.hue + 60) % 360;
                     params.breathingRate += count * 0.2;
+                    palette = 'hope';
                 }
             }
         });
@@ -110,14 +127,16 @@ function MyGobelin({ threadsRef, language }) {
         return params;
     };
 
+    // Обработка текста и сохранение
     const handleSubmitHistory = () => {
         if (!historyText) return;
         setSubmittedHistory(historyText);
         localStorage.setItem('submittedHistory', historyText);
-        threadsRef.current = [getFractalParams(historyText)];
+        threadsRef.current = [getFractalParams(historyText, 0)];
         localStorage.setItem('threads', JSON.stringify(threadsRef.current));
         setHistoryText('');
         setIsEditing(false);
+        setShowConsent(true);
     };
 
     const handleClearHistory = () => {
@@ -126,11 +145,14 @@ function MyGobelin({ threadsRef, language }) {
         localStorage.removeItem('submittedHistory');
         threadsRef.current = [];
         localStorage.setItem('threads', JSON.stringify([]));
+        setBlsActive(false);
+        setSetCount(0);
     };
 
     const handleEditHistory = () => {
         setHistoryText(submittedHistory);
         setIsEditing(true);
+        setBlsActive(false);
     };
 
     const shareGobelin = () => {
@@ -145,260 +167,309 @@ function MyGobelin({ threadsRef, language }) {
         alert(translations[language].share + ' скопировано!');
     };
 
+    // Управление BLS и сетами
+    const handleStartBls = () => {
+        setBlsActive(true);
+        setSetActive(true);
+        setSetCount(1);
+        setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
+    };
+
+    const handlePauseBls = () => {
+        setSetActive(false);
+    };
+
+    const handleStopBls = () => {
+        setBlsActive(false);
+        setSetActive(false);
+        setSetCount(0);
+        threadsRef.current = [{
+            ...threadsRef.current[0],
+            hue: 60,
+            sat: 50,
+            bright: 80,
+            speed: 0,
+            breathingRate: 0,
+            waveAmplitude: 0,
+            rgbSplit: 0,
+            flashFreq: 0
+        }];
+    };
+
+    const handleCalmDown = () => {
+        setBlsFrequency(prev => Math.max(0.8, prev - 0.2));
+        threadsRef.current = [{
+            ...threadsRef.current[0],
+            sat: Math.max(20, threadsRef.current[0].sat * 0.8),
+            bright: Math.max(20, threadsRef.current[0].bright * 0.9),
+            speed: Math.max(0.05, threadsRef.current[0].speed * 0.7),
+            zoom: Math.max(1, threadsRef.current[0].zoom * 0.9)
+        }];
+    };
+
+    const handleConsent = () => {
+        setShowConsent(false);
+        setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
+    };
+
+    // Обработка опроса
+    const handleSurveySubmit = (type, value) => {
+        setSurvey(prev => ({ ...prev, [type]: value }));
+    };
+
+    const handleSurveyComplete = () => {
+        setSurvey(prev => ({ ...prev, completed: true }));
+        console.log('Survey results:', survey);
+    };
+
     React.useEffect(() => {
         const canvas = canvasRef.current;
-        let gl, program, animationFrameId, time = 0;
+        const blsCanvas = blsCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const blsCtx = blsCanvas.getContext('2d');
+        let animationFrameId;
+        let time = 0;
         let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
+        let setStartTime = 0;
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth - 32;
-            canvas.height = 800;
-            if (gl) {
-                gl.viewport(0, 0, canvas.width, canvas.height);
-            }
+            canvas.height = 600; // Из твоего CSS
+            blsCanvas.width = canvas.width;
+            blsCanvas.height = canvas.height;
         };
 
-        // Линейная интерполяция для плавных переходов
         const lerp = (start, end, factor) => start + (end - start) * factor;
 
-        // Вершинный шейдер
-        const vertexShaderSource = `
-            attribute vec2 a_position;
-            void main() {
-                gl_Position = vec4(a_position, 0.0, 1.0);
+        const hsvToRgb = (h, s, v, palette) => {
+            s /= 100;
+            v /= 100;
+            if (palette === 'hope') h = (h + 60) % 360;
+            else if (palette === 'fear') h = (h + 180) % 360;
+            else if (palette === 'anger') h = (h + 360) % 360;
+            else if (palette === 'nature') h = (h + 120) % 360;
+            else if (palette === 'silence') {
+                s *= 0.8;
+                h = (h + 200) % 360;
             }
-        `;
+            const c = v * s;
+            const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 60) [r, g, b] = [c, x, 0];
+            else if (h < 120) [r, g, b] = [x, c, 0];
+            else if (h < 180) [r, g, b] = [0, c, x];
+            else if (h < 240) [r, g, b] = [0, x, c];
+            else if (h < 300) [r, g, b] = [x, 0, c];
+            else [r, g, b] = [c, 0, x];
+            return [
+                Math.round((r + m) * 255),
+                Math.round((g + m) * 255),
+                Math.round((b + m) * 255)
+            ];
+        };
 
-        // Фрагментный шейдер для фрактала Julia с синестетической гаммой
-        const fragmentShaderSource = `
-            precision highp float;
-            uniform vec2 u_resolution;
-            uniform float u_time;
-            uniform vec2 u_c;
-            uniform float u_zoom;
-            uniform float u_iterations;
-            uniform float u_hue;
-            uniform float u_sat;
-            uniform float u_bright;
-            uniform float u_distortion;
-            uniform float u_symmetryBreak;
-            uniform float u_breathingRate;
-            uniform float u_waveAmplitude;
-            uniform float u_textureGrain;
-            uniform float u_depthLayers;
-            uniform float u_rotationDir;
-            uniform float u_rgbSplit;
-            uniform float u_escapeRadius;
-            uniform float u_twist;
+        const renderFractal = (params, t, setProgress) => {
+            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit, palette, escapeRadius, twist } = params;
+            const imageData = ctx.createImageData(canvas.width, canvas.height);
+            const data = imageData.data;
 
-            vec3 hsvToRgb(float h, float s, float v) {
-                // Синестетическая палитра: розовый, фиолетовый, золотой, персиковый, бирюзовый
-                float hues[5];
-                hues[0] = 60.0; // Персиковый
-                hues[1] = 180.0; // Бирюзовый
-                hues[2] = 300.0; // Фиолетовый
-                hues[3] = 330.0; // Розовый
-                hues[4] = 50.0; // Золотой
-                float closestHue = hues[0];
-                for (int i = 1; i < 5; i++) {
-                    if (abs(h - hues[i]) < abs(h - closestHue)) {
-                        closestHue = hues[i];
+            const scale = 4 / zoom;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            const targetBreathe = Math.sin(t * breathingRate * 0.8) * 0.1;
+            const targetWave = Math.sin(t * speed * 1.2) * waveAmplitude * 1.2;
+            const targetRotation = t * speed * rotationDir * 0.015;
+            const targetTwist = Math.sin(t * twist) * 0.04;
+
+            const breathe = lerp(prevBreathe, targetBreathe, 0.1);
+            const wave = lerp(prevWave, targetWave, 0.1);
+            const rotation = lerp(prevRotation, targetRotation, 0.1);
+            const twistEffect = lerp(prevTwist, targetTwist, 0.1);
+
+            prevBreathe = breathe;
+            prevWave = wave;
+            prevRotation = rotation;
+            prevTwist = twistEffect;
+
+            for (let x = 0; x < canvas.width; x += 1) {
+                for (let y = 0; y < canvas.height; y += 1) {
+                    let zx = ((x - centerX) / canvas.width) * scale;
+                    let zy = ((y - centerY) / canvas.height) * scale;
+                    const rotatedZx = zx * Math.cos(rotation + twistEffect) - zy * Math.sin(rotation + twistEffect);
+                    const rotatedZy = zx * Math.sin(rotation + twistEffect) + zy * Math.cos(rotation + twistEffect);
+                    zx = rotatedZx + Math.sin(zy * distortion) * wave;
+                    zy = rotatedZy + Math.cos(zx * distortion) * symmetryBreak;
+
+                    let i = 0;
+                    let tempZx, tempZy;
+                    while (i < iterations) {
+                        tempZx = zx * zx - zy * zy + cX + breathe;
+                        tempZy = 2 * zx * zy + cY + wave;
+                        zx = tempZx;
+                        zy = tempZy;
+                        if (zx * zx + zy * zy > escapeRadius) break;
+                        i++;
                     }
-                }
-                vec3 colors[5];
-                colors[0] = vec3(1.0, 0.8, 0.6); // Персиковый (#FFCC99)
-                colors[1] = vec3(0.4, 0.8, 0.8); // Бирюзовый (#66CCCC)
-                colors[2] = vec3(0.8, 0.6, 1.0); // Фиолетовый (#CC99FF)
-                colors[3] = vec3(1.0, 0.6, 0.6); // Розовый (#FF9999)
-                colors[4] = vec3(1.0, 0.84, 0.0); // Золотой (#FFD700)
-                vec3 color = colors[0];
-                for (int i = 0; i < 5; i++) {
-                    if (closestHue == hues[i]) {
-                        color = colors[i];
-                        break;
+
+                    const idx = (y * canvas.width + x) * 4;
+                    let color;
+                    if (i === iterations) {
+                        color = [0, 0, 0];
+                    } else {
+                        const h = (hue + (i * 20) % 360) % 360;
+                        const s = Math.min(100, sat + (Math.sin(t * flashFreq) * 15));
+                        const v = Math.min(100, bright + (i / iterations) * 80);
+                        color = hsvToRgb(h, s, v, palette);
+                        if (rgbSplit > 0) {
+                            color[0] += Math.sin(t + x * 0.01) * rgbSplit * 30;
+                            color[1] += Math.sin(t + y * 0.01) * rgbSplit * 30;
+                            color[2] += Math.cos(t + (x + y) * 0.01) * rgbSplit * 30;
+                        }
+                        if (textureGrain > 0) {
+                            const noise = (Math.random() - 0.5) * textureGrain;
+                            color = color.map(c => Math.max(0, Math.min(255, c + noise)));
+                        }
                     }
+
+                    const layerFactor = 1 - (i / iterations) * depthLayers * 0.5;
+                    color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
+
+                    data[idx] = color[0];
+                    data[idx + 1] = color[1];
+                    data[idx + 2] = color[2];
+                    data[idx + 3] = 255;
                 }
-                return color * v * (s * 0.8 + 0.2);
             }
 
-            void main() {
-                vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
-                float scale = 4.0 / u_zoom;
-                vec2 z = uv * scale;
-                float breathe = sin(u_time * u_breathingRate * 0.6) * 0.06;
-                float wave = sin(u_time * 1.2) * u_waveAmplitude * 1.0;
-                float rotation = u_time * u_rotationDir * 0.01;
-                float twistEffect = sin(u_time * u_twist) * 0.02;
-                vec2 rotatedZ = vec2(
-                    z.x * cos(rotation + twistEffect) - z.y * sin(rotation + twistEffect),
-                    z.x * sin(rotation + twistEffect) + z.y * cos(rotation + twistEffect)
-                );
-                z = rotatedZ + vec2(sin(z.y * u_distortion) * wave, cos(z.x * u_distortion) * u_symmetryBreak);
-                vec2 c = u_c + vec2(breathe, wave);
-                float i = 0.0;
-                for (int n = 0; n < int(u_iterations); n++) {
-                    float tempZx = z.x * z.x - z.y * z.y + c.x;
-                    float tempZy = 2.0 * z.x * z.y + c.y;
-                    z = vec2(tempZx, tempZy);
-                    if (dot(z, z) > u_escapeRadius) break;
-                    i += 1.0;
-                }
-                vec3 color = vec3(0.0);
-                if (i < u_iterations) {
-                    float h = mod(u_hue + i * 15.0, 360.0);
-                    float s = min(1.0, u_sat + (i / u_iterations) * 0.2);
-                    float v = min(1.0, u_bright + (i / u_iterations) * 0.8);
-                    color = hsvToRgb(h, s, v);
-                    if (u_rgbSplit > 0.0) {
-                        color.r += sin(u_time + gl_FragCoord.x * 0.01) * u_rgbSplit * 0.2;
-                        color.g += sin(u_time + gl_FragCoord.y * 0.01) * u_rgbSplit * 0.2;
-                        color.b += cos(u_time + (gl_FragCoord.x + gl_FragCoord.y) * 0.01) * u_rgbSplit * 0.2;
+            ctx.putImageData(imageData, 0, 0);
+        };
+
+        const renderBlsMarker = (t) => {
+            blsCtx.clearRect(0, 0, blsCanvas.width, blsCanvas.height);
+            if (!blsActive || !setActive) return;
+
+            const amplitude = blsCanvas.width * 0.8;
+            const centerX = blsCanvas.width / 2;
+            const centerY = blsCanvas.height / 2;
+            const x = centerX + amplitude * 0.5 * Math.sin(t * blsFrequency * 2 * Math.PI);
+            const hueShift = x < centerX ? -5 : 5;
+            const brightShift = Math.abs(x - centerX) < amplitude * 0.1 ? 1.05 : 1;
+
+            const gradient = blsCtx.createRadialGradient(x, centerY, 0, x, centerY, 30);
+            const baseHue = (threadsRef.current[0]?.hue || 0) + hueShift;
+            const [r, g, b] = hsvToRgb(baseHue, 80 * brightShift, 90 * brightShift, threadsRef.current[0]?.palette);
+            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
+            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+            blsCtx.beginPath();
+            blsCtx.arc(x, centerY, 30, 0, 2 * Math.PI);
+            blsCtx.fillStyle = gradient;
+            blsCtx.fill();
+        };
+
+        const animate = () => {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (threadsRef.current.length > 0) {
+                const setDuration = 25;
+                const pauseDuration = 12;
+                const maxSets = 6;
+                const setProgress = setCount > 0 ? (time - setStartTime) / setDuration : 0;
+
+                if (blsActive && setActive && setCount <= maxSets) {
+                    if (setProgress >= 1) {
+                        setSetActive(false);
+                        setTimeout(() => {
+                            setSetCount(prev => prev + 1);
+                            setSetActive(true);
+                            setStartTime = time;
+                            threadsRef.current = [getFractalParams(submittedHistory, setCount / maxSets)];
+                        }, pauseDuration * 1000);
                     }
-                    if (u_textureGrain > 0.0) {
-                        float noise = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) * 43758.5453)) - 0.5) * u_textureGrain;
-                        color += noise * 0.05;
-                    }
-                    float layerFactor = 1.0 - (i / u_iterations) * u_depthLayers * 0.5;
-                    color *= layerFactor;
+                } else if (setCount > maxSets) {
+                    handleStopBls();
+                    setSurvey(prev => ({ ...prev, completed: false }));
                 }
-                gl_FragColor = vec4(color, 1.0);
-            }
-        `;
 
-        React.useEffect(() => {
-            const canvas = canvasRef.current;
-            gl = canvas.getContext('webgl');
-            if (!gl) {
-                console.error('WebGL не поддерживается');
-                return;
+                renderFractal(threadsRef.current[0], time, setCount / maxSets);
+                renderBlsMarker(time);
+                time += 0.008;
             }
 
-            // Создание шейдеров
-            const createShader = (type, source) => {
-                const shader = gl.createShader(type);
-                gl.shaderSource(shader, source);
-                gl.compileShader(shader);
-                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                    console.error('Ошибка компиляции шейдера:', gl.getShaderInfoLog(shader));
-                    gl.deleteShader(shader);
-                    return null;
-                }
-                return shader;
-            };
+            animationFrameId = requestAnimationFrame(animate);
+        };
 
-            const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
-            const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-            if (!vertexShader || !fragmentShader) return;
+        resizeCanvas();
+        animate();
+        window.addEventListener('resize', resizeCanvas);
 
-            // Создание программы
-            program = gl.createProgram();
-            gl.attachShader(program, vertexShader);
-            gl.attachShader(program, fragmentShader);
-            gl.linkProgram(program);
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                console.error('Ошибка линковки программы:', gl.getProgramInfoLog(program));
-                return;
-            }
-            gl.useProgram(program);
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [threadsRef, language, blsActive, setActive, setCount, blsFrequency, submittedHistory]);
 
-            // Создание буфера для вершин
-            const positionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            const positions = new Float32Array([
-                -1, -1, 1, -1, -1, 1,
-                -1, 1, 1, -1, 1, 1
-            ]);
-            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-            const positionLocation = gl.getAttribLocation(program, 'a_position');
-            gl.enableVertexAttribArray(positionLocation);
-            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-            let time = 0;
-            let prevBreathe = 0, prevWave = 0, prevRotation = 0, prevTwist = 0;
-
-            const resizeCanvas = () => {
-                canvas.width = window.innerWidth - 32;
-                canvas.height = 800;
-                gl.viewport(0, 0, canvas.width, canvas.height);
-            };
-
-            // Линейная интерполяция для плавных переходов
-            const lerp = (start, end, factor) => start + (end - start) * factor;
-
-            const animate = () => {
-                if (threadsRef.current.length > 0) {
-                    const params = threadsRef.current[0];
-                    const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, rgbSplit, escapeRadius, twist, palette } = params;
-
-                    // Плавные анимационные параметры
-                    const targetBreathe = Math.sin(time * breathingRate * 0.6) * 0.06;
-                    const targetWave = Math.sin(time * speed * 1.2) * waveAmplitude * 1.0;
-                    const targetRotation = time * speed * rotationDir * 0.01;
-                    const targetTwist = Math.sin(time * twist) * 0.02;
-
-                    const breathe = lerp(prevBreathe, targetBreathe, 0.03);
-                    const wave = lerp(prevWave, targetWave, 0.03);
-                    const rotation = lerp(prevRotation, targetRotation, 0.03);
-                    const twistEffect = lerp(prevTwist, targetTwist, 0.03);
-
-                    prevBreathe = breathe;
-                    prevWave = wave;
-                    prevRotation = rotation;
-                    prevTwist = twistEffect;
-
-                    // Установка униформ
-                    gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), canvas.width, canvas.height);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_time'), time);
-                    gl.uniform2f(gl.getUniformLocation(program, 'u_c'), cX + breathe, cY + wave);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_zoom'), zoom);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_iterations'), iterations);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_hue'), hue);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_sat'), sat / 100);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_bright'), bright / 100);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_distortion'), distortion);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_symmetryBreak'), symmetryBreak);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_breathingRate'), breathingRate);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_waveAmplitude'), waveAmplitude);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_textureGrain'), textureGrain);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_depthLayers'), depthLayers);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_rotationDir'), rotationDir);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_rgbSplit'), rgbSplit);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_escapeRadius'), escapeRadius);
-                    gl.uniform1f(gl.getUniformLocation(program, 'u_twist'), twist);
-
-                    gl.clearColor(1.0, 1.0, 1.0, 1.0); // Белый фон
-                    gl.clear(gl.COLOR_BUFFER_BIT);
-                    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-                    time += 0.016; // ~60fps
-                }
-                animationFrameId = requestAnimationFrame(animate);
-            };
-
-            resizeCanvas();
-            animate();
-            window.addEventListener('resize', resizeCanvas);
-
-            return () => {
-                window.removeEventListener('resize', resizeCanvas);
-                cancelAnimationFrame(animationFrameId);
-                if (gl) {
-                    gl.deleteProgram(program);
-                    gl.deleteShader(vertexShader);
-                    gl.deleteShader(fragmentShader);
-                    gl.deleteBuffer(positionBuffer);
-                }
-            };
-        }, [threadsRef, language]);
-
-        return React.createElement(
+    const renderConsentScreen = () => (
+        React.createElement(
             'div',
-            { className: 'page gobelin-page' },
-            React.createElement('h1', null, translations[language].myGobelin || 'My Data Art'),
+            { className: 'consent-screen' },
+            React.createElement('h2', null, translations[language].disclaimer || 'Disclaimer'),
+            React.createElement('p', null, translations[language].disclaimerText || 'This is an artistic visualization with bilateral stimulation (BLS) inspired by EMDR. It is not psychotherapy and does not replace professional help. Consult a certified specialist for therapy.'),
+            React.createElement('p', null, translations[language].warning || 'Content may be triggering. Use grounding techniques (e.g., deep breathing, orienting in the room). Do not use in case of dissociation, crisis, psychosis, or suicidal thoughts without professional support.'),
+            React.createElement('p', null, translations[language].privacy || 'Your text is processed locally and not stored unless you choose to save it.'),
+            React.createElement(
+                'button',
+                { onClick: handleConsent, className: 'consent-button' },
+                translations[language].consent || 'I Understand and Agree'
+            ),
+            React.createElement(
+                'a',
+                { href: 'https://www.nice.org.uk/guidance/ng116', target: '_blank', className: 'guideline-link' },
+                translations[language].guidelines || 'Learn more about EMDR guidelines'
+            )
+        )
+    );
+
+    const renderSurvey = () => (
+        React.createElement(
+            'div',
+            { className: 'survey-screen' },
+            React.createElement('h2', null, translations[language].survey || 'How do you feel?'),
+            ['distress', 'tension', 'calm'].map(type => (
+                React.createElement(
+                    'div',
+                    { key: type, className: 'survey-item' },
+                    React.createElement('label', null, translations[language][type] || type.charAt(0).toUpperCase() + type.slice(1)),
+                    React.createElement('input', {
+                        type: 'range',
+                        min: 0,
+                        max: 10,
+                        value: survey[type],
+                        onChange: (e) => handleSurveySubmit(type, parseInt(e.target.value))
+                    }),
+                    React.createElement('span', null, survey[type])
+                )
+            )),
+            React.createElement(
+                'button',
+                { onClick: handleSurveyComplete, className: 'survey-button', disabled: survey.completed },
+                translations[language].submitSurvey || 'Submit'
+            )
+        )
+    );
+
+    return React.createElement(
+        'div',
+        { className: 'page gobelin-page' },
+        showConsent && renderConsentScreen(),
+        !showConsent && [
+            React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
             React.createElement(
                 'div',
-                { className: 'mode-switcher' },
+                { key: 'mode-switcher', className: 'mode-switcher' },
                 React.createElement(
                     'button',
                     {
@@ -406,7 +477,7 @@ function MyGobelin({ threadsRef, language }) {
                         onClick: () => {
                             setMode('history');
                             if (submittedHistory) {
-                                threadsRef.current = [getFractalParams(submittedHistory)];
+                                threadsRef.current = [getFractalParams(submittedHistory, 0)];
                                 localStorage.setItem('threads', JSON.stringify(threadsRef.current));
                             }
                         }
@@ -426,10 +497,11 @@ function MyGobelin({ threadsRef, language }) {
                     translations[language].aiGorgon || 'Create based on AI Gorgon'
                 )
             ),
-            React.createElement('canvas', { ref: canvasRef, className: 'data-art-canvas' }),
+            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+            React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', pointerEvents: 'none' } }),
             mode === 'history' && React.createElement(
                 'div',
-                { className: 'history-container' },
+                { key: 'history-container', className: 'history-container' },
                 React.createElement('textarea', {
                     value: historyText,
                     onChange: (e) => setHistoryText(e.target.value),
@@ -462,16 +534,74 @@ function MyGobelin({ threadsRef, language }) {
                     )
                 )
             ),
+            submittedHistory && !showConsent && React.createElement(
+                'div',
+                { key: 'bls-controls', className: 'bls-controls' },
+                React.createElement(
+                    'button',
+                    { onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
+                    translations[language].startBls || 'Start BLS'
+                ),
+                React.createElement(
+                    'button',
+                    { onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
+                    translations[language].pauseBls || 'Pause BLS'
+                ),
+                React.createElement(
+                    'button',
+                    { onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
+                    translations[language].stopBls || 'Stop BLS'
+                ),
+                React.createElement(
+                    'button',
+                    { onClick: handleCalmDown, className: 'bls-button' },
+                    translations[language].calmDown || 'Make Calmer'
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'bls-frequency' },
+                    React.createElement('label', null, translations[language].frequency || 'BLS Frequency (Hz)'),
+                    React.createElement('input', {
+                        type: 'range',
+                        min: 0.8,
+                        max: 2.0,
+                        step: 0.1,
+                        value: blsFrequency,
+                        onChange: (e) => setBlsFrequency(parseFloat(e.target.value))
+                    }),
+                    React.createElement('span', null, blsFrequency.toFixed(1))
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'bls-mode' },
+                    ['soft', 'standard', 'intense'].map(mode => (
+                        React.createElement(
+                            'button',
+                            {
+                                key: mode,
+                                className: `bls-mode-button ${blsMode === mode ? 'active' : ''}`,
+                                onClick: () => {
+                                    setBlsMode(mode);
+                                    setBlsFrequency(mode === 'soft' ? 0.8 : mode === 'standard' ? 1.2 : 1.8);
+                                }
+                            },
+                            translations[language][mode] || mode.charAt(0).toUpperCase() + mode.slice(1)
+                        )
+                    ))
+                )
+            ),
             React.createElement(
                 'div',
-                { className: 'gobelin-buttons' },
+                { key: 'gobelin-buttons', className: 'gobelin-buttons' },
                 React.createElement(
                     'button',
                     { onClick: shareGobelin, className: 'gobelin-button share-button' },
                     translations[language].share || 'Share'
                 )
-            )
-        );
+            ),
+            blsActive && !survey.completed && renderSurvey()
+        ]
+    );
 }
 
 export default MyGobelin;
