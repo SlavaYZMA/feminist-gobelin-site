@@ -43,25 +43,25 @@ function MyGobelin({ threadsRef, language }) {
 
     const getFractalParams = React.useMemo(() => (text, setProgress) => {
         const metrics = analyzeText(text);
-        const baseHue = (metrics.textLen * 10) % 360; // Полный диапазон hue
+        const baseHue = (metrics.textLen * 10) % 360;
         const params = {
-            cX: (metrics.avgWordLen / 10) - 0.5 + Math.random() * 0.1,
-            cY: (metrics.avgSentLen / 50) - 0.5 + Math.random() * 0.1,
-            zoom: Math.min(10, 1 + (metrics.textLen / 400) + metrics.uniqueWords * 0.1),
+            cX: (metrics.avgWordLen / 10) - 0.5 + Math.random() * 0.2,
+            cY: (metrics.avgSentLen / 50) - 0.5 + Math.random() * 0.2,
+            zoom: Math.min(12, 1 + (metrics.textLen / 300) + metrics.uniqueWords * 0.15),
             iterations: Math.min(150, 50 + metrics.uniqueWords * 5),
             hue: baseHue,
-            sat: Math.min(90, 60 + metrics.maxWordFreq * 10 * (setProgress < 0.75 ? 1 : 0.8)),
-            bright: Math.min(90, 50 + metrics.avgWordLen * 15 * (setProgress < 0.75 ? 1 : 0.9)),
-            speed: Math.max(0.05, metrics.sentCount * 0.2 * (setProgress < 0.75 ? 1 : 0.5)),
-            distortion: metrics.avgSentLen * 0.1 + metrics.uniqueWords * 0.02,
-            symmetryBreak: metrics.wordCount * 0.015,
-            breathingRate: Math.max(0.3, Math.min(2, metrics.avgSentLen / 10 * 1.5)),
-            waveAmplitude: metrics.sentCount * 0.05,
+            sat: Math.min(90, 60 + metrics.maxWordFreq * 15 * (setProgress < 0.75 ? 1 : 0.8)),
+            bright: Math.min(90, 50 + metrics.avgWordLen * 20 * (setProgress < 0.75 ? 1 : 0.9)),
+            speed: Math.max(0.05, metrics.sentCount * 0.25 * (setProgress < 0.75 ? 1 : 0.5)),
+            distortion: metrics.avgSentLen * 0.15 + metrics.uniqueWords * 0.03,
+            symmetryBreak: metrics.wordCount * 0.02,
+            breathingRate: Math.max(0.3, Math.min(2.5, metrics.avgSentLen / 10 * 1.5)),
+            waveAmplitude: metrics.sentCount * 0.07,
             textureGrain: 0,
             depthLayers: Math.max(1, metrics.sentCount / 2),
             rotationDir: Math.random() > 0.5 ? 1 : -1,
             escapeRadius: 4 + metrics.textLen / 1000,
-            twist: metrics.uniqueWords * 0.025
+            twist: metrics.uniqueWords * 0.03
         };
 
         let palette = 'default';
@@ -69,45 +69,45 @@ function MyGobelin({ threadsRef, language }) {
             const count = countTriggers(text, keywordRules.TRIGGERS[category]);
             if (count > 0) {
                 if (category === 'fear') {
-                    params.zoom += count * 0.3;
-                    params.hue = (baseHue + 180 + count * 20) % 360;
-                    params.bright = Math.max(20, params.bright * 0.7);
+                    params.zoom += count * 0.4;
+                    params.hue = (baseHue + 180 + count * 30) % 360;
+                    params.bright = Math.max(20, params.bright * 0.6);
                     palette = 'fear';
                 } else if (category === 'anger') {
-                    params.sat += count * 10;
-                    params.hue = (baseHue + 360 + count * 30) % 360;
-                    params.distortion += count * 0.1;
+                    params.sat += count * 15;
+                    params.hue = (baseHue + 360 + count * 40) % 360;
+                    params.distortion += count * 0.15;
                     palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations += count * 15;
-                    params.cX += count * 0.02;
-                    params.hue = (baseHue + 90 + count * 10) % 360;
+                    params.iterations += count * 20;
+                    params.cX += count * 0.03;
+                    params.hue = (baseHue + 90 + count * 15) % 360;
                     palette = palette === 'default' ? 'body' : palette;
                 } else if (category === 'place') {
-                    params.cX -= count * 0.03;
-                    params.cY -= count * 0.03;
-                    params.twist += count * 0.01;
-                    params.hue = (baseHue + 270 + count * 15) % 360;
+                    params.cX -= count * 0.04;
+                    params.cY -= count * 0.04;
+                    params.twist += count * 0.015;
+                    params.hue = (baseHue + 270 + count * 20) % 360;
                     palette = palette === 'default' ? 'place' : palette;
                 } else if (category === 'silence') {
-                    params.speed -= count * 0.1;
-                    params.bright = Math.min(90, params.bright * 0.8);
-                    params.hue = (baseHue + 200 + count * 25) % 360;
+                    params.speed -= count * 0.15;
+                    params.bright = Math.min(90, params.bright * 0.7);
+                    params.hue = (baseHue + 200 + count * 30) % 360;
                     palette = 'silence';
                 } else if (category === 'escape') {
-                    params.distortion += count * 0.15;
-                    params.twist += count * 0.02;
-                    params.hue = (baseHue + 300 + count * 20) % 360;
+                    params.distortion += count * 0.2;
+                    params.twist += count * 0.025;
+                    params.hue = (baseHue + 300 + count * 25) % 360;
                     palette = palette === 'default' ? 'escape' : palette;
                 } else if (category === 'nature') {
-                    params.distortion += count * 0.1;
-                    params.hue = (baseHue + 120 + count * 15) % 360;
-                    params.waveAmplitude += count * 0.02;
+                    params.distortion += count * 0.15;
+                    params.hue = (baseHue + 120 + count * 20) % 360;
+                    params.waveAmplitude += count * 0.03;
                     palette = 'nature';
                 } else if (category === 'hope') {
-                    params.bright += count * 10;
-                    params.hue = (baseHue + 60 + count * 20) % 360;
-                    params.breathingRate += count * 0.15;
+                    params.bright += count * 15;
+                    params.hue = (baseHue + 60 + count * 30) % 360;
+                    params.breathingRate += count * 0.2;
                     palette = 'hope';
                 }
             }
@@ -125,8 +125,8 @@ function MyGobelin({ threadsRef, language }) {
         localStorage.setItem('threads', JSON.stringify(threadsRef.current));
         setHistoryText('');
         setIsEditing(false);
-        setIsLoading(true);
-        setBlsActive(false); // BLS отключена по умолчанию
+        setIsLoading(false); // Сразу запускаем анимацию
+        setBlsActive(false);
     };
 
     const handleClearHistory = () => {
@@ -253,11 +253,11 @@ function MyGobelin({ threadsRef, language }) {
         const hsvToRgb = (h, s, v, palette) => {
             s /= 100;
             v /= 100;
-            if (palette === 'fear') v *= 0.7; // Тёмные оттенки для страха
-            else if (palette === 'anger') s = Math.min(1, s * 1.2); // Яркая насыщенность для гнева
-            else if (palette === 'hope') v = Math.min(1, v * 1.1); // Яркость для надежды
-            else if (palette === 'nature') h = (h + 120) % 360; // Зелёные оттенки для природы
-            else if (palette === 'silence') s *= 0.8; // Приглушённая насыщенность
+            if (palette === 'fear') v *= 0.6;
+            else if (palette === 'anger') s = Math.min(1, s * 1.3);
+            else if (palette === 'hope') v = Math.min(1, v * 1.2);
+            else if (palette === 'nature') h = (h + 120) % 360;
+            else if (palette === 'silence') s *= 0.7;
             const c = v * s;
             const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
             const m = v - c;
@@ -277,11 +277,6 @@ function MyGobelin({ threadsRef, language }) {
 
         const renderFractal = (params, t, setProgress) => {
             if (!ctx) return;
-            if (!blsActive && cachedImageData) {
-                ctx.putImageData(cachedImageData, 0, 0);
-                return;
-            }
-
             const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, depthLayers, rotationDir, escapeRadius, twist } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
@@ -305,9 +300,9 @@ function MyGobelin({ threadsRef, language }) {
             prevRotation = rotation;
             prevTwist = twistEffect;
 
-            const dynamicHueShift = Math.sin(t * 0.3) * 50; // Быстрая смена hue (~3-4с)
-            const dynamicSat = sat + Math.sin(t * speed) * 20;
-            const dynamicBright = bright + Math.sin(t * speed * 0.5) * 20;
+            const dynamicHueShift = Math.sin(t * 0.5) * 100;
+            const dynamicSat = sat + Math.sin(t * speed) * 30;
+            const dynamicBright = bright + Math.sin(t * speed * 0.5) * 30;
             const flicker = 0.9 + 0.1 * Math.sin(t * 2);
 
             const step = fps < 30 ? 6 : dynamicStep;
@@ -364,7 +359,7 @@ function MyGobelin({ threadsRef, language }) {
 
             ctx.globalAlpha = 1.0;
             ctx.putImageData(imageData, 0, 0);
-            if (!blsActive) cachedImageData = imageData;
+            if (fps < 15) cachedImageData = imageData; // Кэшируем только при низком FPS
         };
 
         const renderBlsMarker = (t) => {
@@ -423,7 +418,7 @@ function MyGobelin({ threadsRef, language }) {
                             setSetActive(true);
                             setStartTime = time;
                             threadsRef.current = [getFractalParams(submittedHistory, setCount / maxSets)];
-                            cachedImageData = null; // Сброс кэша при смене сета
+                            cachedImageData = null;
                         }, pauseDuration * 1000);
                     }
                 } else if (setCount > maxSets) {
@@ -488,7 +483,7 @@ function MyGobelin({ threadsRef, language }) {
                             if (submittedHistory) {
                                 threadsRef.current = [getFractalParams(submittedHistory, 0)];
                                 localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-                                setIsLoading(true);
+                                setIsLoading(false);
                             }
                         }
                     },
@@ -502,7 +497,7 @@ function MyGobelin({ threadsRef, language }) {
                             setMode('aiGorgon');
                             const savedThreads = localStorage.getItem('threads');
                             threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
-                            setIsLoading(true);
+                            setIsLoading(false);
                         }
                     },
                     translations[language].aiGorgon || 'Create based on AI Gorgon'
