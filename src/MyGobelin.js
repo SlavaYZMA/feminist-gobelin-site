@@ -8,6 +8,7 @@ function MyGobelin({ threadsRef, language }) {
     const [historyText, setHistoryText] = React.useState('');
     const [submittedHistory, setSubmittedHistory] = React.useState(localStorage.getItem('submittedHistory') || '');
     const [isEditing, setIsEditing] = React.useState(false);
+    const particlesRef = React.useRef([]);
 
     const createThread = (rule, existingThreads) => {
         const totalHeight = existingThreads.reduce((sum, thread) => sum + thread.thickness, 0);
@@ -31,6 +32,7 @@ function MyGobelin({ threadsRef, language }) {
         const keywords = Object.keys(keywordRules).filter(k => historyText.toLowerCase().includes(k));
         console.log('History keywords found:', keywords);
         threadsRef.current = [];
+        particlesRef.current = [];
         keywords.forEach(keyword => {
             const thread = createThread(keywordRules[keyword], threadsRef.current);
             threadsRef.current.push(thread);
@@ -45,6 +47,7 @@ function MyGobelin({ threadsRef, language }) {
         setSubmittedHistory('');
         localStorage.removeItem('submittedHistory');
         threadsRef.current = [];
+        particlesRef.current = [];
         localStorage.setItem('threads', JSON.stringify([]));
         console.log('Cleared history and threads');
     };
@@ -61,7 +64,7 @@ function MyGobelin({ threadsRef, language }) {
         }
         const canvas = canvasRef.current;
         const dataUrl = canvas.toDataURL('image/png');
-        const shareText = `${translations[language].share} Feminist Gobelin: https://feminist-gobelin-site.netlify.app`;
+        const shareText = `${translations[language].share} Feminist Data Art: https://feminist-gobelin-site.netlify.app`;
         navigator.clipboard.writeText(shareText);
         alert(translations[language].share + ' скопировано!');
     };
@@ -73,8 +76,19 @@ function MyGobelin({ threadsRef, language }) {
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth - 32;
-            canvas.height = 400;
+            canvas.height = 600; // Увеличим высоту для эффектности
         };
+
+        const createParticle = (x, y, color, thickness) => ({
+            x,
+            y,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            life: Math.random() * 100 + 50,
+            maxLife: Math.random() * 100 + 50,
+            size: Math.random() * thickness * 0.2 + 1,
+            color
+        });
 
         const drawSmoothThread = (ctx, thread, currentX) => {
             ctx.beginPath();
@@ -83,7 +97,7 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.moveTo(x, thread.startY);
                 while (x < currentX) {
                     const nextX = Math.min(x + 5, currentX);
-                    const y = thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3;
+                    const y = thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5;
                     ctx.lineTo(nextX, y);
                     x = nextX;
                 }
@@ -91,12 +105,15 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.moveTo(thread.startX, thread.startY);
                 ctx.lineTo(currentX, thread.endY);
             }
-            ctx.lineWidth = thread.thickness;
+            ctx.lineWidth = thread.thickness * (thread.material === 'silk' ? 0.8 : 1);
             const gradient = ctx.createLinearGradient(thread.startX, thread.startY, currentX, thread.endY);
             gradient.addColorStop(0, thread.color);
             gradient.addColorStop(1, thread.color + 'cc');
             ctx.strokeStyle = gradient;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawTornThread = (ctx, thread, currentX) => {
@@ -106,13 +123,19 @@ function MyGobelin({ threadsRef, language }) {
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
                 const yOffset = (Math.random() - 0.5) * thread.thickness * 0.5;
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 + yOffset : thread.startY + yOffset;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 + yOffset : thread.startY + yOffset;
                 ctx.lineTo(nextX, y);
+                if (Math.random() < 0.1) {
+                    particlesRef.current.push(createParticle(nextX, y, thread.color, thread.thickness));
+                }
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'wool' ? 1.2 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawKnottyThread = (ctx, thread, currentX) => {
@@ -121,18 +144,22 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 15, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 if (Math.random() < 0.2) {
                     ctx.arc(nextX, y, thread.thickness * 0.3, 0, Math.PI * 2);
                     ctx.fillStyle = thread.color;
                     ctx.fill();
+                    particlesRef.current.push(createParticle(nextX, y, thread.color, thread.thickness));
                 }
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'burlap' ? 1.3 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawRoughThread = (ctx, thread, currentX) => {
@@ -142,13 +169,16 @@ function MyGobelin({ threadsRef, language }) {
             while (x < currentX) {
                 const nextX = Math.min(x + 5, currentX);
                 const yOffset = (Math.random() - 0.5) * thread.thickness * 0.2;
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 + yOffset : thread.startY + yOffset;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 + yOffset : thread.startY + yOffset;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'linen' ? 1.2 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawSlipperyThread = (ctx, thread, currentX) => {
@@ -157,7 +187,7 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 5, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
@@ -166,7 +196,10 @@ function MyGobelin({ threadsRef, language }) {
             gradient.addColorStop(0, thread.color);
             gradient.addColorStop(1, thread.color + '80');
             ctx.strokeStyle = gradient;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawStickyThread = (ctx, thread, currentX) => {
@@ -175,20 +208,24 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 if (Math.random() < 0.1) {
                     ctx.beginPath();
                     ctx.moveTo(nextX, y);
-                    ctx.lineTo(nextX, y + thread.thickness * (Math.random() > 0.5 ? 1 : -1));
+                    ctx.lineTo(nextX, y + thread.thickness * (Math.random() > 0.5 ? 1 : -1) * 0.5);
                     ctx.strokeStyle = thread.color + '66';
                     ctx.stroke();
+                    particlesRef.current.push(createParticle(nextX, y, thread.color, thread.thickness));
                 }
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness;
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawLumpyThread = (ctx, thread, currentX) => {
@@ -198,7 +235,7 @@ function MyGobelin({ threadsRef, language }) {
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
                 const lump = Math.random() < 0.15 ? thread.thickness * 1.5 : thread.thickness;
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 ctx.lineWidth = lump * (thread.material === 'burlap' ? 1.3 : 1);
                 ctx.strokeStyle = thread.color;
@@ -207,6 +244,10 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.moveTo(nextX, y);
                 x = nextX;
             }
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawFragileThread = (ctx, thread, currentX) => {
@@ -220,13 +261,16 @@ function MyGobelin({ threadsRef, language }) {
                     ctx.moveTo(x, thread.startY);
                     continue;
                 }
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * 0.7;
             ctx.strokeStyle = thread.color + '80';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawSharpThread = (ctx, thread, currentX) => {
@@ -236,13 +280,16 @@ function MyGobelin({ threadsRef, language }) {
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
                 const yOffset = (Math.random() > 0.5 ? 1 : -1) * thread.thickness * 0.4;
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 + yOffset : thread.startY + yOffset;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 + yOffset : thread.startY + yOffset;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'synthetic' ? 0.9 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawStainedThread = (ctx, thread, currentX) => {
@@ -251,7 +298,7 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 20, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 const gradient = ctx.createLinearGradient(x, thread.startY, nextX, thread.endY);
                 gradient.addColorStop(0, thread.color);
                 gradient.addColorStop(0.5, thread.color + '66');
@@ -264,6 +311,10 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.moveTo(nextX, y);
                 x = nextX;
             }
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawWornThread = (ctx, thread, currentX) => {
@@ -272,19 +323,19 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
-                if (Math.random() < 0.1) {
-                    ctx.strokeStyle = thread.color + '33';
-                } else {
-                    ctx.strokeStyle = thread.color;
-                }
+                ctx.strokeStyle = Math.random() < 0.1 ? thread.color + '33' : thread.color;
                 ctx.lineWidth = thread.thickness * (thread.material === 'velvet' ? 1.1 : 1);
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.moveTo(nextX, y);
                 x = nextX;
             }
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawWetThread = (ctx, thread, currentX) => {
@@ -293,15 +344,21 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
+                if (Math.random() < 0.05) {
+                    particlesRef.current.push(createParticle(nextX, y, thread.color, thread.thickness));
+                }
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness;
             ctx.strokeStyle = thread.color;
             ctx.globalAlpha = thread.opacity * 0.7;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
             ctx.globalAlpha = thread.opacity;
+            ctx.shadowBlur = 0;
         };
 
         const drawTransparentThread = (ctx, thread, currentX) => {
@@ -310,13 +367,16 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness;
             ctx.strokeStyle = thread.color + '66';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawFluffyThread = (ctx, thread, currentX) => {
@@ -325,12 +385,14 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'wool' || thread.material === 'cotton' ? 1.2 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
             for (let i = 0; i < thread.thickness; i++) {
                 ctx.beginPath();
@@ -338,7 +400,7 @@ function MyGobelin({ threadsRef, language }) {
                 while (x < currentX) {
                     const nextX = Math.min(x + 10, currentX);
                     const yOffset = (Math.random() - 0.5) * thread.thickness * 0.2;
-                    const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 + yOffset : thread.startY + yOffset;
+                    const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 + yOffset : thread.startY + yOffset;
                     ctx.moveTo(x, y);
                     ctx.lineTo(nextX, y);
                     x = nextX;
@@ -347,6 +409,7 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.strokeStyle = thread.color + '33';
                 ctx.stroke();
             }
+            ctx.shadowBlur = 0;
         };
 
         const drawBrittleThread = (ctx, thread, currentX) => {
@@ -360,13 +423,19 @@ function MyGobelin({ threadsRef, language }) {
                     ctx.moveTo(x, thread.startY);
                     continue;
                 }
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
+                if (Math.random() < 0.05) {
+                    particlesRef.current.push(createParticle(nextX, y, thread.color, thread.thickness));
+                }
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'synthetic' ? 0.8 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawFadedThread = (ctx, thread, currentX) => {
@@ -375,7 +444,7 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 20, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 const gradient = ctx.createLinearGradient(x, thread.startY, nextX, thread.endY);
                 gradient.addColorStop(0, thread.color);
                 gradient.addColorStop(1, thread.color + '33');
@@ -387,6 +456,10 @@ function MyGobelin({ threadsRef, language }) {
                 ctx.moveTo(nextX, y);
                 x = nextX;
             }
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = thread.color;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawResilientThread = (ctx, thread, currentX) => {
@@ -395,14 +468,14 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'cotton' || thread.material === 'linen' ? 1.1 : 1);
             ctx.strokeStyle = thread.color;
-            ctx.shadowColor = thread.color + '66';
-            ctx.shadowBlur = 5;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
             ctx.shadowBlur = 0;
         };
@@ -414,13 +487,16 @@ function MyGobelin({ threadsRef, language }) {
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
                 const yOffset = (Math.random() - 0.5) * thread.thickness * 0.6;
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 + yOffset : thread.startY + yOffset;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 + yOffset : thread.startY + yOffset;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * (thread.material === 'wool' ? 1.2 : 1);
             ctx.strokeStyle = thread.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawFlowingThread = (ctx, thread, currentX) => {
@@ -429,7 +505,7 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 5, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.03) * thread.thickness * 0.5 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.03) * thread.thickness * 0.7 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
@@ -438,7 +514,10 @@ function MyGobelin({ threadsRef, language }) {
             gradient.addColorStop(0, thread.color);
             gradient.addColorStop(1, thread.color + 'cc');
             ctx.strokeStyle = gradient;
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         };
 
         const drawHeavyThread = (ctx, thread, currentX) => {
@@ -447,20 +526,22 @@ function MyGobelin({ threadsRef, language }) {
             ctx.moveTo(x, thread.startY);
             while (x < currentX) {
                 const nextX = Math.min(x + 10, currentX);
-                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.3 : thread.startY;
+                const y = thread.shape === 'wave' ? thread.startY + Math.sin((x - thread.startX) * 0.05) * thread.thickness * 0.5 : thread.startY;
                 ctx.lineTo(nextX, y);
                 x = nextX;
             }
             ctx.lineWidth = thread.thickness * 1.3;
             ctx.strokeStyle = thread.color;
-            ctx.shadowColor = thread.color + '66';
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = thread.color;
             ctx.stroke();
             ctx.shadowBlur = 0;
         };
 
         const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1a1a1a'; // Тёмный фон для неона
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'lighter';
             threadsRef.current.forEach(thread => {
                 if (thread.progress < 1) {
                     thread.progress += 0.01;
@@ -533,6 +614,21 @@ function MyGobelin({ threadsRef, language }) {
                         drawSmoothThread(ctx, thread, currentX);
                 }
             });
+
+            // Рендер частиц
+            particlesRef.current = particlesRef.current.filter(p => p.life > 0);
+            particlesRef.current.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+                ctx.fillStyle = p.color + Math.floor((p.life / p.maxLife) * 255).toString(16).padStart(2, '0');
+                ctx.fill();
+            });
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
             animationFrameId = requestAnimationFrame(animate);
         };
 
@@ -549,7 +645,7 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        React.createElement('h1', null, translations[language].myGobelin || 'My Gobelin'),
+        React.createElement('h1', null, translations[language].myGobelin || 'My Data Art'),
         React.createElement(
             'div',
             { className: 'mode-switcher' },
@@ -562,6 +658,7 @@ function MyGobelin({ threadsRef, language }) {
                         if (submittedHistory) {
                             const keywords = Object.keys(keywordRules).filter(k => submittedHistory.toLowerCase().includes(k));
                             threadsRef.current = [];
+                            particlesRef.current = [];
                             keywords.forEach(keyword => {
                                 const thread = createThread(keywordRules[keyword], threadsRef.current);
                                 threadsRef.current.push(thread);
@@ -580,12 +677,13 @@ function MyGobelin({ threadsRef, language }) {
                         setMode('aiGorgon');
                         const savedThreads = localStorage.getItem('threads');
                         threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
+                        particlesRef.current = [];
                     }
                 },
                 translations[language].aiGorgon || 'Create based on AI Gorgon'
             )
         ),
-        React.createElement('canvas', { ref: canvasRef, className: 'gobelin-canvas' }),
+        React.createElement('canvas', { ref: canvasRef, className: 'data-art-canvas' }),
         mode === 'history' && React.createElement(
             'div',
             { className: 'history-container' },
