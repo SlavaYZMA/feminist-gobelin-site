@@ -620,9 +620,6 @@ body {
     margin: 16px 0;
     font-family: 'Inter', sans-serif;
 }
-.bls-controls-top {
-    z-index: 3;
-}
 .bls-button, .bls-mode-button {
     background: var(--primary-6);
     color: #fff;
