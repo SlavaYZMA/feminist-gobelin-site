@@ -49,23 +49,30 @@ function MyGobelin({ threadsRef, language }) {
             cX: (metrics.avgWordLen / 10) - 0.5, // Центр фрактала по X
             cY: (metrics.avgSentLen / 50) - 0.5, // Центр фрактала по Y
             zoom: Math.min(10, 1 + (metrics.textLen / 500)), // Масштаб
-            iterations: Math.min(500, 100 + metrics.uniqueWords * 5), // Детализация
+            iterations: Math.min(300, 100 + metrics.uniqueWords * 5), // Детализация
             hue: (metrics.upperCaseCount * 3) % 360, // Базовый цвет
             sat: Math.min(100, metrics.maxWordFreq * 15), // Насыщенность
             bright: Math.min(100, metrics.vowelsRatio * 120), // Яркость
-            speed: Math.max(0.1, metrics.punctuationCount * 0.15), // Скорость анимации
-            distortion: metrics.lineBreakCount * 0.1, // Искажение
-            symmetryBreak: metrics.digitCount * 0.15, // Асимметрия
+            speed: Math.max(0.1, metrics.punctuationCount * 0.12), // Скорость анимации
+            distortion: metrics.lineBreakCount * 0.08, // Искажение
+            symmetryBreak: metrics.digitCount * 0.12, // Асимметрия
             breathingRate: Math.max(0.5, Math.min(2.0, metrics.avgSentLen / 10)), // Пульсация
-            waveAmplitude: metrics.punctuationCount * 0.05, // Волны
-            textureGrain: (1 - metrics.vowelsRatio) * 2, // Минимальная зернистость
+            waveAmplitude: metrics.punctuationCount * 0.04, // Волны
+            textureGrain: (1 - metrics.vowelsRatio) * 1, // Минимальная зернистость
             depthLayers: Math.max(1, metrics.lineBreakCount), // Глубина
             rotationDir: metrics.vowelsRatio > 0.45 ? 1 : -1, // Направление вращения
             flashFreq: 0, // Мерцание
             rgbSplit: 0, // RGB-сплит
             escapeRadius: 4 + metrics.textLen / 1000, // Радиус выхода
-            twist: metrics.uniqueWords * 0.01 // Скручивание форм
+            twist: metrics.uniqueWords * 0.008, // Скручивание форм
+            smoothness: metrics.vowelsRatio * 0.5 // Плавность переходов
         };
+
+        // Проверка keywordRules.TRIGGERS
+        if (!keywordRules || !keywordRules.TRIGGERS) {
+            console.error('keywordRules.TRIGGERS is not defined');
+            return params;
+        }
 
         // Модификаторы от триггерных слов
         let palette = 'default';
@@ -74,43 +81,45 @@ function MyGobelin({ threadsRef, language }) {
             if (count > 0) {
                 if (category === 'fear') {
                     params.zoom += count * 0.3;
-                    params.rgbSplit += count * 0.02;
+                    params.rgbSplit += count * 0.015;
                     params.hue = (params.hue + 180) % 360; // Голубой/оранжевый
-                    params.twist += count * 0.02; // Сложные формы
+                    params.twist += count * 0.015;
                     palette = 'fear';
                 } else if (category === 'anger') {
-                    params.sat += count * 10;
-                    params.flashFreq += count * 0.3;
+                    params.sat += count * 8;
+                    params.flashFreq += count * 0.2;
                     params.hue = (params.hue + 360) % 360; // Красный/зелёный
-                    params.distortion += count * 0.1;
+                    params.distortion += count * 0.08;
                     palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations += count * 20;
-                    params.cX += count * 0.02; // Смещение для узоров
+                    params.iterations += count * 15;
+                    params.cX += count * 0.02;
                     palette = palette === 'default' ? 'body' : palette;
                 } else if (category === 'place') {
-                    params.cX -= count * 0.04;
-                    params.cY -= count * 0.04;
-                    params.twist += count * 0.01;
+                    params.cX -= count * 0.03;
+                    params.cY -= count * 0.03;
+                    params.twist += count * 0.008;
                     palette = palette === 'default' ? 'place' : palette;
                 } else if (category === 'silence') {
-                    params.speed -= count * 0.1;
+                    params.speed -= count * 0.08;
                     params.bright = Math.min(100, params.bright * 0.9);
                     params.hue = (params.hue + 200) % 360; // Пастельный голубой/жёлтый
+                    params.smoothness += count * 0.2;
                     palette = 'silence';
                 } else if (category === 'escape') {
-                    params.distortion += count * 0.2;
-                    params.twist += count * 0.03; // Сложные формы
+                    params.distortion += count * 0.15;
+                    params.twist += count * 0.02;
                     palette = palette === 'default' ? 'escape' : palette;
                 } else if (category === 'nature') {
-                    params.distortion += count * 0.1;
+                    params.distortion += count * 0.08;
                     params.hue = (params.hue + 120) % 360; // Зелёный/розовый
-                    params.waveAmplitude += count * 0.03;
+                    params.waveAmplitude += count * 0.02;
                     palette = 'nature';
                 } else if (category === 'hope') {
-                    params.bright += count * 10;
+                    params.bright += count * 8;
                     params.hue = (params.hue + 60) % 360; // Золотой/фиолетовый
-                    params.breathingRate += count * 0.2;
+                    params.breathingRate += count * 0.15;
+                    params.smoothness += count * 0.2;
                     palette = 'hope';
                 }
             }
@@ -145,14 +154,14 @@ function MyGobelin({ threadsRef, language }) {
 
     const shareGobelin = () => {
         if (!canvasRef.current || threadsRef.current.length === 0) {
-            alert(translations[language].canvasError || 'Cannot download or share an empty canvas.');
+            alert(translations[language]?.canvasError || 'Cannot download or share an empty canvas.');
             return;
         }
         const canvas = canvasRef.current;
         const dataUrl = canvas.toDataURL('image/png');
-        const shareText = `${translations[language].share} Feminist Data Art: https://feminist-gobelin-site.netlify.app`;
+        const shareText = `${translations[language]?.share || 'Share'} Feminist Data Art: https://feminist-gobelin-site.netlify.app`;
         navigator.clipboard.writeText(shareText);
-        alert(translations[language].share + ' скопировано!');
+        alert((translations[language]?.share || 'Share') + ' скопировано!');
     };
 
     React.useEffect(() => {
@@ -160,17 +169,19 @@ function MyGobelin({ threadsRef, language }) {
         const ctx = canvas.getContext('2d');
         let animationFrameId;
         let time = 0;
+        let prevParams = null;
 
         const resizeCanvas = () => {
             canvas.width = window.innerWidth - 32;
             canvas.height = 800;
+            ctx.imageSmoothingEnabled = true; // Сглаживание
         };
 
         // Конвертирует HSV в RGB с контрастными палитрами
-        const hsvToRgb = (h, s, v, palette) => {
+        const hsvToRgb = (h, s, v, palette, smoothness) => {
             s /= 100;
             v /= 100;
-            // Контрастные палитры
+            // Контрастные палитры с плавными переходами
             if (palette === 'hope') h = (h + 60) % 360; // Золотой/фиолетовый
             else if (palette === 'fear') h = (h + 180) % 360; // Голубой/оранжевый
             else if (palette === 'anger') h = (h + 360) % 360; // Красный/зелёный
@@ -189,6 +200,10 @@ function MyGobelin({ threadsRef, language }) {
             else if (h < 240) [r, g, b] = [0, x, c];
             else if (h < 300) [r, g, b] = [x, 0, c];
             else [r, g, b] = [c, 0, x];
+            // Интерполяция для плавности
+            r = r * (1 - smoothness) + (r * smoothness);
+            g = g * (1 - smoothness) + (g * smoothness);
+            b = b * (1 - smoothness) + (b * smoothness);
             return [
                 Math.round((r + m) * 255),
                 Math.round((g + m) * 255),
@@ -196,9 +211,14 @@ function MyGobelin({ threadsRef, language }) {
             ];
         };
 
-        // Рендерит Julia-фрактал с гипнотическими формами и динамикой
+        // Рендерит Julia-фрактал с плавной динамикой
         const renderFractal = (params, t) => {
-            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit, palette, escapeRadius, twist } = params;
+            // Пропустить рендеринг, если параметры не изменились
+            if (prevParams && JSON.stringify(params) === JSON.stringify(prevParams)) {
+                return;
+            }
+
+            const { cX, cY, zoom, iterations, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, flashFreq, rgbSplit, palette, escapeRadius, twist, smoothness } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
 
@@ -206,21 +226,21 @@ function MyGobelin({ threadsRef, language }) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Анимационные параметры
-            const breathe = Math.sin(t * breathingRate * 1.2) * 0.12; // Пульсация
-            const wave = Math.sin(t * speed * 1.5) * waveAmplitude * 1.5; // Волновое эхо
-            const rotation = t * speed * rotationDir * 0.02; // Слоистое вращение
-            const twistEffect = Math.sin(t * twist) * 0.05; // Скручивание
+            // Плавные анимационные параметры
+            const breathe = Math.sin(t * breathingRate * 0.8) * 0.1; // Мягкая пульсация
+            const wave = Math.sin(t * speed * 0.8) * waveAmplitude * 1.2; // Плавное эхо
+            const rotation = t * speed * rotationDir * 0.015; // Плавное вращение
+            const twistEffect = Math.sin(t * twist * 0.8) * 0.03; // Мягкое скручивание
 
-            for (let x = 0; x < canvas.width; x += 1) {
-                for (let y = 0; y < canvas.height; y += 1) {
+            for (let x = 0; x < canvas.width; x += 4) {
+                for (let y = 0; y < canvas.height; y += 4) {
                     let zx = ((x - centerX) / canvas.width) * scale;
-                    let zy = ((y - centerY) / canvas.height) * scale;
-                    // Математическое скручивание
-                    const rotatedZx = zx * Math.cos(rotation + twistEffect) - zy * Math.sin(rotation + twistEffect);
-                    const rotatedZy = zx * Math.sin(rotation + twistEffect) + zy * Math.cos(rotation + twistEffect);
-                    zx = rotatedZx + Math.sin(zy * distortion) * wave;
-                    zy = rotatedZy + Math.cos(zx * distortion) * symmetryBreak;
+                    let zet = ((y - centerY) / canvas.height) * scale;
+                    // Плавное вращение и искажение
+                    const rotatedZx = zx * Math.cos(rotation + twistEffect) - zet * Math.sin(rotation + twistEffect);
+                    const rotatedZy = zx * Math.sin(rotation + twistEffect) + zet * Math.cos(rotation + twistEffect);
+                    zx = rotatedZx + Math.sin(zet * distortion * 0.8) * wave;
+                    zy = rotatedZy + Math.cos(zx * distortion * 0.8) * symmetryBreak;
 
                     let i = 0;
                     let tempZx, tempZy;
@@ -238,15 +258,15 @@ function MyGobelin({ threadsRef, language }) {
                     if (i === iterations) {
                         color = [0, 0, 0]; // Внутри множества — чёрный
                     } else {
-                        const h = (hue + (i * 20) % 360) % 360; // Контрастный градиент
-                        const s = Math.min(100, sat + (Math.sin(t * flashFreq) * 20)); // Мягкое мерцание
-                        const v = Math.min(100, bright + (i / iterations) * 80); // Яркое свечение
-                        color = hsvToRgb(h, s, v, palette);
+                        const h = (hue + (i * 15) % 360) % 360; // Плавный градиент
+                        const s = Math.min(100, sat + (Math.sin(t * flashFreq * 0.5) * 10)); // Смягчённое мерцание
+                        const v = Math.min(100, bright + (i / iterations) * 70); // Яркое свечение
+                        color = hsvToRgb(h, s, v, palette, smoothness);
                         // Мягкий RGB-сплит
                         if (rgbSplit > 0) {
-                            color[0] += Math.sin(t + x * 0.01) * rgbSplit * 40;
-                            color[1] += Math.sin(t + y * 0.01) * rgbSplit * 40;
-                            color[2] += Math.cos(t + (x + y) * 0.01) * rgbSplit * 40;
+                            color[0] += Math.sin(t + x * 0.008) * rgbSplit * 20;
+                            color[1] += Math.sin(t + y * 0.008) * rgbSplit * 20;
+                            color[2] += Math.cos(t + (x + y) * 0.008) * rgbSplit * 20;
                         }
                         // Минимальная текстура
                         if (textureGrain > 0) {
@@ -255,8 +275,8 @@ function MyGobelin({ threadsRef, language }) {
                         }
                     }
 
-                    // Контрастная глубина
-                    const layerFactor = 1 - (i / iterations) * depthLayers * 0.5;
+                    // Плавная глубина
+                    const layerFactor = 1 - (i / iterations) * depthLayers * 0.4;
                     color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
 
                     data[idx] = color[0];
@@ -267,6 +287,7 @@ function MyGobelin({ threadsRef, language }) {
             }
 
             ctx.putImageData(imageData, 0, 0);
+            prevParams = params; // Кэширование параметров
         };
 
         const animate = () => {
@@ -292,7 +313,7 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        React.createElement('h1', null, translations[language].myGobelin || 'My Data Art'),
+        React.createElement('h1', null, translations[language]?.myGobelin || 'My Data Art'),
         React.createElement(
             'div',
             { className: 'mode-switcher' },
@@ -308,7 +329,7 @@ function MyGobelin({ threadsRef, language }) {
                         }
                     }
                 },
-                translations[language].myHistory || 'Create based on my history'
+                translations[language]?.myHistory || 'Create based on my history'
             ),
             React.createElement(
                 'button',
@@ -320,7 +341,7 @@ function MyGobelin({ threadsRef, language }) {
                         threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
                     }
                 },
-                translations[language].aiGorgon || 'Create based on AI Gorgon'
+                translations[language]?.aiGorgon || 'Create based on AI Gorgon'
             )
         ),
         React.createElement('canvas', { ref: canvasRef, className: 'data-art-canvas' }),
@@ -330,7 +351,7 @@ function MyGobelin({ threadsRef, language }) {
             React.createElement('textarea', {
                 value: historyText,
                 onChange: (e) => setHistoryText(e.target.value),
-                placeholder: translations[language].historyPlaceholder || 'Enter your story...',
+                placeholder: translations[language]?.historyPlaceholder || 'Enter your story...',
                 rows: 5,
                 className: 'history-textarea'
             }),
@@ -340,12 +361,12 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement(
                     'button',
                     { onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
-                    translations[language].submit || 'Submit'
+                    translations[language]?.submit || 'Submit'
                 ),
                 React.createElement(
                     'button',
                     { onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
-                    translations[language].clear || 'Clear'
+                    translations[language]?.clear || 'Clear'
                 )
             ),
             submittedHistory && !isEditing && React.createElement(
@@ -355,7 +376,7 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement(
                     'button',
                     { onClick: handleEditHistory, className: 'history-button edit' },
-                    translations[language].edit || 'Edit'
+                    translations[language]?.edit || 'Edit'
                 )
             )
         ),
@@ -365,7 +386,7 @@ function MyGobelin({ threadsRef, language }) {
             React.createElement(
                 'button',
                 { onClick: shareGobelin, className: 'gobelin-button share-button' },
-                translations[language].share || 'Share'
+                translations[language]?.share || 'Share'
             )
         )
     );
