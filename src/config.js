@@ -44,11 +44,6 @@ export const translations = {
         frequency: "BLS Frequency (Hz)",
         soft: "Soft",
         standard: "Standard",
-        survey: "How do you feel?",
-        distress: "Distress",
-        tension: "Tension",
-        calm: "Calm",
-        submitSurvey: "Submit",
         loading: "Loading...",
         fpsWarning: "Low performance detected. Try a smaller screen or simpler settings."
     },
@@ -88,11 +83,6 @@ export const translations = {
         frequency: "Частота BLS (Гц)",
         soft: "Мягко",
         standard: "Стандарт",
-        survey: "Как вы себя чувствуете?",
-        distress: "Дистресс",
-        tension: "Напряжение",
-        calm: "Спокойствие",
-        submitSurvey: "Отправить",
         loading: "Загрузка...",
         fpsWarning: "Обнаружена низкая производительность. Попробуйте уменьшить экран или упростить настройки."
     },
@@ -132,11 +122,6 @@ export const translations = {
         frequency: "Frecuencia BLS (Hz)",
         soft: "Suave",
         standard: "Estándar",
-        survey: "¿Cómo te sientes?",
-        distress: "Malestar",
-        tension: "Tensión",
-        calm: "Calma",
-        submitSurvey: "Enviar",
         loading: "Cargando...",
         fpsWarning: "Se detectó bajo rendimiento. Intenta con una pantalla más pequeña o configuraciones más simples."
     }
