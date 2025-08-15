@@ -378,7 +378,7 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         return false;
     };
 
-    return <div>Testing</div>;
+    return null;
 }
 
 export default MyGobelin;
