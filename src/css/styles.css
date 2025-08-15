@@ -556,6 +556,100 @@ body {
 .data-art-canvas {
     width: 100%;
     height: 600px;
-    background: #fff; /* Белый фон */
+    background: #fff;
     border-radius: 8px;
+}
+.bls-canvas {
+    width: 100%;
+    height: 600px;
+    position: absolute;
+    pointer-events: none;
+}
+.consent-screen, .survey-screen {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gray-1);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    text-align: center;
+    z-index: 1002;
+    max-width: 500px;
+}
+.consent-button, .survey-button {
+    margin-top: 16px;
+    background: var(--primary-6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.consent-button:hover, .survey-button:hover {
+    transform: scale(1.05);
+}
+.consent-button:active, .survey-button:active {
+    transform: scale(0.95);
+}
+.consent-button:disabled, .survey-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+.guideline-link {
+    display: block;
+    margin-top: 16px;
+    color: var(--primary-6);
+    font-size: 14px;
+    text-decoration: none;
+}
+.guideline-link:hover {
+    text-decoration: underline;
+}
+.bls-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 16px;
+}
+.bls-button, .bls-mode-button {
+    background: var(--primary-6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.bls-button:hover, .bls-mode-button:hover {
+    transform: scale(1.05);
+}
+.bls-button:active, .bls-mode-button:active {
+    transform: scale(0.95);
+}
+.bls-button:disabled, .bls-mode-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+.bls-mode-button.active {
+    background: #003087; /* Темнее для активного состояния */
+}
+.bls-frequency, .survey-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+.bls-frequency input, .survey-item input {
+    width: 100px;
+}
+.bls-frequency label, .survey-item label {
+    font-weight: 500;
 }
