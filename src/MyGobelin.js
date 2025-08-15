@@ -378,7 +378,29 @@ function MyGobelin({ threadsRef, language, translations, setShareModalOpen }) {
         return false;
     };
 
-    return null;
+    const handleShareClick = () => {
+        const canvas = canvasRef.current;
+        if (canvas && checkCanvasContent(canvas)) {
+            setShareModalOpen(true);
+        } else {
+            alert(translations[language].noGobelin);
+        }
+    };
+
+    return React.createElement(
+        'div',
+        { className: 'page' },
+        React.createElement('h1', null, translations[language].myGobelin || 'My Gobelin'),
+        React.createElement('canvas', { ref: canvasRef }),
+        React.createElement(
+            'button',
+            {
+                className: 'share-button',
+                onClick: handleShareClick
+            },
+            translations[language].share || 'Share'
+        )
+    );
 }
 
 export default MyGobelin;
