@@ -11,13 +11,15 @@ function MyGobelin({ threadsRef, language }) {
     const [isEditing, setIsEditing] = React.useState(false);
     const [blsActive, setBlsActive] = React.useState(false);
     const [blsFrequency, setBlsFrequency] = React.useState(1.2);
-    const [blsMode, setBlsMode] = React.useState('standard');
     const [setActive, setSetActive] = React.useState(false);
     const [setCount, setSetCount] = React.useState(0);
     const [isLoading, setIsLoading] = React.useState(true);
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
     const [dynamicStep, setDynamicStep] = React.useState(4);
+    const [showConsentScreen, setShowConsentScreen] = React.useState(false);
+    const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
+    const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -117,12 +119,39 @@ function MyGobelin({ threadsRef, language }) {
         return params;
     }, []);
 
+    const staticWarmFractalParams = {
+        cX: 0,
+        cY: 0,
+        zoom: 2,
+        iterations: 100,
+        hue: 40, // Жёлто-оранжевый
+        sat: 80,
+        bright: 90,
+        speed: 0,
+        distortion: 0,
+        symmetryBreak: 0,
+        breathingRate: 0,
+        waveAmplitude: 0,
+        textureGrain: 0,
+        depthLayers: 1,
+        rotationDir: 1,
+        escapeRadius: 4,
+        twist: 0,
+        palette: 'hope'
+    };
+
     const handleSubmitHistory = () => {
         if (!historyText) return;
         setSubmittedHistory(historyText);
-        localStorage.setItem('submittedHistory', historyText);
-        threadsRef.current = [getFractalParams(historyText)];
-        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+        if (!dontSaveHistory) {
+            localStorage.setItem('submittedHistory', historyText);
+            threadsRef.current = [getFractalParams(historyText)];
+            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+        } else {
+            threadsRef.current = [getFractalParams(historyText)];
+            localStorage.removeItem('submittedHistory');
+            localStorage.removeItem('threads');
+        }
         setHistoryText('');
         setIsEditing(false);
         setIsLoading(false);
@@ -159,9 +188,7 @@ function MyGobelin({ threadsRef, language }) {
     };
 
     const handleStartBls = () => {
-        setBlsActive(true);
-        setSetActive(true);
-        setSetCount(1);
+        setShowConsentScreen(true);
     };
 
     const handlePauseBls = () => {
@@ -172,10 +199,36 @@ function MyGobelin({ threadsRef, language }) {
         setBlsActive(false);
         setSetActive(false);
         setSetCount(0);
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (ctx && threadsRef.current.length > 0) {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            renderFractal(staticWarmFractalParams, 0);
+        }
     };
 
     const handleCalmDown = () => {
         setBlsFrequency(prev => Math.max(0.8, prev - 0.2));
+    };
+
+    const acceptConsent = () => {
+        setBlsActive(true);
+        setSetActive(true);
+        setSetCount(1);
+        setShowConsentScreen(false);
+        setBlsFrequency(
+            consentSensitivity === 'soft' ? 0.8 :
+            consentSensitivity === 'intense' ? 1.6 : 1.2
+        );
+        if (dontSaveHistory) {
+            localStorage.removeItem('submittedHistory');
+            localStorage.removeItem('threads');
+        }
+    };
+
+    const declineConsent = () => {
+        setShowConsentScreen(false);
     };
 
     React.useEffect(() => {
@@ -466,7 +519,88 @@ function MyGobelin({ threadsRef, language }) {
         { className: 'page gobelin-page' },
         isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
         fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
-        // 1. Верхняя панель (header уже в App.js, здесь только контент)
+        showConsentScreen && React.createElement(
+            'div',
+            { className: 'consent-screen' },
+            React.createElement('h2', { key: 'consent-title' }, translations[language].consentTitle || 'Before Starting BLS'),
+            React.createElement(
+                'p',
+                { key: 'disclaimer' },
+                translations[language].disclaimer ||
+                'This is an artistic visualization with elements of bilateral stimulation inspired by EMDR. It is not psychotherapy and does not replace working with a certified professional. Learn more at ',
+                React.createElement('a', { href: 'https://www.nice.org.uk/guidance/conditions-and-diseases/mental-health-conditions/post-traumatic-stress-disorder', target: '_blank', rel: 'noopener noreferrer' }, 'NICE'),
+                ' or ',
+                React.createElement('a', { href: 'https://www.apa.org/topics/psychotherapy', target: '_blank', rel: 'noopener noreferrer' }, 'APA'),
+                '.'
+            ),
+            React.createElement(
+                'p',
+                { key: 'self-regulation' },
+                translations[language].selfRegulation ||
+                'To stay grounded, try slow breathing (4 seconds in, 4 seconds out), look around the room to orient yourself, or visualize a safe, calming place.'
+            ),
+            React.createElement(
+                'p',
+                { key: 'content-warning' },
+                translations[language].contentWarning ||
+                'Stories may contain descriptions of violence. The "Stop" button is always available and will replace the animation with a static warm fractal.'
+            ),
+            React.createElement(
+                'div',
+                { key: 'sensitivity', className: 'consent-sensitivity' },
+                ['soft', 'standard', 'intense'].map(sensitivity => (
+                    React.createElement(
+                        'button',
+                        {
+                            key: `sensitivity-${sensitivity}`,
+                            className: `consent-sensitivity-button ${consentSensitivity === sensitivity ? 'active' : ''}`,
+                            onClick: () => setConsentSensitivity(sensitivity)
+                        },
+                        translations[language][sensitivity] ||
+                        (sensitivity === 'soft' ? 'Soft' : sensitivity === 'standard' ? 'Standard' : 'Intense')
+                    )
+                ))
+            ),
+            React.createElement(
+                'p',
+                { key: 'contraindications' },
+                translations[language].contraindications ||
+                'Do not use during severe dissociation, acute crisis, psychosis, or active suicidal thoughts. Seek professional help at ',
+                React.createElement('a', { href: 'https://988lifeline.org', target: '_blank', rel: 'noopener noreferrer' }, '988lifeline.org'),
+                '.'
+            ),
+            React.createElement(
+                'p',
+                { key: 'privacy' },
+                translations[language].privacy ||
+                'Your stories are anonymized and processed locally. You can choose not to save your story.'
+            ),
+            React.createElement(
+                'div',
+                { key: 'checkbox', className: 'consent-checkbox' },
+                React.createElement('input', {
+                    type: 'checkbox',
+                    checked: dontSaveHistory,
+                    onChange: (e) => setDontSaveHistory(e.target.checked)
+                }),
+                React.createElement('span', null, translations[language].dontSave || 'Do not save my story')
+            ),
+            React.createElement(
+                'div',
+                { key: 'consent-buttons', className: 'consent-buttons' },
+                React.createElement(
+                    'button',
+                    { key: 'accept', className: 'consent-button', onClick: acceptConsent },
+                    translations[language].accept || 'Accept'
+                ),
+                React.createElement(
+                    'button',
+                    { key: 'decline', className: 'consent-button decline', onClick: declineConsent },
+                    translations[language].decline || 'Decline'
+                )
+            )
+        ),
+        // 1. Верхняя панель
         React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
         // 2. Кнопки режимов
         React.createElement(
@@ -481,7 +615,9 @@ function MyGobelin({ threadsRef, language }) {
                         setMode('history');
                         if (submittedHistory) {
                             threadsRef.current = [getFractalParams(submittedHistory)];
-                            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+                            if (!dontSaveHistory) {
+                                localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+                            }
                             setIsLoading(false);
                         }
                     }
@@ -552,24 +688,6 @@ function MyGobelin({ threadsRef, language }) {
                     onChange: (e) => setBlsFrequency(parseFloat(e.target.value))
                 }),
                 React.createElement('span', null, blsFrequency.toFixed(1))
-            ),
-            React.createElement(
-                'div',
-                { key: 'bls-mode', className: 'bls-mode' },
-                ['soft', 'standard'].map(mode => (
-                    React.createElement(
-                        'button',
-                        {
-                            key: `bls-mode-${mode}`,
-                            className: `bls-mode-button ${blsMode === mode ? 'active' : ''}`,
-                            onClick: () => {
-                                setBlsMode(mode);
-                                setBlsFrequency(mode === 'soft' ? 0.8 : 1.2);
-                            }
-                        },
-                        translations[language][mode] || mode.charAt(0).toUpperCase() + mode.slice(1)
-                    )
-                ))
             )
         ),
         // 5. Кнопка «Поделиться»
