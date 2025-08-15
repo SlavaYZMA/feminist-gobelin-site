@@ -1,7 +1,12 @@
 export const translations = {
     en: {
         title: "Feminist Data Art",
+        about: "About",
+        instructions: "Instructions",
         myGobelin: "My Data Art",
+        aiChat: "AI Chat",
+        socials: "Socials",
+        support: "Support",
         myHistory: "Create based on my history",
         aiGorgon: "Create based on AI Gorgon",
         historyPlaceholder: "Enter your story...",
@@ -9,6 +14,7 @@ export const translations = {
         clear: "Clear",
         edit: "Edit",
         share: "Share",
+        copy: "Link copied",
         loading: "Loading...",
         fpsWarning: "Low performance detected. Try a smaller screen or simpler settings.",
         canvasError: "Cannot download or share an empty canvas.",
@@ -37,14 +43,20 @@ export const translations = {
     },
     ru: {
         title: "Феминистское искусство данных",
+        about: "О проекте",
+        instructions: "Инструкции",
         myGobelin: "Моё искусство данных",
+        aiChat: "ИИ Чат",
+        socials: "Социальные сети",
+        support: "Поддержка",
         myHistory: "Создать на основе моей истории",
-        aiGorgon: "Создать на основе ИИ Горгона",
+        aiGorgon: "ИИ Горгона",
         historyPlaceholder: "Введите вашу историю...",
         submit: "Отправить",
         clear: "Очистить",
         edit: "Редактировать",
         share: "Поделиться",
+        copy: "Ссылка скопирована",
         loading: "Загрузка...",
         fpsWarning: "Обнаружена низкая производительность. Попробуйте меньший экран или упрощённые настройки.",
         canvasError: "Невозможно скачать или поделиться пустым холстом.",
@@ -70,16 +82,88 @@ export const translations = {
         emdrInfo: "Десенсибилизация и переработка движением глаз (EMDR) — научно подтверждённый метод психотерапии травм. Мы используем только художественную визуализацию по мотивам метода.",
         notTherapy: "Важно: Это не терапия и не заменяет работу с психологом.",
         close: "Закрыть"
+    },
+    es: {
+        title: "Arte de Datos Feminista",
+        about: "Acerca de",
+        instructions: "Instrucciones",
+        myGobelin: "Mi Arte de Datos",
+        aiChat: "Chat de IA",
+        socials: "Redes Sociales",
+        support: "Apoyo",
+        myHistory: "Crear basado en mi historia",
+        aiGorgon: "IA Gorgona",
+        historyPlaceholder: "Ingresa tu historia...",
+        submit: "Enviar",
+        clear: "Limpiar",
+        edit: "Editar",
+        share: "Compartir",
+        copy: "Enlace copiado",
+        loading: "Cargando...",
+        fpsWarning: "Se detectó un rendimiento bajo. Prueba con una pantalla más pequeña o configuraciones más simples.",
+        canvasError: "No se puede descargar o compartir un lienzo vacío.",
+        startBls: "Iniciar BLS",
+        pauseBls: "Pausar BLS",
+        stopBls: "Detener BLS",
+        calmDown: "Hacer más tranquilo",
+        frequency: "Frecuencia BLS (Hz)",
+        consentTitle: "Antes de comenzar BLS",
+        disclaimer: "Esta es una visualización artística con elementos de estimulación bilateral inspirada en EMDR. No es psicoterapia y no reemplaza el trabajo con un profesional certificado. Más información en ",
+        selfRegulation: "Para mantenerte conectado, intenta respirar lentamente (4 segundos inspirar, 4 segundos exhalar), observa la habitación para orientarte o visualiza un lugar seguro y tranquilo.",
+        contentWarning: "Las historias pueden contener descripciones de violencia. El botón 'Detener' siempre está disponible y reemplazará la animación con un fractal cálido estático.",
+        soft: "Suave",
+        standard: "Estándar",
+        intense: "Intenso",
+        contraindications: "No utilices durante disociación severa, crisis aguda, psicosis o pensamientos suicidas activos. Busca ayuda profesional en ",
+        privacy: "Tus historias se anonimizan y procesan localmente. Puedes optar por no guardar tu historia.",
+        dontSave: "No guardar mi historia",
+        accept: "Aceptar",
+        decline: "Rechazar",
+        whatIsBls: "¿Qué es BLS?",
+        blsInfo: "La estimulación bilateral (BLS) es cuando la atención alterna entre los lados izquierdo y derecho (visual, auditivo o táctil). Se utiliza en la terapia EMDR para procesar recuerdos traumáticos.",
+        emdrInfo: "La Desensibilización y Reprocesamiento por Movimientos Oculares (EMDR) es un método de psicoterapia validado científicamente para el trauma. Utilizamos solo una visualización artística inspirada en este método.",
+        notTherapy: "Importante: Esto no es terapia y no reemplaza el trabajo con un psicólogo.",
+        close: "Cerrar"
     }
 };
 
 export const pages = {
-    en: [
-        { id: 'myGobelin', label: 'My Data Art', path: '/my-gobelin' },
-        { id: 'aiGorgon', label: 'AI Gorgon', path: '/ai-gorgon' }
-    ],
-    ru: [
-        { id: 'myGobelin', label: 'Моё искусство данных', path: '/my-gobelin' },
-        { id: 'aiGorgon', label: 'ИИ Горгона', path: '/ai-gorgon' }
-    ]
+    about: {
+        en: "About",
+        ru: "О проекте",
+        es: "Acerca de",
+        name: "About"
+    },
+    instructions: {
+        en: "Instructions",
+        ru: "Инструкции",
+        es: "Instrucciones",
+        name: "Instructions"
+    },
+    myGobelin: {
+        en: "My Data Art",
+        ru: "Моё искусство данных",
+        es: "Mi Arte de Datos",
+        name: "My Data Art",
+        path: "/my-gobelin"
+    },
+    aiChat: {
+        en: "AI Chat",
+        ru: "ИИ Чат",
+        es: "Chat de IA",
+        name: "AI Chat",
+        path: "/ai-chat"
+    },
+    socials: {
+        en: "Socials",
+        ru: "Социальные сети",
+        es: "Redes Sociales",
+        name: "Socials"
+    },
+    support: {
+        en: "Support",
+        ru: "Поддержка",
+        es: "Apoyo",
+        name: "Support"
+    }
 };
