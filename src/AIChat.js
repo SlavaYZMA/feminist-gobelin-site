@@ -208,7 +208,7 @@ function AIChat({ threadsRef, language, translations }) {
 
     return (
         <div className="page chat-page">
-            <h1>{translations[language].aiChat || 'AI чат'}</h1>
+            <h1>Hello</h1>
             <div className="details-toggle" onClick={() => setShowDetails(!showDetails)}>
                 {translations[language].detailsToggle[showDetails ? 'open' : 'closed']}
             </div>
