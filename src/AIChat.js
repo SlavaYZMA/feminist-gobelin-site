@@ -206,7 +206,168 @@ function AIChat({ threadsRef, language, translations }) {
         }
     }, [messages]);
 
-    return React.createElement('div', null, 'Testing');
+    return React.createElement(
+        'div',
+        { className: 'page chat-page' },
+        React.createElement('h1', null, translations[language].aiChat || 'AI Chat'),
+        React.createElement(
+            'div',
+            {
+                className: 'details-toggle',
+                onClick: () => setShowDetails(!showDetails)
+            },
+            translations[language].detailsToggle[showDetails ? 'open' : 'closed']
+        ),
+        showDetails && React.createElement(
+            'div',
+            { className: 'details-form' },
+            React.createElement(
+                'div',
+                { className: 'form-group' },
+                React.createElement('label', null, translations[language].name),
+                React.createElement('input', {
+                    type: 'text',
+                    value: tempName,
+                    onChange: (e) => setTempName(e.target.value),
+                    placeholder: translations[language].namePlaceholder
+                })
+            ),
+            React.createElement(
+                'div',
+                { className: 'form-group' },
+                React.createElement('label', null, translations[language].country),
+                React.createElement(
+                    'select',
+                    {
+                        value: tempCountry,
+                        onChange: (e) => setTempCountry(e.target.value)
+                    },
+                    React.createElement('option', { value: '' }, translations[language].selectCountry),
+                    countries.map(country => React.createElement('option', { key: country, value: country }, country))
+                )
+            ),
+            React.createElement(
+                'div',
+                { className: 'form-group' },
+                React.createElement('label', null, translations[language].city),
+                React.createElement(
+                    'select',
+                    {
+                        value: tempCity,
+                        onChange: (e) => setTempCity(e.target.value),
+                        disabled: !tempCountry || citiesByCountry[tempCountry].length === 0
+                    },
+                    React.createElement('option', { value: '' }, translations[language].selectCity),
+                    tempCountry && citiesByCountry[tempCountry].map(city => React.createElement('option', { key: city, value: city }, city))
+                )
+            ),
+            React.createElement(
+                'button',
+                { onClick: saveData, className: 'action-button' },
+                translations[language].save
+            ),
+            React.createElement(
+                'button',
+                { onClick: resetData, className: 'action-button reset' },
+                translations[language].reset
+            )
+        ),
+        React.createElement(
+            'div',
+            { className: 'chat-container', ref: chatContainerRef },
+            messages.map((message, index) => React.createElement(
+                'div',
+                { key: index, className: `message ${message.role}` },
+                message.role === 'user' && editingIndex === index
+                    ? React.createElement(
+                        'div',
+                        { className: 'edit-container' },
+                        React.createElement('textarea', {
+                            value: editText,
+                            onChange: (e) => setEditText(e.target.value)
+                        }),
+                        React.createElement(
+                            'button',
+                            { onClick: () => saveEdit(index) },
+                            translations[language].save
+                        ),
+                        React.createElement(
+                            'button',
+                            { onClick: () => setEditingIndex(null) },
+                            translations[language].cancel
+                        )
+                    )
+                    : React.createElement(
+                        React.Fragment,
+                        null,
+                        React.createElement('div', { className: 'message-content' }, message.content),
+                        React.createElement('div', { className: 'message-timestamp' }, message.timestamp),
+                        React.createElement(
+                            'div',
+                            { className: 'message-actions' },
+                            message.role === 'user' && React.createElement(
+                                'button',
+                                { onClick: () => startEditing(index, message.content) },
+                                translations[language].edit
+                            ),
+                            message.role === 'user' && React.createElement(
+                                'button',
+                                { onClick: () => clearMessage(index) },
+                                translations[language].delete
+                            ),
+                            message.role === 'assistant' && React.createElement(
+                                'button',
+                                { onClick: () => copyText(message.content) },
+                                translations[language].copy
+                            ),
+                            message.role === 'assistant' && React.createElement(
+                                'button',
+                                { onClick: () => shareResponse(message.content) },
+                                translations[language].share
+                            ),
+                            message.role === 'assistant' && React.createElement(
+                                'button',
+                                { onClick: () => regenerateResponse(index) },
+                                translations[language].regenerate
+                            )
+                        )
+                    )
+            ))
+        ),
+        isLoading && React.createElement(
+            'div',
+            { className: 'loading' },
+            translations[language].loading
+        ),
+        React.createElement(
+            'button',
+            {
+                onClick: clearHistory,
+                className: 'action-button clear-history',
+                disabled: messages.length === 0
+            },
+            translations[language].clearHistory
+        ),
+        React.createElement(
+            'div',
+            { className: 'input-container' },
+            React.createElement('textarea', {
+                value: prompt,
+                onChange: (e) => setPrompt(e.target.value),
+                placeholder: translations[language].promptPlaceholder,
+                rows: 3
+            }),
+            React.createElement(
+                'button',
+                {
+                    onClick: handleSubmit,
+                    className: 'action-button',
+                    disabled: isLoading || !prompt
+                },
+                translations[language].send
+            )
+        )
+    );
 }
 
 export default AIChat;
