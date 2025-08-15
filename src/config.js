@@ -1,7 +1,7 @@
 export const pages = {
     about: { name: 'About', ru: 'О проекте', es: 'Acerca de' },
     instructions: { name: 'Instructions', ru: 'Инструкции', es: 'Instrucciones' },
-    myGobelin: { name: 'My Gobelin', ru: 'Мой гобелен', es: 'Mi Gobelino' },
+    myGobelin: { name: 'My Data Art', ru: 'Мой дата-арт', es: 'Mi Arte de Datos' },
     aiChat: { name: 'AI Chat', ru: 'AI чат', es: 'Chat IA' },
     socials: { name: 'Socials', ru: 'Соцсети', es: 'Redes Sociales' },
     support: { name: 'Support', ru: 'Поддержать', es: 'Apoyar' }
