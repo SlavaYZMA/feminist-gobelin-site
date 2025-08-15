@@ -18,6 +18,7 @@ function MyGobelin({ threadsRef, language }) {
     const [isLoading, setIsLoading] = React.useState(true);
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
+    const [dynamicStep, setDynamicStep] = React.useState(4);
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -47,7 +48,7 @@ function MyGobelin({ threadsRef, language }) {
             cX: (metrics.avgWordLen / 10) - 0.5,
             cY: (metrics.avgSentLen / 50) - 0.5,
             zoom: Math.min(8, 1 + (metrics.textLen / 500)),
-            iterations: Math.min(200, 50 + metrics.uniqueWords * 5),
+            iterations: Math.min(150, 50 + metrics.uniqueWords * 5),
             hue: (metrics.maxWordFreq * 10) % 360,
             sat: Math.min(90, metrics.maxWordFreq * 10 * (setProgress < 0.75 ? 1 : 0.8)),
             bright: Math.min(90, metrics.avgWordLen * 15 * (setProgress < 0.75 ? 1 : 0.9)),
@@ -60,7 +61,7 @@ function MyGobelin({ threadsRef, language }) {
             depthLayers: Math.max(1, metrics.sentCount / 2),
             rotationDir: metrics.avgWordLen > 5 ? 1 : -1,
             escapeRadius: 4 + metrics.textLen / 1000,
-            twist: metrics.uniqueWords * 0.005
+            twist: metrics.uniqueWords * 0.015
         };
 
         let palette = 'default';
@@ -234,8 +235,8 @@ function MyGobelin({ threadsRef, language }) {
         const resizeCanvas = () => {
             if (!canvas || !blsCanvas) return;
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = Math.min(window.innerWidth - 32, 800) * dpr;
-            canvas.height = 600 * dpr;
+            canvas.width = Math.min(window.innerWidth - 32, 600) * dpr;
+            canvas.height = 450 * dpr;
             canvas.style.width = `${canvas.width / dpr}px`;
             canvas.style.height = `${canvas.height / dpr}px`;
             blsCanvas.width = canvas.width;
@@ -302,7 +303,8 @@ function MyGobelin({ threadsRef, language }) {
             prevRotation = rotation;
             prevTwist = twistEffect;
 
-            const step = 2;
+            const step = fps < 30 ? 6 : dynamicStep;
+            console.log('Rendering fractal', { step, iterations });
             for (let x = 0; x < canvas.width; x += step) {
                 for (let y = 0; y < canvas.height; y += step) {
                     let zx = ((x - centerX) / canvas.width) * scale;
@@ -364,9 +366,10 @@ function MyGobelin({ threadsRef, language }) {
             const centerY = blsCanvas.height / 2;
             const x = centerX + amplitude * 0.5 * Math.sin(t * blsFrequency * 2 * Math.PI);
             const hueShift = x < centerX ? -5 : 5;
+            const radius = 20 + 5 * Math.sin(t * 2);
 
             blsCtx.beginPath();
-            blsCtx.arc(x, centerY, 20, 0, 2 * Math.PI);
+            blsCtx.arc(x, centerY, radius, 0, 2 * Math.PI);
             blsCtx.fillStyle = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.fill();
         };
@@ -383,7 +386,10 @@ function MyGobelin({ threadsRef, language }) {
                 frameCount = 0;
                 lastFrameTime = now;
                 console.log('FPS:', fps);
-                if (fps < 20) setFpsWarning(true);
+                if (fps < 15) setFpsWarning(true);
+                else setFpsWarning(false);
+                if (fps < 30 && dynamicStep < 6) setDynamicStep(6);
+                else if (fps > 60 && dynamicStep > 4) setDynamicStep(4);
             }
 
             ctx.fillStyle = '#fff';
@@ -431,7 +437,7 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         setTimeout(startAnimation, 500);
-        setTimeout(() => setIsLoading(false), 2000); // Force hide loading screen after 2s
+        setTimeout(() => setIsLoading(false), 2000);
         window.addEventListener('resize', resizeCanvas);
 
         return () => {
@@ -440,6 +446,10 @@ function MyGobelin({ threadsRef, language }) {
             cancelAnimationFrame(animationFrameId);
         };
     }, [threadsRef, language, blsActive, setActive, setCount, blsFrequency, submittedHistory]);
+
+    React.useEffect(() => {
+        console.log('Render debug', { canvasInDOM: !!document.querySelector('.data-art-canvas'), blsCanvasInDOM: !!document.querySelector('.bls-canvas') });
+    }, []);
 
     const renderConsentScreen = () => (
         React.createElement(
@@ -465,7 +475,6 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        console.log('Rendering canvas', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current }),
         isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
         fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
         React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
@@ -610,4 +619,4 @@ function MyGobelin({ threadsRef, language }) {
     );
 }
 
-export default MyGobelin;
+export default React.memo(MyGobelin);
