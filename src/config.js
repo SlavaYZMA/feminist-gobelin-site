@@ -32,7 +32,8 @@ export const translations = {
         whatIsBls: "What is BLS?",
         blsInfo: "Bilateral Stimulation (BLS) is when attention alternates between the left and right sides (visually, auditory, or tactile). It is used in EMDR therapy to process traumatic memories.",
         emdrInfo: "Eye Movement Desensitization and Reprocessing (EMDR) is a scientifically validated psychotherapy method for trauma. We use only an artistic visualization inspired by this method.",
-        notTherapy: "Important: This is not therapy and does not replace working with a psychologist."
+        notTherapy: "Important: This is not therapy and does not replace working with a psychologist.",
+        close: "Close"
     },
     ru: {
         title: "Феминистское искусство данных",
@@ -67,6 +68,18 @@ export const translations = {
         whatIsBls: "Что такое BLS?",
         blsInfo: "Двусторонняя стимуляция (BLS) — это когда внимание попеременно смещается между левой и правой стороной (визуально, звуком или касанием). Используется в EMDR-терапии для переработки травматических воспоминаний.",
         emdrInfo: "Десенсибилизация и переработка движением глаз (EMDR) — научно подтверждённый метод психотерапии травм. Мы используем только художественную визуализацию по мотивам метода.",
-        notTherapy: "Важно: Это не терапия и не заменяет работу с психологом."
+        notTherapy: "Важно: Это не терапия и не заменяет работу с психологом.",
+        close: "Закрыть"
     }
+};
+
+export const pages = {
+    en: [
+        { id: 'myGobelin', label: 'My Data Art', path: '/my-gobelin' },
+        { id: 'aiGorgon', label: 'AI Gorgon', path: '/ai-gorgon' }
+    ],
+    ru: [
+        { id: 'myGobelin', label: 'Моё искусство данных', path: '/my-gobelin' },
+        { id: 'aiGorgon', label: 'ИИ Горгона', path: '/ai-gorgon' }
+    ]
 };
