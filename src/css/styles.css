@@ -42,7 +42,7 @@ body {
 .language-switcher {
     position: absolute;
     top: 16px;
-    right: 80px;
+    right: 120px; /* Adjusted for info button */
 }
 .language-switcher select {
     background: var(--gray-1);
@@ -59,7 +59,7 @@ body {
     border-color: var(--primary-6);
     box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
-.bls-info-button {
+.info-button {
     position: absolute;
     top: 16px;
     right: 16px;
@@ -70,15 +70,58 @@ body {
     padding: 8px 16px;
     font-size: 14px;
     font-weight: 500;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.bls-info-button:hover {
+.info-button:hover {
     transform: scale(1.05);
 }
-.bls-info-button:active {
-    transform: scale(0.95);
+.info-button:active {
     background: #003087;
+    transform: scale(0.95);
+}
+.info-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gray-1);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    text-align: left;
+    z-index: 1002;
+    max-width: 500px;
+}
+.info-modal h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+}
+.info-modal p {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text-1);
+    margin: 0 0 12px;
+}
+.info-modal button {
+    background: var(--primary-6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 16px;
+}
+.info-modal button:hover {
+    transform: scale(1.05);
+}
+.info-modal button:active {
+    transform: scale(0.95);
 }
 .hamburger {
     background: transparent;
@@ -168,7 +211,7 @@ body {
 .menu-button:active {
     transform: scale(0.95);
 }
-.overlay, .modal-overlay {
+.overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -180,7 +223,7 @@ body {
     pointer-events: none;
     transition: opacity 0.3s ease;
 }
-.overlay.open, .modal-overlay.open {
+.overlay.open {
     opacity: 1;
     pointer-events: auto;
 }
@@ -436,18 +479,16 @@ body {
 .footer-socials a:hover {
     text-decoration: underline;
 }
-.modal, .bls-info-modal {
+.modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--gray-1);
+    background: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    padding: 20px;
+    padding: 16px;
     z-index: 1002;
-    max-width: 500px;
-    text-align: left;
 }
 .modal-header {
     display: flex;
@@ -456,26 +497,11 @@ body {
     margin-bottom: 16px;
 }
 .modal-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
-.modal-close-button {
-    background: var(--primary-6);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
+.modal-close {
     cursor: pointer;
-    transition: all 0.2s ease;
-}
-.modal-close-button:hover {
-    transform: scale(1.05);
-}
-.modal-close-button:active {
-    transform: scale(0.95);
-    background: #003087;
 }
 .modal-content.share-modal {
     display: flex;
