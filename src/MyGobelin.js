@@ -240,16 +240,16 @@ function MyGobelin({ threadsRef, language }) {
                     const rotatedZx = zx * Math.cos(rotation + twistEffect) - zet * Math.sin(rotation + twistEffect);
                     const rotatedZy = zx * Math.sin(rotation + twistEffect) + zet * Math.cos(rotation + twistEffect);
                     zx = rotatedZx + Math.sin(zet * distortion * 0.8) * wave;
-                    zy = rotatedZy + Math.cos(zx * distortion * 0.8) * symmetryBreak;
+                    zet = rotatedZy + Math.cos(zx * distortion * 0.8) * symmetryBreak;
 
                     let i = 0;
                     let tempZx, tempZy;
                     while (i < iterations) {
-                        tempZx = zx * zx - zy * zy + cX + breathe;
-                        tempZy = 2 * zx * zy + cY + wave;
+                        tempZx = zx * zx - zet * zet + cX + breathe;
+                        tempZy = 2 * zx * zet + cY + wave;
                         zx = tempZx;
-                        zy = tempZy;
-                        if (zx * zx + zy * zy > escapeRadius) break;
+                        zet = tempZy;
+                        if (zx * zx + zet * zet > escapeRadius) break;
                         i++;
                     }
 
