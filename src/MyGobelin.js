@@ -170,25 +170,26 @@ function MyGobelin({ threadsRef, language }) {
             const wave = Math.sin(t * speed) * waveAmplitude;
             const rotation = t * speed * rotationDir * 0.01;
 
-            for (let x = 0; x < canvas.width; x += 2) { // Пропускаем пиксели для оптимизации
-                for (let y = 0; y < canvas.height; y += 2) {
+            for (let x = 0; x < canvas.width; x += 4) { // Пропускаем пиксели для оптимизации
+                for (let y = 0; y < canvas.height; y += 4) {
                     let zx = ((x - centerX) / canvas.width) * scale;
                     let zy = ((y - centerY) / canvas.height) * scale;
                     // Применяем вращение
-                    const newZx = zx * Math.cos(rotation) - zy * Math.sin(rotation);
-                    zy = zx * Math.sin(rotation) + zy * Math.cos(rotation);
-                    zx = newZx;
+                    const rotatedZx = zx * Math.cos(rotation) - zy * Math.sin(rotation);
+                    const rotatedZy = zx * Math.sin(rotation) + zy * Math.cos(rotation);
+                    zx = rotatedZx;
+                    zy = rotatedZy;
                     // Применяем distortion и symmetryBreak
                     zx += Math.sin(zy * distortion) * wave;
                     zy += Math.cos(zx * distortion) * symmetryBreak;
 
                     let i = 0;
-                    let newZx, newZy;
+                    let tempZx, tempZy;
                     while (i < iterations) {
-                        newZx = zx * zx - zy * zy + cX + breathe;
-                        newZy = 2 * zx * zy + cY + wave;
-                        zx = newZx;
-                        zy = newZy;
+                        tempZx = zx * zx - zy * zy + cX + breathe;
+                        tempZy = 2 * zx * zy + cY + wave;
+                        zx = tempZx;
+                        zy = tempZy;
                         if (zx * zx + zy * zy > 4) break;
                         i++;
                     }
