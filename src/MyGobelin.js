@@ -2,7 +2,7 @@ import React from 'react';
 import { keywordRules } from './keywordRules.js';
 import { translations } from './config.js';
 
-function MyGobelin({ threadsRef, language }) {
+function MyGobelin({ threadsRef, language = 'en' }) { // Добавлено значение по умолчанию 'en'
     const canvasRef = React.useRef(null);
     const blsCanvasRef = React.useRef(null);
     const [mode, setMode] = React.useState('history');
@@ -21,6 +21,9 @@ function MyGobelin({ threadsRef, language }) {
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
     const [showInfoModal, setShowInfoModal] = React.useState(false);
+
+    // Проверка корректности language
+    const validLanguage = ['en', 'ru'].includes(language) ? language : 'en';
 
     const analyzeText = (text) => {
         const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -178,14 +181,14 @@ function MyGobelin({ threadsRef, language }) {
 
     const shareGobelin = () => {
         if (!canvasRef.current || threadsRef.current.length === 0) {
-            alert(translations[language].canvasError || 'Cannot download or share an empty canvas.');
+            alert(translations[validLanguage].canvasError || 'Cannot download or share an empty canvas.');
             return;
         }
         const canvas = canvasRef.current;
         const dataUrl = canvas.toDataURL('image/png');
-        const shareText = `${translations[language].share} Feminist Data Art: https://feminist-gobelin-site.netlify.app`;
+        const shareText = `${translations[validLanguage].share} Feminist Data Art: https://feminist-gobelin-site.netlify.app`;
         navigator.clipboard.writeText(shareText);
-        alert(translations[language].share + ' скопировано!');
+        alert(translations[validLanguage].share + ' скопировано!');
     };
 
     const handleStartBls = () => {
@@ -517,7 +520,7 @@ function MyGobelin({ threadsRef, language }) {
             window.removeEventListener('resize', resizeCanvas);
             cancelAnimationFrame(animationFrameId);
         };
-    }, [threadsRef, language, blsActive, setActive, setCount, blsFrequency, submittedHistory]);
+    }, [threadsRef, validLanguage, blsActive, setActive, setCount, blsFrequency, submittedHistory]);
 
     React.useEffect(() => {
         console.log('Render debug', { canvasInDOM: !!document.querySelector('.data-art-canvas'), blsCanvasInDOM: !!document.querySelector('.bls-canvas') });
@@ -526,16 +529,16 @@ function MyGobelin({ threadsRef, language }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[language].loading || 'Loading...'),
-        fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[language].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
+        isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[validLanguage].loading || 'Loading...'),
+        fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[validLanguage].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
         showConsentScreen && React.createElement(
             'div',
             { className: 'consent-screen' },
-            React.createElement('h2', { key: 'consent-title' }, translations[language].consentTitle || 'Before Starting BLS'),
+            React.createElement('h2', { key: 'consent-title' }, translations[validLanguage].consentTitle || 'Before Starting BLS'),
             React.createElement(
                 'p',
                 { key: 'disclaimer' },
-                translations[language].disclaimer ||
+                translations[validLanguage].disclaimer ||
                 'This is an artistic visualization with elements of bilateral stimulation inspired by EMDR. It is not psychotherapy and does not replace working with a certified professional. Learn more at ',
                 React.createElement('a', { href: 'https://www.nice.org.uk/guidance/conditions-and-diseases/mental-health-conditions/post-traumatic-stress-disorder', target: '_blank', rel: 'noopener noreferrer' }, 'NICE'),
                 ' or ',
@@ -545,13 +548,13 @@ function MyGobelin({ threadsRef, language }) {
             React.createElement(
                 'p',
                 { key: 'self-regulation' },
-                translations[language].selfRegulation ||
+                translations[validLanguage].selfRegulation ||
                 'To stay grounded, try slow breathing (4 seconds in, 4 seconds out), look around the room to orient yourself, or visualize a safe, calming place.'
             ),
             React.createElement(
                 'p',
                 { key: 'content-warning' },
-                translations[language].contentWarning ||
+                translations[validLanguage].contentWarning ||
                 'Stories may contain descriptions of violence. The "Stop" button is always available and will replace the animation with a static warm fractal.'
             ),
             React.createElement(
@@ -565,7 +568,7 @@ function MyGobelin({ threadsRef, language }) {
                             className: `consent-sensitivity-button ${consentSensitivity === sensitivity ? 'active' : ''}`,
                             onClick: () => setConsentSensitivity(sensitivity)
                         },
-                        translations[language][sensitivity] ||
+                        translations[validLanguage][sensitivity] ||
                         (sensitivity === 'soft' ? 'Soft' : sensitivity === 'standard' ? 'Standard' : 'Intense')
                     )
                 ))
@@ -573,7 +576,7 @@ function MyGobelin({ threadsRef, language }) {
             React.createElement(
                 'p',
                 { key: 'contraindications' },
-                translations[language].contraindications ||
+                translations[validLanguage].contraindications ||
                 'Do not use during severe dissociation, acute crisis, psychosis, or active suicidal thoughts. Seek professional help at ',
                 React.createElement('a', { href: 'https://988lifeline.org', target: '_blank', rel: 'noopener noreferrer' }, '988lifeline.org'),
                 '.'
@@ -581,7 +584,7 @@ function MyGobelin({ threadsRef, language }) {
             React.createElement(
                 'p',
                 { key: 'privacy' },
-                translations[language].privacy ||
+                translations[validLanguage].privacy ||
                 'Your stories are anonymized and processed locally. You can choose not to save your story.'
             ),
             React.createElement(
@@ -592,7 +595,7 @@ function MyGobelin({ threadsRef, language }) {
                     checked: dontSaveHistory,
                     onChange: (e) => setDontSaveHistory(e.target.checked)
                 }),
-                React.createElement('span', null, translations[language].dontSave || 'Do not save my story')
+                React.createElement('span', null, translations[validLanguage].dontSave || 'Do not save my story')
             ),
             React.createElement(
                 'div',
@@ -600,52 +603,50 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement(
                     'button',
                     { key: 'accept', className: 'consent-button', onClick: acceptConsent },
-                    translations[language].accept || 'Accept'
+                    translations[validLanguage].accept || 'Accept'
                 ),
                 React.createElement(
                     'button',
                     { key: 'decline', className: 'consent-button decline', onClick: declineConsent },
-                    translations[language].decline || 'Decline'
+                    translations[validLanguage].decline || 'Decline'
                 )
             )
         ),
         showInfoModal && React.createElement(
             'div',
             { className: 'info-modal' },
-            React.createElement('h2', { key: 'info-title' }, translations[language].whatIsBls || 'What is BLS?'),
+            React.createElement('h2', { key: 'info-title' }, translations[validLanguage].whatIsBls || 'What is BLS?'),
             React.createElement(
                 'p',
                 { key: 'bls-info' },
-                translations[language].blsInfo ||
+                translations[validLanguage].blsInfo ||
                 'Bilateral Stimulation (BLS) is when attention alternates between the left and right sides (visually, auditory, or tactile). It is used in EMDR therapy to process traumatic memories.'
             ),
             React.createElement(
                 'p',
                 { key: 'emdr-info' },
-                translations[language].emdrInfo ||
+                translations[validLanguage].emdrInfo ||
                 'Eye Movement Desensitization and Reprocessing (EMDR) is a scientifically validated psychotherapy method for trauma. We use only an artistic visualization inspired by this method.'
             ),
             React.createElement(
                 'p',
                 { key: 'not-therapy' },
-                translations[language].notTherapy ||
+                translations[validLanguage].notTherapy ||
                 'Important: This is not therapy and does not replace working with a psychologist.'
             ),
             React.createElement(
                 'button',
                 { key: 'close-info', onClick: closeInfoModal },
-                translations[language].close || 'Close'
+                translations[validLanguage].close || 'Close'
             )
         ),
         showInfoModal && React.createElement('div', { className: 'overlay open', onClick: closeInfoModal }),
         React.createElement(
             'div',
             { className: 'header' },
-            React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[language].whatIsBls || 'What is BLS?')
+            React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[validLanguage].whatIsBls || 'What is BLS?')
         ),
-        // 1. Верхняя панель
-        React.createElement('h1', { key: 'title' }, translations[language].myGobelin || 'My Data Art'),
-        // 2. Кнопки режимов
+        React.createElement('h1', { key: 'title' }, translations[validLanguage].myGobelin || 'My Data Art'),
         React.createElement(
             'div',
             { key: 'mode-switcher', className: 'mode-switcher' },
@@ -665,7 +666,7 @@ function MyGobelin({ threadsRef, language }) {
                         }
                     }
                 },
-                translations[language].myHistory || 'Create based on my history'
+                translations[validLanguage].myHistory || 'Create based on my history'
             ),
             React.createElement(
                 'button',
@@ -679,10 +680,9 @@ function MyGobelin({ threadsRef, language }) {
                         setIsLoading(false);
                     }
                 },
-                translations[language].aiGorgon || 'Create based on AI Gorgon'
+                translations[validLanguage].aiGorgon || 'Create based on AI Gorgon'
             )
         ),
-        // 3. Блок фрактала и BLS
         React.createElement(
             'div',
             { key: 'canvas-container', style: { position: 'relative', margin: '0 auto', maxWidth: '600px' } },
@@ -694,34 +694,33 @@ function MyGobelin({ threadsRef, language }) {
                 style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }
             })
         ),
-        // 4. Блок настроек BLS
         submittedHistory && React.createElement(
             'div',
             { key: 'bls-controls', className: 'bls-controls' },
             React.createElement(
                 'button',
                 { key: 'start-bls', onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
-                translations[language].startBls || 'Start BLS'
+                translations[validLanguage].startBls || 'Start BLS'
             ),
             React.createElement(
                 'button',
                 { key: 'pause-bls', onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
-                translations[language].pauseBls || 'Pause BLS'
+                translations[validLanguage].pauseBls || 'Pause BLS'
             ),
             React.createElement(
                 'button',
                 { key: 'stop-bls', onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
-                translations[language].stopBls || 'Stop BLS'
+                translations[validLanguage].stopBls || 'Stop BLS'
             ),
             React.createElement(
                 'button',
                 { key: 'calm-down', onClick: handleCalmDown, className: 'bls-button' },
-                translations[language].calmDown || 'Make Calmer'
+                translations[validLanguage].calmDown || 'Make Calmer'
             ),
             React.createElement(
                 'div',
                 { key: 'bls-frequency', className: 'bls-frequency' },
-                React.createElement('label', null, translations[language].frequency || 'BLS Frequency (Hz)'),
+                React.createElement('label', null, translations[validLanguage].frequency || 'BLS Frequency (Hz)'),
                 React.createElement('input', {
                     type: 'range',
                     min: 0.8,
@@ -733,17 +732,15 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement('span', null, blsFrequency.toFixed(1))
             )
         ),
-        // 5. Кнопка «Поделиться»
         React.createElement(
             'div',
             { key: 'gobelin-buttons', className: 'gobelin-buttons' },
             React.createElement(
                 'button',
                 { key: 'share-button', onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
-                translations[language].share || 'Share'
+                translations[validLanguage].share || 'Share'
             )
         ),
-        // 6. Текстовое поле для ввода истории
         mode === 'history' && React.createElement(
             'div',
             { key: 'history-container', className: 'history-container' },
@@ -751,26 +748,24 @@ function MyGobelin({ threadsRef, language }) {
                 key: 'history-textarea',
                 value: historyText,
                 onChange: (e) => setHistoryText(e.target.value),
-                placeholder: translations[language].historyPlaceholder || 'Enter your story...',
+                placeholder: translations[validLanguage].historyPlaceholder || 'Enter your story...',
                 rows: 5,
                 className: 'history-textarea'
             }),
-            // 7. Блок кнопок отправки
             React.createElement(
                 'div',
                 { key: 'history-buttons', className: 'history-buttons' },
                 React.createElement(
                     'button',
                     { key: 'submit-button', onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
-                    translations[language].submit || 'Submit'
+                    translations[validLanguage].submit || 'Submit'
                 ),
                 React.createElement(
                     'button',
                     { key: 'clear-button', onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
-                    translations[language].clear || 'Clear'
+                    translations[validLanguage].clear || 'Clear'
                 )
             ),
-            // 8. Отображение сохранённой истории
             submittedHistory && !isEditing && React.createElement(
                 'div',
                 { key: 'history-text', className: 'history-text' },
@@ -778,7 +773,7 @@ function MyGobelin({ threadsRef, language }) {
                 React.createElement(
                     'button',
                     { key: 'edit-button', onClick: handleEditHistory, className: 'history-button edit' },
-                    translations[language].edit || 'Edit'
+                    translations[validLanguage].edit || 'Edit'
                 )
             )
         )
