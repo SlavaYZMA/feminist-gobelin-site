@@ -166,7 +166,7 @@ body {
 .content {
     flex: 1;
     padding: 80px 16px 100px;
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
     width: 100%;
     position: relative;
@@ -555,19 +555,17 @@ body {
 }
 .data-art-canvas {
     width: 100%;
-    max-width: 800px;
-    height: 600px;
+    max-width: 600px;
+    height: 450px;
     background: #fff;
     border-radius: 8px;
-    border: 1px solid red; /* Отладочный бордер */
 }
 .bls-canvas {
     width: 100%;
-    max-width: 800px;
-    height: 600px;
+    max-width: 600px;
+    height: 450px;
     position: absolute;
     pointer-events: none;
-    border: 1px solid blue; /* Отладочный бордер */
 }
 .consent-screen, .loading-screen, .fps-warning {
     position: fixed;
