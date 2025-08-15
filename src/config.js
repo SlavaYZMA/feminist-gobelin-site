@@ -25,7 +25,12 @@ export const translations = {
         errorResponse: "An error occurred. Please try again later.",
         fallbackResponse: "Feminism is a movement advocating for equal rights and opportunities for women across social, political, and economic spheres. (Please verify information with official sources.)",
         modalTitle: "User Details",
-        canvasError: "Cannot download or share an empty canvas."
+        canvasError: "Cannot download or share an empty canvas.",
+        myHistory: "Create based on my history",
+        aiGorgon: "Create based on AI Gorgon",
+        historyPlaceholder: "Enter your story...",
+        submit: "Submit",
+        edit: "Edit"
     },
     ru: {
         download: 'Скачать',
@@ -44,7 +49,12 @@ export const translations = {
         errorResponse: "Произошла ошибка. Пожалуйста, попробуйте снова.",
         fallbackResponse: "Феминизм — это движение за равные права и возможности для женщин в социальной, политической и экономической сферах. (Пожалуйста, проверьте информацию в официальных источниках.)",
         modalTitle: "Данные пользователя",
-        canvasError: "Невозможно скачать или поделиться пустым холстом."
+        canvasError: "Невозможно скачать или поделиться пустым холстом.",
+        myHistory: "Создать на основе моей истории",
+        aiGorgon: "Создать на основе общения с AI Горгоной",
+        historyPlaceholder: "Введите вашу историю...",
+        submit: "Отправить",
+        edit: "Редактировать"
     },
     es: {
         download: 'Descargar',
@@ -63,6 +73,11 @@ export const translations = {
         errorResponse: "Ocurrió un error. Por favor, intenta de nuevo.",
         fallbackResponse: "El feminismo es un movimiento que aboga por los derechos y oportunidades iguales para las mujeres en las esferas social, política y económica. (Por favor, verifica la información con fuentes oficiales.)",
         modalTitle: "Detalles del usuario",
-        canvasError: "No se puede descargar ni compartir un lienzo vacío."
+        canvasError: "No se puede descargar ni compartir un lienzo vacío.",
+        myHistory: "Crear basado en mi historia",
+        aiGorgon: "Crear basado en AI Gorgona",
+        historyPlaceholder: "Ingresa tu historia...",
+        submit: "Enviar",
+        edit: "Editar"
     }
 };
