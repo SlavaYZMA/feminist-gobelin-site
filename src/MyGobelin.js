@@ -228,8 +228,8 @@ function MyGobelin({ threadsRef, language }) {
             prevRotation = rotation;
             prevTwist = twistEffect;
 
-            for (let x = 0; x < canvas.width; x += 4) {
-                for (let y = 0; y < canvas.height; y += 4) {
+            for (let x = 0; x < canvas.width; x += 1) {
+                for (let y = 0; y < canvas.height; y += 1) {
                     let zx = ((x - centerX) / canvas.width) * scale;
                     let zy = ((y - centerY) / canvas.height) * scale;
                     // Плавное математическое скручивание
