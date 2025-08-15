@@ -195,8 +195,11 @@ function MyGobelin({ threadsRef, language }) {
     };
 
     React.useEffect(() => {
+        console.log('useEffect triggered', { canvasRef: !!canvasRef.current, blsCanvasRef: !!blsCanvasRef.current });
+
         if (!canvasRef.current || !blsCanvasRef.current) {
-            console.error('Canvas refs are not initialized');
+            console.error('Canvas refs are not initialized at start of useEffect');
+            setIsLoading(true);
             return;
         }
 
@@ -230,6 +233,7 @@ function MyGobelin({ threadsRef, language }) {
             blsCanvas.style.height = canvas.style.height;
             ctx.scale(dpr, dpr);
             blsCtx.scale(dpr, dpr);
+            console.log('Canvas resized', { width: canvas.width, height: canvas.height });
         };
 
         const lerp = (start, end, factor) => start + (end - start) * factor;
@@ -361,6 +365,7 @@ function MyGobelin({ threadsRef, language }) {
                 fps = frameCount;
                 frameCount = 0;
                 lastFrameTime = now;
+                console.log('FPS:', fps);
                 if (fps < 20) setFpsWarning(true);
             }
 
@@ -396,17 +401,22 @@ function MyGobelin({ threadsRef, language }) {
         };
 
         resizeCanvas();
-        setTimeout(() => {
+        const startAnimation = () => {
             if (canvasRef.current && blsCanvasRef.current) {
+                console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current });
                 setIsLoading(false);
                 animate();
             } else {
                 console.error('Canvas refs still not initialized after delay');
+                setTimeout(startAnimation, 500); // Повторная попытка через 500 мс
             }
-        }, 100);
+        };
+
+        setTimeout(startAnimation, 500); // Увеличенная задержка
         window.addEventListener('resize', resizeCanvas);
 
         return () => {
+            console.log('Cleaning up useEffect');
             window.removeEventListener('resize', resizeCanvas);
             cancelAnimationFrame(animationFrameId);
         };
@@ -472,7 +482,7 @@ function MyGobelin({ threadsRef, language }) {
                     translations[language].aiGorgon || 'Create based on AI Gorgon'
                 )
             ),
-            submittedHistory && !showConsent && React.createElement(
+            submittedHistory && React.createElement(
                 'div',
                 { key: 'bls-controls', className: 'bls-controls bls-controls-top' },
                 React.createElement(
