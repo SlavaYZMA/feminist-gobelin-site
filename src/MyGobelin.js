@@ -15,7 +15,6 @@ function MyGobelin({ threadsRef, language }) {
     const [setActive, setSetActive] = React.useState(false);
     const [setCount, setSetCount] = React.useState(0);
     const [showConsent, setShowConsent] = React.useState(true);
-    const [survey, setSurvey] = React.useState({ distress: 0, tension: 0, calm: 0, completed: false });
     const [isLoading, setIsLoading] = React.useState(true);
     const [fpsWarning, setFpsWarning] = React.useState(false);
 
@@ -56,7 +55,7 @@ function MyGobelin({ threadsRef, language }) {
             symmetryBreak: metrics.wordCount * 0.01,
             breathingRate: Math.max(0.3, Math.min(1.5, metrics.avgSentLen / 15)),
             waveAmplitude: metrics.sentCount * 0.03,
-            textureGrain: 0, // Убираем шум
+            textureGrain: 0,
             depthLayers: Math.max(1, metrics.sentCount / 2),
             rotationDir: metrics.avgWordLen > 5 ? 1 : -1,
             escapeRadius: 4 + metrics.textLen / 1000,
@@ -158,7 +157,6 @@ function MyGobelin({ threadsRef, language }) {
         setBlsActive(true);
         setSetActive(true);
         setSetCount(1);
-        setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
     };
 
     const handlePauseBls = () => {
@@ -193,17 +191,7 @@ function MyGobelin({ threadsRef, language }) {
 
     const handleConsent = () => {
         setShowConsent(false);
-        setSurvey({ distress: 0, tension: 0, calm: 0, completed: false });
         setIsLoading(true);
-    };
-
-    const handleSurveySubmit = (type, value) => {
-        setSurvey(prev => ({ ...prev, [type]: value }));
-    };
-
-    const handleSurveyComplete = () => {
-        setSurvey(prev => ({ ...prev, completed: true }));
-        console.log('Survey results:', survey);
     };
 
     React.useEffect(() => {
@@ -298,7 +286,7 @@ function MyGobelin({ threadsRef, language }) {
             prevRotation = rotation;
             prevTwist = twistEffect;
 
-            const step = 2; // Уменьшаем плотность
+            const step = 2;
             for (let x = 0; x < canvas.width; x += step) {
                 for (let y = 0; y < canvas.height; y += step) {
                     let zx = ((x - centerX) / canvas.width) * scale;
@@ -397,12 +385,11 @@ function MyGobelin({ threadsRef, language }) {
                     }
                 } else if (setCount > maxSets) {
                     handleStopBls();
-                    setSurvey(prev => ({ ...prev, completed: false }));
                 }
 
                 renderFractal(threadsRef.current[0], time, setCount / maxSets);
                 renderBlsMarker(time);
-                time += 0.016; // ~60fps
+                time += 0.016;
             }
 
             animationFrameId = requestAnimationFrame(animate);
@@ -446,34 +433,6 @@ function MyGobelin({ threadsRef, language }) {
         )
     );
 
-    const renderSurvey = () => (
-        React.createElement(
-            'div',
-            { className: 'survey-screen' },
-            React.createElement('h2', null, translations[language].survey || 'How do you feel?'),
-            ['distress', 'tension', 'calm'].map(type => (
-                React.createElement(
-                    'div',
-                    { key: type, className: 'survey-item' },
-                    React.createElement('label', null, translations[language][type] || type.charAt(0).toUpperCase() + type.slice(1)),
-                    React.createElement('input', {
-                        type: 'range',
-                        min: 0,
-                        max: 10,
-                        value: survey[type],
-                        onChange: (e) => handleSurveySubmit(type, parseInt(e.target.value))
-                    }),
-                    React.createElement('span', null, survey[type])
-                )
-            )),
-            React.createElement(
-                'button',
-                { onClick: handleSurveyComplete, className: 'survey-button', disabled: survey.completed },
-                translations[language].submitSurvey || 'Submit'
-            )
-        )
-    );
-
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
@@ -513,48 +472,9 @@ function MyGobelin({ threadsRef, language }) {
                     translations[language].aiGorgon || 'Create based on AI Gorgon'
                 )
             ),
-            React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
-                React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
-                React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
-            ]),
-            mode === 'history' && React.createElement(
-                'div',
-                { key: 'history-container', className: 'history-container' },
-                React.createElement('textarea', {
-                    value: historyText,
-                    onChange: (e) => setHistoryText(e.target.value),
-                    placeholder: translations[language].historyPlaceholder || 'Enter your story...',
-                    rows: 5,
-                    className: 'history-textarea'
-                }),
-                React.createElement(
-                    'div',
-                    { className: 'history-buttons' },
-                    React.createElement(
-                        'button',
-                        { onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
-                        translations[language].submit || 'Submit'
-                    ),
-                    React.createElement(
-                        'button',
-                        { onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
-                        translations[language].clear || 'Clear'
-                    )
-                ),
-                submittedHistory && !isEditing && React.createElement(
-                    'div',
-                    { className: 'history-text' },
-                    React.createElement('p', null, submittedHistory),
-                    React.createElement(
-                        'button',
-                        { onClick: handleEditHistory, className: 'history-button edit' },
-                        translations[language].edit || 'Edit'
-                    )
-                )
-            ),
             submittedHistory && !showConsent && React.createElement(
                 'div',
-                { key: 'bls-controls', className: 'bls-controls' },
+                { key: 'bls-controls', className: 'bls-controls bls-controls-top' },
                 React.createElement(
                     'button',
                     { onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
@@ -608,6 +528,45 @@ function MyGobelin({ threadsRef, language }) {
                     ))
                 )
             ),
+            React.createElement('div', { key: 'canvas-container', style: { position: 'relative' } }, [
+                React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+                React.createElement('canvas', { key: 'bls-canvas', ref: blsCanvasRef, className: 'bls-canvas', style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' } })
+            ]),
+            mode === 'history' && React.createElement(
+                'div',
+                { key: 'history-container', className: 'history-container' },
+                React.createElement('textarea', {
+                    value: historyText,
+                    onChange: (e) => setHistoryText(e.target.value),
+                    placeholder: translations[language].historyPlaceholder || 'Enter your story...',
+                    rows: 5,
+                    className: 'history-textarea'
+                }),
+                React.createElement(
+                    'div',
+                    { className: 'history-buttons' },
+                    React.createElement(
+                        'button',
+                        { onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
+                        translations[language].submit || 'Submit'
+                    ),
+                    React.createElement(
+                        'button',
+                        { onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
+                        translations[language].clear || 'Clear'
+                    )
+                ),
+                submittedHistory && !isEditing && React.createElement(
+                    'div',
+                    { className: 'history-text' },
+                    React.createElement('p', null, submittedHistory),
+                    React.createElement(
+                        'button',
+                        { onClick: handleEditHistory, className: 'history-button edit' },
+                        translations[language].edit || 'Edit'
+                    )
+                )
+            ),
             React.createElement(
                 'div',
                 { key: 'gobelin-buttons', className: 'gobelin-buttons' },
@@ -616,8 +575,7 @@ function MyGobelin({ threadsRef, language }) {
                     { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: isLoading },
                     translations[language].share || 'Share'
                 )
-            ),
-            blsActive && !survey.completed && renderSurvey()
+            )
         ]
     );
 }
