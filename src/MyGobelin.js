@@ -13,10 +13,10 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     const [blsFrequency, setBlsFrequency] = React.useState(1.2);
     const [setActive, setSetActive] = React.useState(false);
     const [setCount, setSetCount] = React.useState(0);
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [isLoading, setIsLoading] = React.useState(false); // Изменено: начально false
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
-    const [dynamicStep, setDynamicStep] = React.useState(3);
+    const [dynamicStep, setDynamicStep] = React.useState(4); // Увеличено для оптимизации
     const [showConsentScreen, setShowConsentScreen] = React.useState(false);
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
@@ -195,23 +195,44 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         }
         setHistoryText('');
         setIsEditing(false);
-        setIsLoading(true);
+        setIsLoading(true); // Показываем загрузку
         setLoadingProgress(0);
         setBlsActive(false);
         cachedFrames.current = [];
+        // Запускаем рендеринг анимации
+        if (canvasRef.current && threadsRef.current.length > 0) {
+            preRenderFrames(threadsRef.current[0]).then(() => {
+                setCanvasReady(true);
+            }).catch(err => console.error('handleSubmitHistory preRenderFrames error:', err));
+        }
     };
 
     const handleClearHistory = () => {
         setHistoryText('');
         setSubmittedHistory('');
         localStorage.removeItem('submittedHistory');
-        threadsRef.current = [defaultFractalParams]; // Используем дефолтные параметры
-        localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+        threadsRef.current = [];
+        localStorage.removeItem('threads');
         setBlsActive(false);
         setSetCount(0);
-        setIsLoading(true);
+        setIsLoading(false); // Не показываем загрузку
         setLoadingProgress(0);
+        setCanvasReady(false);
         cachedFrames.current = [];
+        // Рендерим статический фрактал
+        if (canvasRef.current) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const fractalData = renderFractal(defaultFractalParams, 0, 40, defaultFractalParams.zoom, null);
+                if (fractalData) {
+                    ctx.putImageData(fractalData, 0, 0);
+                    renderBranches(ctx, defaultFractalParams, 0, 1, null);
+                }
+            }
+        }
     };
 
     const handleEditHistory = () => {
@@ -250,7 +271,12 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         if (ctx && threadsRef.current.length > 0) {
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            renderFractal(staticWarmFractalParams, 0, 40, staticWarmFractalParams.zoom);
+            const params = threadsRef.current[0] || defaultFractalParams;
+            const fractalData = renderFractal(params, 0, 40, params.zoom, null);
+            if (fractalData) {
+                ctx.putImageData(fractalData, 0, 0);
+                renderBranches(ctx, params, 0, 1, null);
+            }
         }
         cachedFrames.current = [];
     };
@@ -292,6 +318,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     };
 
     const renderBranches = (ctx, params, t, progress, blsX) => {
+        console.log('renderBranches called', { params, t, progress, blsX });
         const { branchDepth, hue, palette } = params;
         const centerX = ctx.canvas.width / 2;
         const centerY = ctx.canvas.height / 2;
@@ -363,11 +390,22 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 resizeCanvas();
-                if (threadsRef.current.length > 0) {
+                if (threadsRef.current.length > 0 && cachedFrames.current.length === 0) {
                     setIsLoading(true);
                     setLoadingProgress(0);
                     cachedFrames.current = [];
                     preRenderFrames(threadsRef.current[0]).catch(err => console.error('Resize preRenderFrames error:', err));
+                } else if (threadsRef.current.length === 0) {
+                    // Рендерим статический фрактал при ресайзе, если нет текста
+                    if (ctx) {
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        const fractalData = renderFractal(defaultFractalParams, 0, 40, defaultFractalParams.zoom, null);
+                        if (fractalData) {
+                            ctx.putImageData(fractalData, 0, 0);
+                            renderBranches(ctx, defaultFractalParams, 0, 1, null);
+                        }
+                    }
                 }
             }, 200);
         };
@@ -450,6 +488,8 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const step = dynamicStep;
             const blsPull = blsX ? (blsX - centerX) / canvas.width * 0.05 : 0;
 
+            console.log('renderFractal started', { t, currentIterations, currentZoom, step });
+
             for (let x = 0; x < canvas.width; x += step) {
                 for (let y = 0; y < canvas.height; y += step) {
                     let zx = ((x - centerX) / canvas.width) * scale;
@@ -499,6 +539,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 }
             }
 
+            console.log('renderFractal completed', { imageData: !!imageData });
             return imageData;
         };
 
@@ -539,14 +580,14 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             setIsLoading(true);
             setLoadingProgress(0);
             cachedFrames.current = [];
-            const frameCount = 2400;
+            const frameCount = 600; // Уменьшено для теста
             const timeStep = 40 / frameCount;
             const phase1 = frameCount / 4;
             const phase2 = frameCount * 3 / 4;
             const phase3 = frameCount;
 
             try {
-                console.log('Starting preRenderFrames', { frameCount, params });
+                console.log('Starting preRenderFrames', { frameCount, params, timestamp: Date.now() });
                 for (let i = 0; i < frameCount; i++) {
                     const t = i * timeStep;
                     const progress = i / (frameCount - 1);
@@ -598,16 +639,18 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     if (fractalData) {
                         ctx.putImageData(fractalData, 0, 0);
                         renderBranches(ctx, frameParams, t, easedProgress, blsX);
-                        cachedFrames.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                        const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        cachedFrames.current.push(frameData);
+                        console.log('Frame saved', { frameIndex: i, frameData: !!frameData });
                     } else {
-                        console.warn('No fractalData for frame', i);
+                        console.warn('No fractalData for frame', { frameIndex: i });
                     }
                     setLoadingProgress((i + 1) / frameCount * 100);
                     if (i % 10 === 0) {
                         await new Promise(resolve => setTimeout(resolve, 0));
                     }
                 }
-                console.log('Pre-rendering complete', { frameCount: cachedFrames.current.length });
+                console.log('Pre-rendering complete', { frameCount: cachedFrames.current.length, timestamp: Date.now() });
                 setIsLoading(false);
                 setCanvasReady(true);
             } catch (error) {
@@ -659,18 +702,18 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 ctx.putImageData(frame, 0, 0);
                 frameIndex = (frameIndex + 1) % cachedFrames.current.length;
 
-                renderBlsMarker(frameIndex * (40 / 2400), threadsRef.current[0]);
+                renderBlsMarker(frameIndex * (40 / 600), threadsRef.current[0]);
             } else {
                 console.warn('animate: No frames to render', {
                     threadsLength: threadsRef.current.length,
                     cachedFramesLength: cachedFrames.current.length
                 });
-                // Рендерим статический фрактал, если нет кадров
+                // Рендерим статический фрактал
                 const params = threadsRef.current.length > 0 ? threadsRef.current[0] : defaultFractalParams;
-                const fractalData = renderFractal(params, frameIndex * (40 / 2400), 40, params.zoom, null);
+                const fractalData = renderFractal(params, frameIndex * (40 / 600), 40, params.zoom, null);
                 if (fractalData) {
                     ctx.putImageData(fractalData, 0, 0);
-                    renderBranches(ctx, params, frameIndex * (40 / 2400), 1, null);
+                    renderBranches(ctx, params, frameIndex * (40 / 600), 1, null);
                 }
             }
 
@@ -681,22 +724,27 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             if (checkCanvas()) {
                 console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current });
                 resizeCanvas();
-                // Устанавливаем дефолтные параметры, если threadsRef пуст
-                if (threadsRef.current.length === 0) {
-                    console.log('No threads, using defaultFractalParams');
-                    threadsRef.current = [defaultFractalParams];
-                    localStorage.setItem('threads', JSON.stringify(threadsRef.current));
+                // Рендерим статический фрактал при старте
+                if (ctx && threadsRef.current.length === 0) {
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    const fractalData = renderFractal(defaultFractalParams, 0, 40, defaultFractalParams.zoom, null);
+                    if (fractalData) {
+                        ctx.putImageData(fractalData, 0, 0);
+                        renderBranches(ctx, defaultFractalParams, 0, 1, null);
+                    }
                 }
-                preRenderFrames(threadsRef.current[0]).then(() => {
-                    setCanvasReady(true);
+                // Запускаем анимацию только если есть кадры
+                if (cachedFrames.current.length > 0) {
                     animate();
-                }).catch(err => console.error('startAnimation preRenderFrames error:', err));
+                }
             } else {
                 console.warn('Retrying animation start');
                 setTimeout(startAnimation, 500);
             }
         };
 
+        // Инициализация канваса и рендеринг статического фрактала
         setTimeout(startAnimation, 500);
         window.addEventListener('resize', debounceResize);
 
@@ -711,7 +759,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        isLoading && !canvasReady && React.createElement(
+        isLoading && canvasReady && React.createElement(
             'div',
             { className: 'loading-screen' },
             React.createElement('p', null, translations[validLanguage].loadingAnimation || 'Generating fractal animation...'),
@@ -835,12 +883,31 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                             setIsLoading(true);
                             setLoadingProgress(0);
                             cachedFrames.current = [];
+                            if (canvasRef.current) {
+                                preRenderFrames(threadsRef.current[0]).then(() => {
+                                    setCanvasReady(true);
+                                }).catch(err => console.error('Mode history preRenderFrames error:', err));
+                            }
                         } else {
-                            threadsRef.current = [defaultFractalParams];
-                            localStorage.setItem('threads', JSON.stringify(threadsRef.current));
-                            setIsLoading(true);
-                            setLoadingProgress(0);
+                            threadsRef.current = [];
+                            localStorage.removeItem('threads');
+                            setIsLoading(false);
+                            setCanvasReady(false);
                             cachedFrames.current = [];
+                            // Рендерим статический фрактал
+                            if (canvasRef.current) {
+                                const canvas = canvasRef.current;
+                                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                                if (ctx) {
+                                    ctx.fillStyle = '#fff';
+                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                    const fractalData = renderFractal(defaultFractalParams, 0, 40, defaultFractalParams.zoom, null);
+                                    if (fractalData) {
+                                        ctx.putImageData(fractalData, 0, 0);
+                                        renderBranches(ctx, defaultFractalParams, 0, 1, null);
+                                    }
+                                }
+                            }
                         }
                     }
                 },
@@ -853,10 +920,32 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     onClick: () => {
                         setMode('aiGorgon');
                         const savedThreads = localStorage.getItem('threads');
-                        threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [defaultFractalParams];
+                        threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
                         setIsLoading(true);
                         setLoadingProgress(0);
                         cachedFrames.current = [];
+                        if (threadsRef.current.length > 0 && canvasRef.current) {
+                            preRenderFrames(threadsRef.current[0]).then(() => {
+                                setCanvasReady(true);
+                            }).catch(err => console.error('Mode aiGorgon preRenderFrames error:', err));
+                        } else {
+                            setIsLoading(false);
+                            setCanvasReady(false);
+                            // Рендерим статический фрактал
+                            if (canvasRef.current) {
+                                const canvas = canvasRef.current;
+                                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                                if (ctx) {
+                                    ctx.fillStyle = '#fff';
+                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                    const fractalData = renderFractal(defaultFractalParams, 0, 40, defaultFractalParams.zoom, null);
+                                    if (fractalData) {
+                                        ctx.putImageData(fractalData, 0, 0);
+                                        renderBranches(ctx, defaultFractalParams, 0, 1, null);
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 translations[validLanguage].aiGorgon || 'Create based on AI Gorgon'
