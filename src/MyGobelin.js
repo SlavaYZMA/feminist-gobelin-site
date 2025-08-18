@@ -16,12 +16,17 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     const [isLoading, setIsLoading] = React.useState(true);
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
-    const [dynamicStep, setDynamicStep] = React.useState(1); // Шаг 1 для гладкости
+    const [dynamicStep, setDynamicStep] = React.useState(1);
     const [showConsentScreen, setShowConsentScreen] = React.useState(false);
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
     const [showInfoModal, setShowInfoModal] = React.useState(false);
-    const cachedFrames = React.useRef([]); // Кэш для кадров анимации
+    const [loadingProgress, setLoadingProgress] = React.useState(0); // Прогресс загрузки
+    const cachedFrames = React.useRef([]);
+    const prevBreathe = React.useRef(0); // Переменные для интерполяции
+    const prevWave = React.useRef(0);
+    const prevRotation = React.useRef(0);
+    const prevTwist = React.useRef(0);
     const validLanguage = ['en', 'ru'].includes(language) ? language : 'en';
 
     const analyzeText = (text) => {
@@ -157,7 +162,8 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         }
         setHistoryText('');
         setIsEditing(false);
-        setIsLoading(true); // Запускаем загрузку для генерации кадров
+        setIsLoading(true);
+        setLoadingProgress(0); // Сбрасываем прогресс
         setBlsActive(false);
     };
 
@@ -170,14 +176,15 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         setBlsActive(false);
         setSetCount(0);
         setIsLoading(true);
-        cachedFrames.current = []; // Очищаем кэш
+        setLoadingProgress(0);
+        cachedFrames.current = [];
     };
 
     const handleEditHistory = () => {
         setHistoryText(submittedHistory);
         setIsEditing(true);
         setBlsActive(false);
-        cachedFrames.current = []; // Очищаем кэш при редактировании
+        cachedFrames.current = [];
     };
 
     const shareGobelin = () => {
@@ -211,7 +218,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             renderFractal(staticWarmFractalParams, 0);
         }
-        cachedFrames.current = []; // Очищаем кэш
+        cachedFrames.current = [];
     };
 
     const handleCalmDown = () => {
@@ -278,6 +285,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         let lastFrameFPS = performance.now();
         let frameCount = 0;
         let fps = 0;
+        let setStartTime = performance.now() / 1000;
 
         const resizeCanvas = () => {
             if (!canvas || !blsCanvas) return;
@@ -295,7 +303,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ctx.scale(dpr, dpr);
             blsCtx.scale(dpr, dpr);
             console.log('Canvas resized', { width: canvas.width, height: canvas.height, cssWidth, cssHeight, dpr });
-            cachedFrames.current = []; // Очищаем кэш при изменении размера
+            cachedFrames.current = [];
         };
 
         const lerp = (start, end, factor) => start + (end - start) * factor;
@@ -340,38 +348,33 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const targetRotation = t * speed * rotationDir * 0.01;
             const targetTwist = Math.sin(t * twist) * 0.02;
 
-            const breathe = lerp(prevBreathe, targetBreathe, 0.1);
-            const wave = lerp(prevWave, targetWave, 0.1);
-            const rotation = lerp(prevRotation, targetRotation, 0.1);
-            const twistEffect = lerp(prevTwist, targetTwist, 0.1);
-
-            prevBreathe = breathe;
-            prevWave = wave;
-            prevRotation = rotation;
-            prevTwist = twistEffect;
+            prevBreathe.current = lerp(prevBreathe.current, targetBreathe, 0.1);
+            prevWave.current = lerp(prevWave.current, targetWave, 0.1);
+            prevRotation.current = lerp(prevRotation.current, targetRotation, 0.1);
+            prevTwist.current = lerp(prevTwist.current, targetTwist, 0.1);
 
             const dynamicHueShift = Math.sin(t * 0.5) * 120;
             const dynamicSat = sat + Math.sin(t * speed) * 30;
             const dynamicBright = bright + Math.sin(t * speed * 0.5) * 30;
             const flicker = 0.9 + 0.1 * Math.sin(t * 2);
 
-            const step = dynamicStep; // Фиксированный шаг 1 для гладкости
+            const step = dynamicStep;
             console.log('Rendering fractal', { step, iterations, hue: (hue + dynamicHueShift) % 360, sat: dynamicSat, bright: dynamicBright, zoom, twist });
 
             for (let x = 0; x < canvas.width; x += step) {
                 for (let y = 0; y < canvas.height; y += step) {
                     let zx = ((x - centerX) / canvas.width) * scale;
                     let zy = ((y - centerY) / canvas.height) * scale;
-                    const rotatedZx = zx * Math.cos(rotation + twistEffect) - zy * Math.sin(rotation + twistEffect);
-                    const rotatedZy = zx * Math.sin(rotation + twistEffect) + zy * Math.cos(rotation + twistEffect);
-                    zx = rotatedZx + Math.sin(zy * distortion) * wave;
+                    const rotatedZx = zx * Math.cos(prevRotation.current + prevTwist.current) - zy * Math.sin(prevRotation.current + prevTwist.current);
+                    const rotatedZy = zx * Math.sin(prevRotation.current + prevTwist.current) + zy * Math.cos(prevRotation.current + prevTwist.current);
+                    zx = rotatedZx + Math.sin(zy * distortion) * prevWave.current;
                     zy = rotatedZy + Math.cos(zx * distortion) * symmetryBreak;
 
                     let i = 0;
                     let tempZx, tempZy;
                     while (i < iterations) {
-                        tempZx = zx * zx - zy * zy + cX + breathe;
-                        tempZy = 2 * zx * zy + cY + wave;
+                        tempZx = zx * zx - zy * zy + cX + prevBreathe.current;
+                        tempZy = 2 * zx * zy + cY + prevWave.current;
                         zx = tempZx;
                         zy = tempZy;
                         if (zx * zx + zy * zy > escapeRadius) break;
@@ -408,7 +411,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             }
 
             ctx.globalAlpha = 1.0;
-            return imageData; // Возвращаем ImageData для кэширования
+            return imageData;
         };
 
         const renderBlsMarker = (t) => {
@@ -451,9 +454,10 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         const preRenderFrames = async (params) => {
             if (!ctx || !canvas) return;
             setIsLoading(true);
+            setLoadingProgress(0);
             cachedFrames.current = [];
-            const frameCount = 60; // Генерируем 60 кадров (~2 сек при 30 FPS)
-            const timeStep = 2 / frameCount; // Длительность цикла ~2 секунды
+            const frameCount = 60;
+            const timeStep = 2 / frameCount;
 
             for (let i = 0; i < frameCount; i++) {
                 const t = i * timeStep;
@@ -461,7 +465,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 if (frameData) {
                     cachedFrames.current.push(frameData);
                 }
-                // Позволяем браузеру обработать другие задачи
+                setLoadingProgress((i + 1) / frameCount * 100); // Обновляем прогресс
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
             setIsLoading(false);
@@ -507,12 +511,11 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     handleStopBls();
                 }
 
-                // Воспроизводим кэшированный кадр
                 const frame = cachedFrames.current[frameIndex % cachedFrames.current.length];
                 ctx.putImageData(frame, 0, 0);
                 frameIndex = (frameIndex + 1) % cachedFrames.current.length;
 
-                renderBlsMarker(frameIndex * (2 / 60)); // Синхронизируем BLS с кадрами
+                renderBlsMarker(frameIndex * (2 / 60));
             }
 
             animationFrameId = requestAnimationFrame(animate);
@@ -542,7 +545,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         window.addEventListener('resize', () => {
             resizeCanvas();
             if (threadsRef.current.length > 0) {
-                preRenderFrames(threadsRef.current[0]); // Перегенерируем кадры при изменении размера
+                preRenderFrames(threadsRef.current[0]);
             }
         });
 
@@ -560,7 +563,20 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
-        isLoading && !canvasReady && React.createElement('div', { className: 'loading-screen' }, translations[validLanguage].loading || 'Loading...'),
+        isLoading && !canvasReady && React.createElement(
+            'div',
+            { className: 'loading-screen' },
+            React.createElement('p', null, translations[validLanguage].loadingAnimation || 'Generating animation...'),
+            React.createElement(
+                'div',
+                { className: 'progress-bar' },
+                React.createElement('div', {
+                    className: 'progress-bar-fill',
+                    style: { width: `${loadingProgress}%` }
+                })
+            ),
+            React.createElement('p', null, `${Math.round(loadingProgress)}%`)
+        ),
         fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[validLanguage].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
         showConsentScreen && React.createElement(
             'div',
@@ -693,7 +709,8 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                             if (!dontSaveHistory) {
                                 localStorage.setItem('threads', JSON.stringify(threadsRef.current));
                             }
-                            setIsLoading(true); // Запускаем генерацию кадров
+                            setIsLoading(true);
+                            setLoadingProgress(0);
                             cachedFrames.current = [];
                         }
                     }
@@ -709,7 +726,8 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                         setMode('aiGorgon');
                         const savedThreads = localStorage.getItem('threads');
                         threadsRef.current = savedThreads ? JSON.parse(savedThreads) : [];
-                        setIsLoading(true); // Запускаем генерацию кадров
+                        setIsLoading(true);
+                        setLoadingProgress(0);
                         cachedFrames.current = [];
                     }
                 },
