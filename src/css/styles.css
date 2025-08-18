@@ -1,15 +1,20 @@
+/* Цветовые переменные */
 :root {
-    --primary-6: #165DF5;
-    --color-text-1: #333;
-    --gray-1: #F7F8FA;
-    --gray-9: #272E3B;
-    --color-neutral-3: rgba(0,0,0,0.1);
-    --user-bg: #E6F0FA;
-    --assistant-bg: #F7F6F5;
+    --primary-6: #165DF5; /* Основной синий */
+    --color-text-1: #333; /* Цвет текста */
+    --gray-1: #F7F8FA; /* Светлый фон */
+    --gray-9: #272E3B; /* Тёмный серый */
+    --color-neutral-3: rgba(0,0,0,0.1); /* Полупрозрачная граница */
+    --user-bg: #E6F0FA; /* Фон сообщений пользователя */
+    --assistant-bg: #F7F6F5; /* Фон сообщений ассистента */
+    --accent-gradient: linear-gradient(90deg, #4a90e2, #87ceeb); /* Градиент для акцентов */
 }
+
+/* Общие стили */
 * {
     box-sizing: border-box;
 }
+
 body {
     margin: 0;
     background: #fff;
@@ -19,12 +24,15 @@ body {
     display: flex;
     flex-direction: column;
 }
+
 .app-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
+
+/* Хедер */
 .header {
     position: fixed;
     top: 0;
@@ -39,11 +47,14 @@ body {
     padding: 0 16px;
     z-index: 1000;
 }
+
+/* Переключатель языка */
 .language-switcher {
     position: absolute;
     top: 16px;
-    right: 120px; /* Adjusted for info button */
+    right: 120px;
 }
+
 .language-switcher select {
     background: var(--gray-1);
     border: 1px solid rgba(0,0,0,0.05);
@@ -54,11 +65,14 @@ body {
     color: var(--color-text-1);
     cursor: pointer;
 }
+
 .language-switcher select:focus {
     outline: none;
     border-color: var(--primary-6);
     box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
+
+/* Кнопка информации */
 .info-button {
     position: absolute;
     top: 16px;
@@ -74,13 +88,17 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .info-button:hover {
     transform: scale(1.05);
 }
+
 .info-button:active {
     background: #003087;
     transform: scale(0.95);
 }
+
+/* Модальное окно информации */
 .info-modal {
     position: fixed;
     top: 50%;
@@ -94,17 +112,20 @@ body {
     z-index: 1002;
     max-width: 500px;
 }
+
 .info-modal h2 {
     font-size: 18px;
     font-weight: 600;
     margin: 0 0 16px;
 }
+
 .info-modal p {
     font-size: 14px;
     line-height: 20px;
     color: var(--color-text-1);
     margin: 0 0 12px;
 }
+
 .info-modal button {
     background: var(--primary-6);
     color: #fff;
@@ -117,12 +138,16 @@ body {
     transition: all 0.2s ease;
     margin-top: 16px;
 }
+
 .info-modal button:hover {
     transform: scale(1.05);
 }
+
 .info-modal button:active {
     transform: scale(0.95);
 }
+
+/* Гамбургер-меню */
 .hamburger {
     background: transparent;
     border: none;
@@ -133,12 +158,16 @@ body {
     align-items: center;
     justify-content: center;
 }
+
 .hamburger:hover {
     transform: scale(1.1);
 }
+
 .hamburger:active {
     transform: scale(0.9);
 }
+
+/* Боковое меню */
 .side-menu {
     position: fixed;
     top: 0;
@@ -155,9 +184,11 @@ body {
     flex-direction: column;
     gap: 16px;
 }
+
 .side-menu.open {
     transform: translateX(0);
 }
+
 .menu-close {
     position: absolute;
     top: 16px;
@@ -171,12 +202,15 @@ body {
     align-items: center;
     justify-content: center;
 }
+
 .menu-close:hover {
     transform: scale(1.1);
 }
+
 .menu-close:active {
     transform: scale(0.9);
 }
+
 .menu-item {
     font-size: 16px;
     font-weight: 500;
@@ -186,13 +220,16 @@ body {
     border-radius: 8px;
     transition: background 0.2s ease;
 }
+
 .menu-item:hover {
     background: var(--gray-1);
 }
+
 .menu-item.active {
     background: var(--primary-6);
     color: #fff;
 }
+
 .menu-button {
     background: var(--primary-6);
     color: #fff;
@@ -205,12 +242,16 @@ body {
     text-align: center;
     transition: all 0.2s ease;
 }
+
 .menu-button:hover {
     transform: scale(1.05);
 }
+
 .menu-button:active {
     transform: scale(0.95);
 }
+
+/* Оверлей */
 .overlay {
     position: fixed;
     top: 0;
@@ -223,10 +264,13 @@ body {
     pointer-events: none;
     transition: opacity 0.3s ease;
 }
+
 .overlay.open {
     opacity: 1;
     pointer-events: auto;
 }
+
+/* Контент */
 .content {
     flex: 1;
     padding: 80px 16px 100px;
@@ -236,6 +280,7 @@ body {
     position: relative;
     z-index: 1;
 }
+
 .page {
     display: flex;
     flex-direction: column;
@@ -244,6 +289,7 @@ body {
     position: relative;
     z-index: 2;
 }
+
 .page h1 {
     font-size: 24px;
     font-weight: 600;
@@ -251,11 +297,14 @@ body {
     position: relative;
     z-index: 3;
 }
+
 .page p {
     font-size: 16px;
     line-height: 24px;
     color: rgba(0,0,0,0.8);
 }
+
+/* Кнопки гобелена */
 .gobelin-buttons {
     display: flex;
     gap: 16px;
@@ -263,6 +312,7 @@ body {
     position: relative;
     z-index: 3;
 }
+
 .gobelin-button {
     background: var(--primary-6);
     color: #fff;
@@ -274,12 +324,16 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .gobelin-button:hover {
     transform: scale(1.05);
 }
+
 .gobelin-button:active {
     transform: scale(0.95);
 }
+
+/* Чат */
 .chat-container {
     max-height: 400px;
     overflow-y: auto;
@@ -289,34 +343,41 @@ body {
     background: #fff;
     margin-bottom: 16px;
 }
+
 .message {
     margin-bottom: 16px;
     padding: 12px;
     border-radius: 8px;
     position: relative;
 }
+
 .message.user {
     background: var(--user-bg);
     margin-left: 20%;
 }
+
 .message.assistant {
     background: var(--assistant-bg);
     margin-right: 20%;
 }
+
 .message-content {
     font-size: 14px;
     line-height: 20px;
 }
+
 .message-timestamp {
     font-size: 12px;
     color: var(--gray-9);
     margin-top: 4px;
 }
+
 .message-actions {
     display: flex;
     gap: 8px;
     margin-top: 8px;
 }
+
 .message-actions button {
     background: var(--primary-6);
     color: #fff;
@@ -327,17 +388,22 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .message-actions button:hover {
     transform: scale(1.05);
 }
+
 .message-actions button:active {
     transform: scale(0.95);
 }
+
+/* Поле ввода */
 .input-container {
     display: flex;
     gap: 16px;
     align-items: flex-end;
 }
+
 .input-container textarea {
     flex: 1;
     padding: 12px;
@@ -347,11 +413,14 @@ body {
     font-family: 'Inter', sans-serif;
     resize: none;
 }
+
 .input-container textarea:focus {
     outline: none;
     border-color: var(--primary-6);
     box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
+
+/* Кнопки действий */
 .action-button {
     background: var(--primary-6);
     color: #fff;
@@ -363,23 +432,26 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .action-button:hover {
     transform: scale(1.05);
 }
+
 .action-button:active {
     transform: scale(0.95);
 }
+
 .action-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
-.action-button.reset {
-    background: #ff4d4f;
-}
+
+.action-button.reset,
 .action-button.clear-history {
     background: #ff4d4f;
-    margin-bottom: 16px;
 }
+
+/* Форма */
 .details-form {
     display: flex;
     flex-direction: column;
@@ -390,15 +462,18 @@ body {
     background: var(--gray-1);
     margin-bottom: 16px;
 }
+
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
 .form-group label {
     font-size: 14px;
     font-weight: 500;
 }
+
 .form-group input,
 .form-group select {
     padding: 12px;
@@ -407,12 +482,14 @@ body {
     font-size: 14px;
     font-family: 'Inter', sans-serif;
 }
+
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
     border-color: var(--primary-6);
     box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
+
 .details-toggle {
     cursor: pointer;
     color: var(--primary-6);
@@ -420,11 +497,14 @@ body {
     font-weight: 500;
     margin-bottom: 16px;
 }
+
+/* Контейнер редактирования */
 .edit-container {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
 .edit-container textarea {
     padding: 12px;
     border: 1px solid var(--color-neutral-3);
@@ -432,6 +512,7 @@ body {
     font-size: 14px;
     font-family: 'Inter', sans-serif;
 }
+
 .edit-container button {
     background: var(--primary-6);
     color: #fff;
@@ -441,44 +522,55 @@ body {
     font-size: 12px;
     cursor: pointer;
 }
+
+/* Футер */
 .footer {
     background: var(--gray-1);
     padding: 16px;
     border-top: 1px solid var(--color-neutral-3);
     text-align: center;
 }
+
 .footer-menu {
     display: flex;
     justify-content: center;
     gap: 16px;
     margin-bottom: 8px;
 }
+
 .footer-item {
     font-size: 14px;
     color: var(--color-text-1);
     cursor: pointer;
 }
+
 .footer-item:hover {
     color: var(--primary-6);
 }
+
 .footer-contact {
     font-size: 12px;
     color: var(--gray-9);
     margin-bottom: 8px;
 }
+
 .footer-socials {
     display: flex;
     justify-content: center;
     gap: 16px;
 }
+
 .footer-socials a {
     font-size: 12px;
     color: var(--primary-6);
     text-decoration: none;
 }
+
 .footer-socials a:hover {
     text-decoration: underline;
 }
+
+/* Модальное окно */
 .modal {
     position: fixed;
     top: 50%;
@@ -490,24 +582,29 @@ body {
     padding: 16px;
     z-index: 1002;
 }
+
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
 }
+
 .modal-title {
     font-size: 16px;
     font-weight: 600;
 }
+
 .modal-close {
     cursor: pointer;
 }
+
 .modal-content.share-modal {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
+
 .share-button {
     background: var(--primary-6);
     color: #fff;
@@ -520,18 +617,23 @@ body {
     align-items: center;
     gap: 8px;
 }
+
 .share-button:hover {
     transform: scale(1.05);
 }
+
 .share-button:active {
     transform: scale(0.95);
 }
+
+/* Переключатель режимов */
 .mode-switcher {
     display: flex;
     gap: 16px;
     justify-content: center;
     margin-bottom: 16px;
 }
+
 .mode-button {
     background: var(--gray-1);
     color: var(--color-text-1);
@@ -543,22 +645,28 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .mode-button.active {
     background: var(--primary-6);
     color: #fff;
 }
+
 .mode-button:hover {
     transform: scale(1.05);
 }
+
 .mode-button:active {
     transform: scale(0.95);
 }
+
+/* Контейнер истории */
 .history-container {
     display: flex;
     flex-direction: column;
     gap: 16px;
     margin-top: 16px;
 }
+
 .history-textarea {
     width: 100%;
     padding: 12px;
@@ -568,16 +676,19 @@ body {
     font-family: 'Inter', sans-serif;
     resize: vertical;
 }
+
 .history-textarea:focus {
     outline: none;
     border-color: var(--primary-6);
     box-shadow: 0 0 0 2px rgba(22,93,245,0.2);
 }
+
 .history-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
 }
+
 .history-button {
     background: var(--primary-6);
     color: #fff;
@@ -589,22 +700,28 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .history-button:hover {
     transform: scale(1.05);
 }
+
 .history-button:active {
     transform: scale(0.95);
 }
+
 .history-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
+
 .history-button.clear {
     background: #ff4d4f;
 }
+
 .history-button.edit {
     background: var(--gray-9);
 }
+
 .history-text {
     margin-top: 16px;
     padding: 12px;
@@ -612,26 +729,35 @@ body {
     border-radius: 8px;
     background: var(--gray-1);
 }
+
 .history-text p {
     margin: 0 0 8px;
     font-size: 14px;
     line-height: 20px;
 }
-.data-art-canvas {
+
+/* Канвас */
+.data-art-canvas, .bls-canvas {
     width: 100%;
     max-width: 600px;
     height: 450px;
     background: #fff;
     border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Мягкая тень для глубины */
+    transition: box-shadow 0.3s ease; /* Плавный переход тени */
 }
+
+.data-art-canvas:hover, .bls-canvas:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2); /* Усиление тени при наведении */
+}
+
 .bls-canvas {
-    width: 100%;
-    max-width: 600px;
-    height: 450px;
     position: absolute;
     pointer-events: none;
 }
-.consent-screen, .loading-screen, .fps-warning {
+
+/* Экран согласия */
+.consent-screen {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -640,38 +766,41 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    text-align: center;
+    text-align: left;
     z-index: 1002;
     max-width: 500px;
-}
-.consent-screen {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    text-align: left;
 }
+
 .consent-screen h2 {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
 }
+
 .consent-screen p {
     font-size: 14px;
     line-height: 20px;
     color: var(--color-text-1);
 }
+
 .consent-screen a {
     color: var(--primary-6);
     text-decoration: none;
 }
+
 .consent-screen a:hover {
     text-decoration: underline;
 }
+
 .consent-sensitivity {
     display: flex;
     gap: 12px;
     justify-content: center;
 }
+
 .consent-sensitivity-button {
     background: var(--primary-6);
     color: #fff;
@@ -683,31 +812,38 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .consent-sensitivity-button:hover {
     transform: scale(1.05);
 }
+
 .consent-sensitivity-button:active {
     transform: scale(0.95);
 }
+
 .consent-sensitivity-button.active {
     background: #003087;
 }
+
 .consent-checkbox {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 14px;
 }
+
 .consent-checkbox input {
     width: 16px;
     height: 16px;
     cursor: pointer;
 }
+
 .consent-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
 }
+
 .consent-button {
     margin-top: 16px;
     background: var(--primary-6);
@@ -720,19 +856,24 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .consent-button:hover {
     transform: scale(1.05);
 }
+
 .consent-button:active {
     transform: scale(0.95);
 }
+
 .consent-button.decline {
     background: #ff4d4f;
 }
+
 .consent-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
+
 .guideline-link {
     display: block;
     margin-top: 16px;
@@ -740,9 +881,12 @@ body {
     font-size: 14px;
     text-decoration: none;
 }
+
 .guideline-link:hover {
     text-decoration: underline;
 }
+
+/* Элементы управления BLS */
 .bls-controls {
     display: flex;
     flex-wrap: wrap;
@@ -751,6 +895,7 @@ body {
     margin: 16px 0;
     font-family: 'Inter', sans-serif;
 }
+
 .bls-button {
     background: var(--primary-6);
     color: #fff;
@@ -763,16 +908,20 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .bls-button:hover {
     transform: scale(1.05);
 }
+
 .bls-button:active {
     transform: scale(0.95);
 }
+
 .bls-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
+
 .bls-frequency {
     display: flex;
     align-items: center;
@@ -780,59 +929,70 @@ body {
     font-size: 14px;
     font-family: 'Inter', sans-serif;
 }
+
 .bls-frequency input {
     width: 100px;
 }
+
 .bls-frequency label {
     font-weight: 500;
 }
-.loading-screen {
-    font-size: 16px;
-    font-weight: 500;
-}
-.fps-warning {
-    background: #ff4d4f;
-    color: #fff;
-    padding: 16px;
-    font-size: 14px;
-}
-/* Прогресс-бар для загрузки анимации */
+
+/* Экран загрузки */
 .loading-screen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95); /* Полупрозрачный белый для мягкости */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    color: #333;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 18px;
+    color: var(--color-text-1);
+    transition: opacity 0.5s ease; /* Плавное появление/исчезновение */
 }
 
 .progress-bar {
-    width: 50%;
-    max-width: 300px;
-    height: 20px;
-    background: #eee;
-    border-radius: 10px;
+    width: 60%;
+    max-width: 400px;
+    height: 24px;
+    background: var(--gray-1);
+    border-radius: 12px;
     overflow: hidden;
-    margin: 10px 0;
-    border: 1px solid #ccc;
+    margin: 12px 0;
+    border: 1px solid var(--color-neutral-3);
 }
 
 .progress-bar-fill {
     height: 100%;
-    background: #4a90e2;
+    background: var(--accent-gradient); /* Градиент для красоты */
     transition: width 0.5s ease-in-out;
 }
 
-/* Убедимся, что другие элементы не перекрывают loading-screen */
+/* Предупреждение о низком FPS */
+.fps-warning {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff4d4f;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    z-index: 1001;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Страница гобелена */
 .gobelin-page {
     position: relative;
     z-index: 1;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
 }
