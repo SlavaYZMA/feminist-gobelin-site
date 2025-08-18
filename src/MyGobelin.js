@@ -16,7 +16,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     const [isLoading, setIsLoading] = React.useState(true);
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
-    const [dynamicStep, setDynamicStep] = React.useState(2); // Увеличен шаг для оптимизации
+    const [dynamicStep, setDynamicStep] = React.useState(3); // Увеличен для оптимизации
     const [showConsentScreen, setShowConsentScreen] = React.useState(false);
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
@@ -58,7 +58,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             cX: (metrics.avgWordLen / 10) - 0.5 + Math.random() * 0.3,
             cY: (metrics.avgSentLen / 50) - 0.5 + Math.random() * 0.3,
             zoom: Math.min(12, 1 + (metrics.textLen / 250) + metrics.uniqueWords * 0.2),
-            iterations: 100, // Фиксируем 100 итераций для полного раскрытия
+            iterations: 40, // Уменьшено для оптимизации
             hue: baseHue,
             sat: Math.min(90, 60 + metrics.maxWordFreq * 15),
             bright: Math.min(90, 50 + metrics.avgWordLen * 20),
@@ -67,14 +67,16 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             symmetryBreak: metrics.wordCount * 0.02,
             breathingRate: Math.max(0.3, Math.min(2.5, metrics.avgSentLen / 10 * 1.5)),
             waveAmplitude: metrics.sentCount * 0.07,
-            textureGrain: 0,
+            textureGrain: 0.1, // Добавлено для синестетической текстуры
             depthLayers: Math.max(1, metrics.sentCount / 2),
             rotationDir: Math.random() > 0.5 ? 1 : -1,
             escapeRadius: 4 + metrics.textLen / 1000,
-            twist: metrics.uniqueWords * 0.04
+            twist: metrics.uniqueWords * 0.04,
+            branchDepth: Math.min(6, Math.ceil(metrics.sentCount / 3)) // Глубина ветвления
         };
 
         let palette = 'default';
+        let violenceIntensity = 0;
         Object.keys(keywordRules.TRIGGERS).forEach(category => {
             const count = countTriggers(text, keywordRules.TRIGGERS[category]);
             if (count > 0) {
@@ -82,14 +84,17 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     params.zoom += count * 0.4;
                     params.hue = (baseHue + 180 + count * 30) % 360;
                     params.bright = Math.max(20, params.bright * 0.5);
+                    params.distortion += count * 0.2;
+                    violenceIntensity += count;
                     palette = 'fear';
                 } else if (category === 'anger') {
                     params.sat += count * 15;
                     params.hue = (baseHue + 360 + count * 40) % 360;
                     params.distortion += count * 0.15;
+                    violenceIntensity += count;
                     palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations = 100; // Фиксируем для единообразия
+                    params.iterations = 40;
                     params.cX += count * 0.03;
                     params.hue = (baseHue + 90 + count * 15) % 360;
                     palette = palette === 'default' ? 'body' : palette;
@@ -124,6 +129,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         });
 
         params.palette = palette;
+        params.violenceIntensity = violenceIntensity; // Для управления хаотичностью
         return params;
     }, []);
 
@@ -131,7 +137,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         cX: 0,
         cY: 0,
         zoom: 2,
-        iterations: 100,
+        iterations: 40,
         hue: 40,
         sat: 80,
         bright: 90,
@@ -145,7 +151,9 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         rotationDir: 1,
         escapeRadius: 4,
         twist: 0,
-        palette: 'hope'
+        branchDepth: 4,
+        palette: 'hope',
+        violenceIntensity: 0
     };
 
     const handleSubmitHistory = () => {
@@ -217,7 +225,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         if (ctx && threadsRef.current.length > 0) {
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            renderFractal(staticWarmFractalParams, 0, 100, staticWarmFractalParams.zoom);
+            renderFractal(staticWarmFractalParams, 0, 40, staticWarmFractalParams.zoom);
         }
         cachedFrames.current = [];
     };
@@ -253,15 +261,54 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         setShowInfoModal(false);
     };
 
+    // Функция для генерации шума Перлина (для текстуры)
+    const perlinNoise = (x, y, seed = 0) => {
+        const n = (Math.sin(x * 0.1 + y * 0.1 + seed) * 43758.5453);
+        return (n - Math.floor(n)) * 2 - 1; // Нормализация [-1, 1]
+    };
+
+    // Функция для рендеринга ветвей (L-система упрощённая)
+    const renderBranches = (ctx, params, t, progress, blsX) => {
+        const { branchDepth, hue, palette } = params;
+        const centerX = ctx.canvas.width / 2;
+        const centerY = ctx.canvas.height / 2;
+        const maxLength = ctx.canvas.width * 0.3 * progress;
+        const branchAngle = Math.PI / 4;
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.globalAlpha = 0.6 * progress; // Прозрачность растёт
+
+        const drawBranch = (depth, length, angle, t) => {
+            if (depth === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            const blsPull = blsX ? (blsX - centerX) / ctx.canvas.width * 0.1 : 0; // Притяжение к BLS
+            const endX = length * Math.cos(angle + blsPull + Math.sin(t) * 0.05);
+            const endY = length * Math.sin(angle + blsPull + Math.sin(t) * 0.05);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = `hsl(${(hue + depth * 10) % 360}, 80%, ${70 + depth * 5}%)`;
+            ctx.lineWidth = depth * 2;
+            ctx.stroke();
+
+            ctx.translate(endX, endY);
+            drawBranch(depth - 1, length * 0.7, angle + branchAngle, t);
+            drawBranch(depth - 1, length * 0.7, angle - branchAngle, t);
+            ctx.translate(-endX, -endY);
+        };
+
+        for (let i = 0; i < 4; i++) {
+            drawBranch(Math.round(branchDepth * progress), maxLength, i * Math.PI / 2, t);
+        }
+        ctx.restore();
+    };
+
     React.useEffect(() => {
         console.log('useEffect triggered', { canvasRef: !!canvasRef.current, blsCanvasRef: !!blsCanvasRef.current });
 
         const checkCanvas = () => {
             if (!canvasRef.current || !blsCanvasRef.current) {
-                console.error('Canvas refs are not initialized', {
-                    canvas: !!document.querySelector('.data-art-canvas'),
-                    blsCanvas: !!document.querySelector('.bls-canvas')
-                });
+                console.error('Canvas refs are not initialized');
                 setTimeout(checkCanvas, 500);
                 return false;
             }
@@ -317,10 +364,12 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             blsCanvas.style.height = canvas.style.height;
             ctx.scale(dpr, dpr);
             blsCtx.scale(dpr, dpr);
-            console.log('Canvas resized', { width: canvas.width, height: canvas.height, cssWidth, cssHeight, dpr });
+            console.log('Canvas resized', { width: canvas.width, height: canvas.height });
         };
 
         const lerp = (start, end, factor) => start + (end - start) * factor;
+
+        const easeInOut = (t) => 1 - Math.cos((t * Math.PI) / 2); // Ease-in-out для плавности
 
         const hsvToRgb = (h, s, v, palette) => {
             s /= 100;
@@ -347,9 +396,9 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ];
         };
 
-        const renderFractal = (params, t, currentIterations, currentZoom) => {
+        const renderFractal = (params, t, currentIterations, currentZoom, blsX) => {
             if (!ctx) return null;
-            const { cX, cY, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, depthLayers, rotationDir, escapeRadius, twist } = params;
+            const { cX, cY, hue, sat, bright, speed, distortion, symmetryBreak, breathingRate, waveAmplitude, textureGrain, depthLayers, rotationDir, escapeRadius, twist, palette, violenceIntensity } = params;
             const imageData = ctx.createImageData(canvas.width, canvas.height);
             const data = imageData.data;
 
@@ -362,18 +411,18 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const targetRotation = t * speed * rotationDir * 0.01;
             const targetTwist = Math.sin(t * twist) * 0.02;
 
-            prevBreathe.current = lerp(prevBreathe.current, targetBreathe, 0.05); // Мягкая интерполяция
-            prevWave.current = lerp(prevWave.current, targetWave, 0.05);
-            prevRotation.current = lerp(prevRotation.current, targetRotation, 0.05);
-            prevTwist.current = lerp(prevTwist.current, targetTwist, 0.05);
+            prevBreathe.current = lerp(prevBreathe.current, targetBreathe, 0.03);
+            prevWave.current = lerp(prevWave.current, targetWave, 0.03);
+            prevRotation.current = lerp(prevRotation.current, targetRotation, 0.03);
+            prevTwist.current = lerp(prevTwist.current, targetTwist, 0.03);
 
-            const dynamicHueShift = Math.sin(t * 0.2) * 60; // Замедленный сдвиг цвета
-            const dynamicSat = sat + Math.sin(t * speed * 0.5) * 20;
-            const dynamicBright = bright + Math.sin(t * speed * 0.3) * 20;
-            const flicker = 0.95 + 0.05 * Math.sin(t * 1.5); // Уменьшенное мерцание
+            const dynamicHueShift = Math.sin(t * 0.1) * 50;
+            const dynamicSat = sat + Math.sin(t * speed * 0.3) * 15;
+            const dynamicBright = bright + Math.sin(t * speed * 0.2) * 15;
+            const flicker = 0.97 + 0.03 * Math.sin(t * 1.2);
 
             const step = dynamicStep;
-            console.log('Rendering fractal', { step, iterations: currentIterations, hue: (hue + dynamicHueShift) % 360, sat: dynamicSat, bright: dynamicBright, zoom: currentZoom, twist });
+            const blsPull = blsX ? (blsX - centerX) / canvas.width * 0.05 : 0; // Влияние BLS
 
             for (let x = 0; x < canvas.width; x += step) {
                 for (let y = 0; y < canvas.height; y += step) {
@@ -381,8 +430,8 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     let zy = ((y - centerY) / canvas.height) * scale;
                     const rotatedZx = zx * Math.cos(prevRotation.current + prevTwist.current) - zy * Math.sin(prevRotation.current + prevTwist.current);
                     const rotatedZy = zx * Math.sin(prevRotation.current + prevTwist.current) + zy * Math.cos(prevRotation.current + prevTwist.current);
-                    zx = rotatedZx + Math.sin(zy * distortion) * prevWave.current;
-                    zy = rotatedZy + Math.cos(zx * distortion) * symmetryBreak;
+                    zx = rotatedZx + Math.sin(zy * distortion + blsPull) * prevWave.current;
+                    zy = rotatedZy + Math.cos(zx * distortion + blsPull) * symmetryBreak;
 
                     let i = 0;
                     let tempZx, tempZy;
@@ -400,15 +449,15 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     if (i === currentIterations) {
                         color = [0, 0, 0];
                     } else {
-                        const h = ((hue + dynamicHueShift + (i * 10)) % 360);
+                        const h = ((hue + dynamicHueShift + (i * 8)) % 360);
                         const s = Math.min(90, dynamicSat);
-                        const v = Math.min(90, dynamicBright + (i / currentIterations) * 40);
-                        color = hsvToRgb(h, s, v, params.palette);
+                        const v = Math.min(90, dynamicBright + (i / currentIterations) * 30);
+                        color = hsvToRgb(h, s, v, palette);
                     }
 
-                    const layerFactor = 1 - (i / currentIterations) * depthLayers * 0.4;
-                    ctx.globalAlpha = flicker;
-                    color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
+                    const layerFactor = 1 - (i / currentIterations) * depthLayers * 0.3;
+                    const noise = textureGrain * perlinNoise(x, y, t) * 20;
+                    color = color.map(c => Math.max(0, Math.min(255, (c + noise) * layerFactor)));
 
                     for (let dx = 0; dx < step; dx++) {
                         for (let dy = 0; dy < step; dy++) {
@@ -417,21 +466,20 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                                 data[dIdx] = color[0];
                                 data[dIdx + 1] = color[1];
                                 data[dIdx + 2] = color[2];
-                                data[dIdx + 3] = 255;
+                                data[dIdx + 3] = flicker * 255;
                             }
                         }
                     }
                 }
             }
 
-            ctx.globalAlpha = 1.0;
             return imageData;
         };
 
-        const renderBlsMarker = (t) => {
-            if (!blsCtx) return;
+        const renderBlsMarker = (t, params) => {
+            if (!blsCtx) return null;
             blsCtx.clearRect(0, 0, blsCanvas.width, blsCanvas.height);
-            if (!blsActive || !setActive) return;
+            if (!blsActive || !setActive) return null;
 
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const cssWidth = Math.min(window.innerWidth - 32, 600);
@@ -444,12 +492,14 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const hueShift = x < centerX ? -5 : 5;
 
             blsCtx.shadowBlur = 20;
-            blsCtx.shadowColor = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
+            blsCtx.shadowColor = `hsl(${(params?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.beginPath();
             blsCtx.arc(x * dpr, centerY * dpr, radius, 0, 2 * Math.PI);
-            blsCtx.fillStyle = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
+            blsCtx.fillStyle = `hsl(${(params?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.fill();
             blsCtx.shadowBlur = 0;
+
+            return x * dpr; // Возвращаем позицию для влияния на ветви
         };
 
         const preRenderFrames = async (params) => {
@@ -458,28 +508,42 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             setLoadingProgress(0);
             cachedFrames.current = [];
             const frameCount = 2400; // 40 секунд при 60 FPS
-            const timeStep = 40 / frameCount; // Время на кадр для 40 секунд
-            const startIterations = 0; // Начинаем с 0 итераций
-            const endIterations = 100; // До 100 итераций
-            const startZoom = params.zoom * 10; // Начальный зум (далеко)
-            const endZoom = params.zoom; // Конечный зум
-            const startHue = (params.hue + 180) % 360; // Начальный сдвиг цвета
-            const startSat = params.sat * 0.5; // Меньшая насыщенность в начале
-            const startBright = params.bright * 0.5; // Меньшая яркость в начале
-            const startDistortion = params.distortion * 0.5; // Меньшая дисторсия
-            const startTwist = params.twist * 0.5; // Меньший твист
+            const timeStep = 40 / frameCount;
+            const phase1 = frameCount / 4; // 0–10 сек
+            const phase2 = frameCount * 3 / 4; // 10–30 сек
+            const phase3 = frameCount; // 30–40 сек
 
             for (let i = 0; i < frameCount; i++) {
                 const t = i * timeStep;
-                const progress = i / (frameCount - 1); // От 0 до 1
-                const easedProgress = 1 - Math.cos((progress * Math.PI) / 2); // Ease-in для плавности
-                const currentIterations = Math.round(lerp(startIterations, endIterations, easedProgress));
-                const currentZoom = lerp(startZoom, endZoom, easedProgress);
-                const currentHue = lerp(startHue, params.hue, easedProgress);
-                const currentSat = lerp(startSat, params.sat, easedProgress);
-                const currentBright = lerp(startBright, params.bright, easedProgress);
-                const currentDistortion = lerp(startDistortion, params.distortion, easedProgress);
-                const currentTwist = lerp(startTwist, params.twist, easedProgress);
+                const progress = i / (frameCount - 1);
+                const easedProgress = easeInOut(progress);
+
+                let currentIterations, currentZoom, currentHue, currentSat, currentBright, currentDistortion, currentTwist;
+                if (i < phase1) { // Активация: хаос
+                    currentIterations = lerp(0, 20, i / phase1);
+                    currentZoom = lerp(params.zoom * 10, params.zoom * 2, i / phase1);
+                    currentHue = lerp((params.hue + 180) % 360, params.hue, i / phase1);
+                    currentSat = lerp(params.sat * 0.5, params.sat, i / phase1);
+                    currentBright = lerp(params.bright * 0.5, params.bright * 0.7, i / phase1);
+                    currentDistortion = lerp(params.distortion * (1 + params.violenceIntensity * 0.5), params.distortion, i / phase1);
+                    currentTwist = lerp(params.twist * (1 + params.violenceIntensity * 0.5), params.twist, i / phase1);
+                } else if (i < phase2) { // Обработка: рост
+                    currentIterations = lerp(20, 40, (i - phase1) / (phase2 - phase1));
+                    currentZoom = lerp(params.zoom * 2, params.zoom, (i - phase1) / (phase2 - phase1));
+                    currentHue = lerp(params.hue, (params.hue + 60) % 360, (i - phase1) / (phase2 - phase1));
+                    currentSat = lerp(params.sat, params.sat * 1.2, (i - phase1) / (phase2 - phase1));
+                    currentBright = lerp(params.bright * 0.7, params.bright, (i - phase1) / (phase2 - phase1));
+                    currentDistortion = lerp(params.distortion, params.distortion * 0.5, (i - phase1) / (phase2 - phase1));
+                    currentTwist = lerp(params.twist, params.twist * 0.5, (i - phase1) / (phase2 - phase1));
+                } else { // Заземление: гармония
+                    currentIterations = 40;
+                    currentZoom = params.zoom;
+                    currentHue = (params.hue + 60) % 360;
+                    currentSat = params.sat * 1.2;
+                    currentBright = params.bright * 1.1;
+                    currentDistortion = params.distortion * 0.3;
+                    currentTwist = params.twist * 0.3;
+                }
 
                 const frameParams = {
                     ...params,
@@ -492,13 +556,19 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     twist: currentTwist
                 };
 
-                const frameData = renderFractal(frameParams, t, currentIterations, currentZoom);
-                if (frameData) {
-                    cachedFrames.current.push(frameData);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const blsX = renderBlsMarker(t, frameParams);
+                const fractalData = renderFractal(frameParams, t, currentIterations, currentZoom, blsX);
+                if (fractalData) {
+                    ctx.putImageData(fractalData, 0, 0);
+                    renderBranches(ctx, frameParams, t, easedProgress, blsX);
+                    cachedFrames.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
                 }
                 setLoadingProgress((i + 1) / frameCount * 100);
                 if (i % 10 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 0)); // Асинхронная пауза каждые 10 кадров
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
             setIsLoading(false);
@@ -548,7 +618,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 ctx.putImageData(frame, 0, 0);
                 frameIndex = (frameIndex + 1) % cachedFrames.current.length;
 
-                renderBlsMarker(frameIndex * (40 / 2400)); // Соответствие времени анимации
+                renderBlsMarker(frameIndex * (40 / 2400), threadsRef.current[0]);
             }
 
             animationFrameId = requestAnimationFrame(animate);
@@ -556,7 +626,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
 
         const startAnimation = () => {
             if (checkCanvas()) {
-                console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current, ctx: !!ctx, blsCtx: !!blsCtx });
+                console.log('Starting animation', { canvas: !!canvasRef.current, blsCanvas: !!blsCanvasRef.current });
                 resizeCanvas();
                 if (threadsRef.current.length > 0) {
                     preRenderFrames(threadsRef.current[0]).then(() => {
@@ -585,10 +655,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         };
     }, [threadsRef, validLanguage, blsActive, setActive, setCount, blsFrequency, submittedHistory]);
 
-    React.useEffect(() => {
-        console.log('Render debug', { canvasInDOM: !!document.querySelector('.data-art-canvas'), blsCanvasInDOM: !!document.querySelector('.bls-canvas') });
-    }, []);
-
     return React.createElement(
         'div',
         { className: 'page gobelin-page' },
@@ -601,41 +667,37 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 { className: 'progress-bar' },
                 React.createElement('div', {
                     className: 'progress-bar-fill',
-                    style: { width: `${loadingProgress}%`, transition: 'width 0.5s ease-in-out' } // Плавный переход
+                    style: { width: `${loadingProgress}%`, transition: 'width 0.5s ease-in-out' }
                 })
             ),
             React.createElement('p', null, `${Math.round(loadingProgress)}%`)
         ),
-        fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[validLanguage].fpsWarning || 'Low performance detected. Try a smaller screen or simpler settings.'),
+        fpsWarning && React.createElement('div', { className: 'fps-warning' }, translations[validLanguage].fpsWarning || 'Low performance detected.'),
         showConsentScreen && React.createElement(
             'div',
             { className: 'consent-screen' },
-            React.createElement('h2', { key: 'consent-title' }, translations[validLanguage].consentTitle || 'Before Starting BLS'),
+            React.createElement('h2', null, translations[validLanguage].consentTitle || 'Before Starting BLS'),
             React.createElement(
                 'p',
-                { key: 'disclaimer' },
+                null,
                 translations[validLanguage].disclaimer ||
-                'This is an artistic visualization with elements of bilateral stimulation inspired by EMDR. It is not psychotherapy and does not replace working with a certified professional. Learn more at ',
-                React.createElement('a', { href: 'https://www.nice.org.uk/guidance/conditions-and-diseases/mental-health-conditions/post-traumatic-stress-disorder', target: '_blank', rel: 'noopener noreferrer' }, 'NICE'),
-                ' or ',
-                React.createElement('a', { href: 'https://www.apa.org/topics/psychotherapy', target: '_blank', rel: 'noopener noreferrer' }, 'APA'),
-                '.'
+                'This is an artistic visualization with elements of bilateral stimulation inspired by EMDR.'
             ),
             React.createElement(
                 'p',
-                { key: 'self-regulation' },
+                null,
                 translations[validLanguage].selfRegulation ||
-                'To stay grounded, try slow breathing (4 seconds in, 4 seconds out), look around the room to orient yourself, or visualize a safe, calming place.'
+                'To stay grounded, try slow breathing (4 seconds in, 4 seconds out).'
             ),
             React.createElement(
                 'p',
-                { key: 'content-warning' },
+                null,
                 translations[validLanguage].contentWarning ||
-                'Stories may contain descriptions of violence. The "Stop" button is always available and will replace the animation with a static warm fractal.'
+                'Stories may contain descriptions of violence.'
             ),
             React.createElement(
                 'div',
-                { key: 'sensitivity', className: 'consent-sensitivity' },
+                { className: 'consent-sensitivity' },
                 ['soft', 'standard', 'intense'].map(sensitivity => (
                     React.createElement(
                         'button',
@@ -651,21 +713,13 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ),
             React.createElement(
                 'p',
-                { key: 'contraindications' },
+                null,
                 translations[validLanguage].contraindications ||
-                'Do not use during severe dissociation, acute crisis, psychosis, or active suicidal thoughts. Seek professional help at ',
-                React.createElement('a', { href: 'https://988lifeline.org', target: '_blank', rel: 'noopener noreferrer' }, '988lifeline.org'),
-                '.'
-            ),
-            React.createElement(
-                'p',
-                { key: 'privacy' },
-                translations[validLanguage].privacy ||
-                'Your stories are anonymized and processed locally. You can choose not to save your story.'
+                'Do not use during severe dissociation.'
             ),
             React.createElement(
                 'div',
-                { key: 'checkbox', className: 'consent-checkbox' },
+                { className: 'consent-checkbox' },
                 React.createElement('input', {
                     type: 'checkbox',
                     checked: dontSaveHistory,
@@ -675,15 +729,15 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ),
             React.createElement(
                 'div',
-                { key: 'consent-buttons', className: 'consent-buttons' },
+                { className: 'consent-buttons' },
                 React.createElement(
                     'button',
-                    { key: 'accept', className: 'consent-button', onClick: acceptConsent },
+                    { className: 'consent-button', onClick: acceptConsent },
                     translations[validLanguage].accept || 'Accept'
                 ),
                 React.createElement(
                     'button',
-                    { key: 'decline', className: 'consent-button decline', onClick: declineConsent },
+                    { className: 'consent-button decline', onClick: declineConsent },
                     translations[validLanguage].decline || 'Decline'
                 )
             )
@@ -691,28 +745,16 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         showInfoModal && React.createElement(
             'div',
             { className: 'info-modal' },
-            React.createElement('h2', { key: 'info-title' }, translations[validLanguage].whatIsBls || 'What is BLS?'),
+            React.createElement('h2', null, translations[validLanguage].whatIsBls || 'What is BLS?'),
             React.createElement(
                 'p',
-                { key: 'bls-info' },
+                null,
                 translations[validLanguage].blsInfo ||
-                'Bilateral Stimulation (BLS) is when attention alternates between the left and right sides (visually, auditory, or tactile). It is used in EMDR therapy to process traumatic memories.'
-            ),
-            React.createElement(
-                'p',
-                { key: 'emdr-info' },
-                translations[validLanguage].emdrInfo ||
-                'Eye Movement Desensitization and Reprocessing (EMDR) is a scientifically validated psychotherapy method for trauma. We use only an artistic visualization inspired by this method.'
-            ),
-            React.createElement(
-                'p',
-                { key: 'not-therapy' },
-                translations[validLanguage].notTherapy ||
-                'Important: This is not therapy and does not replace working with a psychologist.'
+                'Bilateral Stimulation (BLS) is used in EMDR therapy.'
             ),
             React.createElement(
                 'button',
-                { key: 'close-info', onClick: closeInfoModal },
+                { onClick: closeInfoModal },
                 translations[validLanguage].close || 'Close'
             )
         ),
@@ -722,14 +764,13 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             { className: 'header' },
             React.createElement('button', { className: 'info-button', onClick: openInfoModal }, translations[validLanguage].whatIsBls || 'What is BLS?')
         ),
-        React.createElement('h1', { key: 'title' }, translations[validLanguage].myGobelin || 'My Data Art'),
+        React.createElement('h1', null, translations[validLanguage].myGobelin || 'My Data Art'),
         React.createElement(
             'div',
-            { key: 'mode-switcher', className: 'mode-switcher' },
+            { className: 'mode-switcher' },
             React.createElement(
                 'button',
                 {
-                    key: 'history-mode',
                     className: `mode-button ${mode === 'history' ? 'active' : ''}`,
                     onClick: () => {
                         setMode('history');
@@ -749,7 +790,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             React.createElement(
                 'button',
                 {
-                    key: 'aiGorgon-mode',
                     className: `mode-button ${mode === 'aiGorgon' ? 'active' : ''}`,
                     onClick: () => {
                         setMode('aiGorgon');
@@ -765,10 +805,9 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         ),
         React.createElement(
             'div',
-            { key: 'canvas-container', style: { position: 'relative', margin: '0 auto', maxWidth: '600px' } },
-            React.createElement('canvas', { key: 'fractal-canvas', ref: canvasRef, className: 'data-art-canvas' }),
+            { style: { position: 'relative', margin: '0 auto', maxWidth: '600px' } },
+            React.createElement('canvas', { ref: canvasRef, className: 'data-art-canvas' }),
             React.createElement('canvas', {
-                key: 'bls-canvas',
                 ref: blsCanvasRef,
                 className: 'bls-canvas',
                 style: { position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }
@@ -776,30 +815,30 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         ),
         submittedHistory && React.createElement(
             'div',
-            { key: 'bls-controls', className: 'bls-controls' },
+            { className: 'bls-controls' },
             React.createElement(
                 'button',
-                { key: 'start-bls', onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
+                { onClick: handleStartBls, className: 'bls-button', disabled: blsActive },
                 translations[validLanguage].startBls || 'Start BLS'
             ),
             React.createElement(
                 'button',
-                { key: 'pause-bls', onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
+                { onClick: handlePauseBls, className: 'bls-button', disabled: !blsActive },
                 translations[validLanguage].pauseBls || 'Pause BLS'
             ),
             React.createElement(
                 'button',
-                { key: 'stop-bls', onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
+                { onClick: handleStopBls, className: 'bls-button', disabled: !blsActive },
                 translations[validLanguage].stopBls || 'Stop BLS'
             ),
             React.createElement(
                 'button',
-                { key: 'calm-down', onClick: handleCalmDown, className: 'bls-button' },
+                { onClick: handleCalmDown, className: 'bls-button' },
                 translations[validLanguage].calmDown || 'Make Calmer'
             ),
             React.createElement(
                 'div',
-                { key: 'bls-frequency', className: 'bls-frequency' },
+                { className: 'bls-frequency' },
                 React.createElement('label', null, translations[validLanguage].frequency || 'BLS Frequency (Hz)'),
                 React.createElement('input', {
                     type: 'range',
@@ -814,18 +853,17 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         ),
         React.createElement(
             'div',
-            { key: 'gobelin-buttons', className: 'gobelin-buttons' },
+            { className: 'gobelin-buttons' },
             React.createElement(
                 'button',
-                { key: 'share-button', onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
+                { onClick: shareGobelin, className: 'gobelin-button share-button', disabled: !canvasReady },
                 translations[validLanguage].share || 'Share'
             )
         ),
         mode === 'history' && React.createElement(
             'div',
-            { key: 'history-container', className: 'history-container' },
+            { className: 'history-container' },
             React.createElement('textarea', {
-                key: 'history-textarea',
                 value: historyText,
                 onChange: (e) => setHistoryText(e.target.value),
                 placeholder: translations[validLanguage].historyPlaceholder || 'Enter your story...',
@@ -834,25 +872,25 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             }),
             React.createElement(
                 'div',
-                { key: 'history-buttons', className: 'history-buttons' },
+                { className: 'history-buttons' },
                 React.createElement(
                     'button',
-                    { key: 'submit-button', onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
+                    { onClick: handleSubmitHistory, className: 'history-button', disabled: !historyText },
                     translations[validLanguage].submit || 'Submit'
                 ),
                 React.createElement(
                     'button',
-                    { key: 'clear-button', onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
+                    { onClick: handleClearHistory, className: 'history-button clear', disabled: !historyText && !submittedHistory },
                     translations[validLanguage].clear || 'Clear'
                 )
             ),
             submittedHistory && !isEditing && React.createElement(
                 'div',
-                { key: 'history-text', className: 'history-text' },
-                React.createElement('p', { key: 'history-content' }, submittedHistory),
+                { className: 'history-text' },
+                React.createElement('p', null, submittedHistory),
                 React.createElement(
                     'button',
-                    { key: 'edit-button', onClick: handleEditHistory, className: 'history-button edit' },
+                    { onClick: handleEditHistory, className: 'history-button edit' },
                     translations[validLanguage].edit || 'Edit'
                 )
             )
