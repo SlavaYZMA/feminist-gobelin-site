@@ -16,7 +16,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
     const [isLoading, setIsLoading] = React.useState(true);
     const [canvasReady, setCanvasReady] = React.useState(false);
     const [fpsWarning, setFpsWarning] = React.useState(false);
-    const [dynamicStep, setDynamicStep] = React.useState(1);
+    const [dynamicStep, setDynamicStep] = React.useState(2); // Увеличен шаг для оптимизации
     const [showConsentScreen, setShowConsentScreen] = React.useState(false);
     const [consentSensitivity, setConsentSensitivity] = React.useState('standard');
     const [dontSaveHistory, setDontSaveHistory] = React.useState(false);
@@ -58,7 +58,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             cX: (metrics.avgWordLen / 10) - 0.5 + Math.random() * 0.3,
             cY: (metrics.avgSentLen / 50) - 0.5 + Math.random() * 0.3,
             zoom: Math.min(12, 1 + (metrics.textLen / 250) + metrics.uniqueWords * 0.2),
-            iterations: Math.min(150, 50 + metrics.uniqueWords * 5),
+            iterations: 100, // Фиксируем 100 итераций для полного раскрытия
             hue: baseHue,
             sat: Math.min(90, 60 + metrics.maxWordFreq * 15),
             bright: Math.min(90, 50 + metrics.avgWordLen * 20),
@@ -89,7 +89,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     params.distortion += count * 0.15;
                     palette = 'anger';
                 } else if (category === 'body') {
-                    params.iterations += count * 20;
+                    params.iterations = 100; // Фиксируем для единообразия
                     params.cX += count * 0.03;
                     params.hue = (baseHue + 90 + count * 15) % 360;
                     palette = palette === 'default' ? 'body' : palette;
@@ -217,7 +217,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         if (ctx && threadsRef.current.length > 0) {
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            renderFractal(staticWarmFractalParams, 0);
+            renderFractal(staticWarmFractalParams, 0, 100, staticWarmFractalParams.zoom);
         }
         cachedFrames.current = [];
     };
@@ -288,7 +288,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
         let fps = 0;
         let setStartTime = performance.now() / 1000;
 
-        // Дебаунсинг для ресайза
         let resizeTimeout;
         const debounceResize = () => {
             clearTimeout(resizeTimeout);
@@ -297,6 +296,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 if (threadsRef.current.length > 0) {
                     setIsLoading(true);
                     setLoadingProgress(0);
+                    cachedFrames.current = [];
                     preRenderFrames(threadsRef.current[0]);
                 }
             }, 200);
@@ -318,7 +318,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             ctx.scale(dpr, dpr);
             blsCtx.scale(dpr, dpr);
             console.log('Canvas resized', { width: canvas.width, height: canvas.height, cssWidth, cssHeight, dpr });
-            cachedFrames.current = [];
         };
 
         const lerp = (start, end, factor) => start + (end - start) * factor;
@@ -363,15 +362,15 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const targetRotation = t * speed * rotationDir * 0.01;
             const targetTwist = Math.sin(t * twist) * 0.02;
 
-            prevBreathe.current = lerp(prevBreathe.current, targetBreathe, 0.1);
-            prevWave.current = lerp(prevWave.current, targetWave, 0.1);
-            prevRotation.current = lerp(prevRotation.current, targetRotation, 0.1);
-            prevTwist.current = lerp(prevTwist.current, targetTwist, 0.1);
+            prevBreathe.current = lerp(prevBreathe.current, targetBreathe, 0.05); // Мягкая интерполяция
+            prevWave.current = lerp(prevWave.current, targetWave, 0.05);
+            prevRotation.current = lerp(prevRotation.current, targetRotation, 0.05);
+            prevTwist.current = lerp(prevTwist.current, targetTwist, 0.05);
 
-            const dynamicHueShift = Math.sin(t * 0.5) * 120;
-            const dynamicSat = sat + Math.sin(t * speed) * 30;
-            const dynamicBright = bright + Math.sin(t * speed * 0.5) * 30;
-            const flicker = 0.9 + 0.1 * Math.sin(t * 2);
+            const dynamicHueShift = Math.sin(t * 0.2) * 60; // Замедленный сдвиг цвета
+            const dynamicSat = sat + Math.sin(t * speed * 0.5) * 20;
+            const dynamicBright = bright + Math.sin(t * speed * 0.3) * 20;
+            const flicker = 0.95 + 0.05 * Math.sin(t * 1.5); // Уменьшенное мерцание
 
             const step = dynamicStep;
             console.log('Rendering fractal', { step, iterations: currentIterations, hue: (hue + dynamicHueShift) % 360, sat: dynamicSat, bright: dynamicBright, zoom: currentZoom, twist });
@@ -401,13 +400,13 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                     if (i === currentIterations) {
                         color = [0, 0, 0];
                     } else {
-                        const h = ((hue + dynamicHueShift + (i * 15)) % 360);
+                        const h = ((hue + dynamicHueShift + (i * 10)) % 360);
                         const s = Math.min(90, dynamicSat);
-                        const v = Math.min(90, dynamicBright + (i / currentIterations) * 50);
+                        const v = Math.min(90, dynamicBright + (i / currentIterations) * 40);
                         color = hsvToRgb(h, s, v, params.palette);
                     }
 
-                    const layerFactor = 1 - (i / currentIterations) * depthLayers * 0.5;
+                    const layerFactor = 1 - (i / currentIterations) * depthLayers * 0.4;
                     ctx.globalAlpha = flicker;
                     color = color.map(c => Math.max(0, Math.min(255, c * layerFactor)));
 
@@ -444,19 +443,6 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             const x = centerX + amplitude * Math.sin(t * blsFrequency * 2 * Math.PI);
             const hueShift = x < centerX ? -5 : 5;
 
-            console.log('Rendering BLS marker', { 
-                x, 
-                radius, 
-                amplitude, 
-                cssWidth, 
-                centerX, 
-                blsCanvasWidth: blsCanvas.width, 
-                blsCanvasHeight: blsCanvas.height, 
-                dpr, 
-                minX: centerX - amplitude, 
-                maxX: centerX + amplitude 
-            });
-
             blsCtx.shadowBlur = 20;
             blsCtx.shadowColor = `hsl(${(threadsRef.current[0]?.hue || 0) + hueShift}, 80%, 90%)`;
             blsCtx.beginPath();
@@ -471,24 +457,49 @@ function MyGobelin({ threadsRef, language = 'en' }) {
             setIsLoading(true);
             setLoadingProgress(0);
             cachedFrames.current = [];
-            const frameCount = 60;
-            const timeStep = 2 / frameCount;
-            const startIterations = 10; // Начинаем с малого числа итераций
-            const endIterations = params.iterations; // Максимум итераций из params
-            const startZoom = params.zoom * 5; // Начинаем с увеличенного зума (далеко)
+            const frameCount = 2400; // 40 секунд при 60 FPS
+            const timeStep = 40 / frameCount; // Время на кадр для 40 секунд
+            const startIterations = 0; // Начинаем с 0 итераций
+            const endIterations = 100; // До 100 итераций
+            const startZoom = params.zoom * 10; // Начальный зум (далеко)
             const endZoom = params.zoom; // Конечный зум
+            const startHue = (params.hue + 180) % 360; // Начальный сдвиг цвета
+            const startSat = params.sat * 0.5; // Меньшая насыщенность в начале
+            const startBright = params.bright * 0.5; // Меньшая яркость в начале
+            const startDistortion = params.distortion * 0.5; // Меньшая дисторсия
+            const startTwist = params.twist * 0.5; // Меньший твист
 
             for (let i = 0; i < frameCount; i++) {
                 const t = i * timeStep;
-                const progress = i / (frameCount - 1);
-                const currentIterations = Math.round(lerp(startIterations, endIterations, progress));
-                const currentZoom = lerp(startZoom, endZoom, progress);
-                const frameData = renderFractal(params, t, currentIterations, currentZoom);
+                const progress = i / (frameCount - 1); // От 0 до 1
+                const easedProgress = 1 - Math.cos((progress * Math.PI) / 2); // Ease-in для плавности
+                const currentIterations = Math.round(lerp(startIterations, endIterations, easedProgress));
+                const currentZoom = lerp(startZoom, endZoom, easedProgress);
+                const currentHue = lerp(startHue, params.hue, easedProgress);
+                const currentSat = lerp(startSat, params.sat, easedProgress);
+                const currentBright = lerp(startBright, params.bright, easedProgress);
+                const currentDistortion = lerp(startDistortion, params.distortion, easedProgress);
+                const currentTwist = lerp(startTwist, params.twist, easedProgress);
+
+                const frameParams = {
+                    ...params,
+                    iterations: currentIterations,
+                    zoom: currentZoom,
+                    hue: currentHue,
+                    sat: currentSat,
+                    bright: currentBright,
+                    distortion: currentDistortion,
+                    twist: currentTwist
+                };
+
+                const frameData = renderFractal(frameParams, t, currentIterations, currentZoom);
                 if (frameData) {
                     cachedFrames.current.push(frameData);
                 }
                 setLoadingProgress((i + 1) / frameCount * 100);
-                await new Promise(resolve => setTimeout(resolve, 0));
+                if (i % 10 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 0)); // Асинхронная пауза каждые 10 кадров
+                }
             }
             setIsLoading(false);
             setCanvasReady(true);
@@ -507,7 +518,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 frameCount = 0;
                 lastFrameFPS = now;
                 console.log('FPS:', fps);
-                if (fps < 20) setFpsWarning(true); // Повышен порог до 20
+                if (fps < 20) setFpsWarning(true);
                 else setFpsWarning(false);
             }
 
@@ -537,7 +548,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 ctx.putImageData(frame, 0, 0);
                 frameIndex = (frameIndex + 1) % cachedFrames.current.length;
 
-                renderBlsMarker(frameIndex * (2 / 60));
+                renderBlsMarker(frameIndex * (40 / 2400)); // Соответствие времени анимации
             }
 
             animationFrameId = requestAnimationFrame(animate);
@@ -590,7 +601,7 @@ function MyGobelin({ threadsRef, language = 'en' }) {
                 { className: 'progress-bar' },
                 React.createElement('div', {
                     className: 'progress-bar-fill',
-                    style: { width: `${loadingProgress}%` }
+                    style: { width: `${loadingProgress}%`, transition: 'width 0.5s ease-in-out' } // Плавный переход
                 })
             ),
             React.createElement('p', null, `${Math.round(loadingProgress)}%`)
